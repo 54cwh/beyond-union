@@ -40,6 +40,7 @@ uv run pytest     # E2E + 契约测试（Playwright）
 │   ├── tailwind.src.css      Tailwind 输入源
 │   ├── js/                   纯函数层（ESM，可单测）
 │   │   ├── common.js         基础设施（导航 / 数据加载）
+│   │   ├── chart-view.js     统一图表展示组件
 │   │   ├── filter.js         筛选 / 聚合
 │   │   ├── format.js         格式化
 │   │   └── __tests__/        Vitest 单测

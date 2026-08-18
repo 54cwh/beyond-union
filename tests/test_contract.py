@@ -18,6 +18,7 @@ REQUIRED_ASSETS = [
     "assets/vendor/vue.global.prod.js",
     "assets/vendor/echarts.min.js",
     "assets/js/common.js",
+    "assets/js/chart-view.js",
 ]
 
 # 页面间接依赖的关键资产（经由 common.css 引用）

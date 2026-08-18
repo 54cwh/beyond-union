@@ -17,6 +17,7 @@
     import { Nav, Data, fetchData } from '../assets/js/common.js';
     import { filterRows, groupBy } from '../assets/js/filter.js';
     import { formatNumber, formatMoney, formatPercent, formatDate } from '../assets/js/format.js';
+    import { createChart } from '../assets/js/chart-view.js';
 
     Nav();
 
@@ -40,28 +41,12 @@
         </main>
       `,
       mounted() {
-        this.initChart();
-      },
-      methods: {
-        // ===== ECharts 统一范式（所有图表页照抄）=====
-        // 1. mounted 里调用 initChart
-        // 2. 数据变化时调用 this.renderChart(newData)，不要重新 init
-        initChart() {
-          this.chart = echarts.init(this.$refs.chart);
-          this.renderChart([]);
-          window.addEventListener('resize', () => this.chart && this.chart.resize());
-        },
-        renderChart(data) {
-          if (!this.chart) return;
-          this.chart.setOption({
-            tooltip: { trigger: 'axis' },
-            xAxis: { type: 'category', data: data.map(d => d.label) },
-            yAxis: { type: 'value' },
-            series: [{ type: 'bar', data: data.map(d => d.value) }],
-          });
-        },
+        // 图表：用统一组件，数据形如 [{label, value}]
+        this.chart = createChart(this.$refs.chart);
+        this.chart.setData([{ label: '示例', value: 10 }]);
       },
       beforeUnmount() {
+        // 统一组件负责 dispose，页面只需调用
         if (this.chart) { this.chart.dispose(); this.chart = null; }
       },
       computed: {},
