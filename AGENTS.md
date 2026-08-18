@@ -88,6 +88,19 @@ tests/              pytest + Playwright
 
 **开工第一步**：读 `docs/分工说明.md` 的"岗位工作区"，只动自己地盘的文件。
 
+### 每人 skill 必装（🟢 必须；🟡 可选）
+
+| 成员 | 🟢 必须装 | 🟡 可选 |
+|------|----------|---------|
+| 全员 | `test-driven-development` · `verification-before-completion` · `webapp-testing` · **context7(MCP)** | — |
+| zzx(A) | `chinese-documentation` | `drawio` · `systematic-debugging` |
+| lcz(B) | `ui-ux-pro-max` · `frontend-design` · `web-design-guidelines` | `theme-factory` |
+| cjx(C) | `ui-ux-pro-max` · `frontend-design` · `systematic-debugging` | `web-design-guidelines` |
+| pcx(D) | `ui-ux-pro-max` · `frontend-design` · `systematic-debugging` | `web-design-guidelines` |
+| cwh(E) | `requesting-code-review` · `receiving-code-review` · `finishing-a-development-branch` · `subagent-driven-development` | `chinese-documentation` · `drawio` |
+
+> 完整说明见 `docs/技术栈定案.md`"技能清单"。
+
 ---
 
 ## 工作规范（强制指令，每次回复前必须默念）
