@@ -40,7 +40,7 @@ bash scripts/build_tailwind.sh  # 编译 Tailwind（改 class 后必跑）
 ## 铁律（AI 最容易犯的错）
 - 开工前问用户是否已经完成 git pull操作
 
-1. **禁止本机绝对路径**：不写 `/home/xxx/`、`C:\...`、`/mnt/`。页面内引用共享资源用 `../assets/`；导航/数据加载用根路径 `/pages/`、`/data/`（common.js 已示范）
+1. **禁止本机绝对路径**：不写 `/home/xxx/`、`C:\...`Wo/QmwXkU、`/mnt/`。页面内引用共享资源用 `../assets/`；导航/数据加载用根路径 `/pages/`、`/data/`（common.js 已示范）
 2. **计算逻辑放 A 的计算层**：筛选/聚合/格式化用 `assets/js/filter.js`、`format.js`，**禁止在页面/Vue 里自写**；缺功能向 A 提
 3. **图表走 B 的组件**：`chart-view.js` 统一封装；页面传数据、不碰 echarts API
 4. **全局组件只由 E/B 提供**：Copilot 壳/问答库归 E，可信 AI 卡片/溯源组件归 B；页面是消费者
