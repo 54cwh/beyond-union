@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# 构建产物
+build/
+*.spec.bak
+
+# EXE
+*.exe
+*.onefile
+
+# 数据（真实数据不入库）
+data/*.csv
+data/*.xlsx
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,22 @@
+[
+  {
+    "year": 2020,
+    "region": "华东",
+    "amount": 100
+  },
+  {
+    "year": 2020,
+    "region": "华北",
+    "amount": 200
+  },
+  {
+    "year": 2021,
+    "region": "华东",
+    "amount": 300
+  },
+  {
+    "year": 2021,
+    "region": "华南",
+    "amount": 150
+  }
+]

@@ -1,0 +1,10 @@
+# 统一 LF 换行，防 Win/WSL 冲突
+* text=auto eol=lf
+
+# 二进制文件不做换行转换
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.db binary

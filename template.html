@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>挑战杯 Demo</title>
+  <link rel="stylesheet" href="../assets/tailwind.css">
+  <link rel="stylesheet" href="../assets/common.css">
+  <script src="../assets/vendor/vue.global.prod.js"></script>
+  <script src="../assets/vendor/echarts.min.js"></script>
+</head>
+<body class="min-h-screen">
+  <nav id="site-nav" class="p-4 border-b"></nav>
+  <div id="app" class="container mx-auto p-4"></div>
+
+  <script type="module">
+    import { Nav, Data, fetchData } from '../assets/js/common.js';
+    import { filterRows, groupBy } from '../assets/js/filter.js';
+    import { formatNumber, formatMoney, formatPercent, formatDate } from '../assets/js/format.js';
+
+    Nav();
+
+    const app = Vue.createApp({
+      data() {
+        return {
+          title: "页面标题",
+          loading: false,
+          error: "",
+        };
+      },
+      template: `
+        <main>
+          <h1 class="text-2xl mb-4">{{ title }}</h1>
+          <p v-if="loading" class="text-gray-400">加载中…</p>
+          <p v-else-if="error" class="text-red-400">{{ error }}</p>
+          <div v-else>
+            <!-- 页面内容写在这里 -->
+            <div ref="chart" class="w-full h-80"></div>
+          </div>
+        </main>
+      `,
+      mounted() {
+        this.initChart();
+      },
+      methods: {
+        // ===== ECharts 统一范式（所有图表页照抄）=====
+        // 1. mounted 里调用 initChart
+        // 2. 数据变化时调用 this.renderChart(newData)，不要重新 init
+        initChart() {
+          this.chart = echarts.init(this.$refs.chart);
+          this.renderChart([]);
+          window.addEventListener('resize', () => this.chart && this.chart.resize());
+        },
+        renderChart(data) {
+          if (!this.chart) return;
+          this.chart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: data.map(d => d.label) },
+            yAxis: { type: 'value' },
+            series: [{ type: 'bar', data: data.map(d => d.value) }],
+          });
+        },
+      },
+      beforeUnmount() {
+        if (this.chart) { this.chart.dispose(); this.chart = null; }
+      },
+      computed: {},
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>
