@@ -38,6 +38,7 @@ bash scripts/build_tailwind.sh  # 编译 Tailwind（改 class 后必跑）
 ```
 
 ## 铁律（AI 最容易犯的错）
+- 开工前问用户是否已经完成 git pull操作
 
 1. **禁止本机绝对路径**：不写 `/home/xxx/`、`C:\...`、`/mnt/`。页面内引用共享资源用 `../assets/`；导航/数据加载用根路径 `/pages/`、`/data/`（common.js 已示范）
 2. **计算逻辑放 A 的计算层**：筛选/聚合/格式化用 `assets/js/filter.js`、`format.js`，**禁止在页面/Vue 里自写**；缺功能向 A 提
@@ -67,6 +68,7 @@ tests/              pytest + Playwright
 
 | 文档 | 作用 |
 |------|------|
+| `docs/开工指南.md` | **保姆级开工步骤**（装工具→clone→建分支→开发→提交），不熟 git 先看这个 |
 | `docs/需求.md` | 产品需求（12 页 → 6 页）|
 | `docs/技术栈定案.md` | 技术决策、锁死细则、版本表、待建清单 |
 | `docs/分工说明.md` | **岗位工作区**（每人分支/文件/文档）、依赖、里程碑 |
