@@ -1,5 +1,5 @@
 [project]
-name = "tiaozhanbei-demo"
+name = "beyond-union"
 version = "0.1.0"
 description = "挑战杯 Demo：纯前端 + JSON + 双模式打包"
 requires-python = ">=3.12"

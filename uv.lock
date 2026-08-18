@@ -12,6 +12,43 @@ wheels = [
 ]
 
 [[package]]
+name = "beyond-union"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "bottle" },
+    { name = "pywebview" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "openpyxl" },
+    { name = "pandas" },
+    { name = "playwright" },
+    { name = "pyinstaller" },
+    { name = "pytest" },
+    { name = "pytest-playwright" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "bottle", specifier = ">=0.13,<0.14" },
+    { name = "pywebview", specifier = ">=5.4,<6" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "openpyxl", specifier = ">=3.1,<3.2" },
+    { name = "pandas", specifier = ">=2.2,<2.3" },
+    { name = "playwright", specifier = ">=1.49,<1.50" },
+    { name = "pyinstaller", specifier = ">=6.11,<6.12" },
+    { name = "pytest", specifier = ">=8.3,<8.4" },
+    { name = "pytest-playwright", specifier = ">=0.5,<0.6" },
+    { name = "ruff", specifier = ">=0.16.3" },
+]
+
+[[package]]
 name = "bottle"
 version = "0.13.4"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -805,43 +842,6 @@ source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
 sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/ab/e2/e9a00f0ccb71718418230718b3d900e71a5d16e701a3dae079a21e9cd8f8/text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93", size = 76885, upload-time = "2019-08-30T21:36:45.405Z" }
 wheels = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/a6/a5/c0b6468d3824fe3fde30dbb5e1f687b291608f9473681bbf7dabbf5a87d7/text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8", size = 78154, upload-time = "2019-08-30T21:37:03.543Z" },
-]
-
-[[package]]
-name = "tiaozhanbei-demo"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "bottle" },
-    { name = "pywebview" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "openpyxl" },
-    { name = "pandas" },
-    { name = "playwright" },
-    { name = "pyinstaller" },
-    { name = "pytest" },
-    { name = "pytest-playwright" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "bottle", specifier = ">=0.13,<0.14" },
-    { name = "pywebview", specifier = ">=5.4,<6" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "openpyxl", specifier = ">=3.1,<3.2" },
-    { name = "pandas", specifier = ">=2.2,<2.3" },
-    { name = "playwright", specifier = ">=1.49,<1.50" },
-    { name = "pyinstaller", specifier = ">=6.11,<6.12" },
-    { name = "pytest", specifier = ">=8.3,<8.4" },
-    { name = "pytest-playwright", specifier = ">=0.5,<0.6" },
-    { name = "ruff", specifier = ">=0.16.3" },
 ]
 
 [[package]]

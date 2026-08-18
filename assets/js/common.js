@@ -4,11 +4,12 @@
 
 // ===== 导航 =====
 const NAV_ITEMS = [
-  { page: "p1", href: "pages/p1.html", label: "首页" },
-  { page: "p2", href: "pages/p2.html", label: "数据看板" },
-  { page: "p3", href: "pages/p3.html", label: "组合查询" },
-  { page: "p4", href: "pages/p4.html", label: "明细搜索" },
-  { page: "p5", href: "pages/p5.html", label: "结论" },
+  { page: "p1", href: "pages/p1.html", label: "运营工作台" },
+  { page: "p2", href: "pages/p2.html", label: "发电预测" },
+  { page: "p3", href: "pages/p3.html", label: "风光储优化" },
+  { page: "p4", href: "pages/p4.html", label: "绿电入市" },
+  { page: "p5", href: "pages/p5.html", label: "决策与政策" },
+  { page: "p6", href: "pages/p6.html", label: "经营成效" },
 ];
 
 function renderNav() {

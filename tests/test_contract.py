@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-PAGES = ["p1", "p2", "p3", "p4", "p5"]
+PAGES = ["p1", "p2", "p3", "p4", "p5", "p6"]
 
 # 每个页面必须引用的共享资产
 REQUIRED_ASSETS = [
@@ -73,7 +73,7 @@ def test_nav_renders_on_every_page(page, base_url):
         nav = page.locator("#site-nav")
         assert nav.is_visible(), f"{p}.html 导航未渲染"
         links = nav.locator("a")
-        assert links.count() == 5, f"{p}.html 导航应有 5 项，实得 {links.count()}"
+        assert links.count() == 6, f"{p}.html 导航应有 6 项，实得 {links.count()}"
         for i in range(5):
             href = links.nth(i).get_attribute("href")
             assert href.startswith("pages/p"), f"{p}.html 导航链接异常: {href}"

@@ -1,12 +1,15 @@
-# 挑战杯 Demo
+# 北域绿联 · beyond-union
 
-纯前端 + JSON 的本地数据展示 Demo，打包为单 EXE，无需服务器。
+东北新能源入市与多能协同智能决策平台 —— 新能源企业经营决策工作台（demo）。
+让每一度新能源电力从"发出来"走向"算清楚、储得优、卖得好"。
+
+纯前端 + JSON 的本地 Demo，打包为单 EXE，无需服务器。产品需求见 `需求.md`。
 
 ## 技术栈
 
 - **样式**：Tailwind CSS v3.4（预编译）+ 视觉宪法 `design-system/MASTER.md`
 - **前端**：Vue 3.4 全局版（Options API，无构建）+ ECharts 5.5
-- **数据**：`data/*.json` + fetch（结构待定）
+- **数据**：`data/demo/*.json` 模拟数据集 + fetch（A 数据岗产出）
 - **打包**：pywebview 双模式（GUI 默认 + `--web` 浏览器兜底）→ PyInstaller 单 EXE
 
 ## 快速开始

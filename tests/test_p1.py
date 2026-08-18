@@ -26,7 +26,7 @@ def test_p1_has_title_and_app(page, base_url):
     page.goto(f"{base_url}/pages/p1.html")
     app = page.locator("#app")
     assert app.is_visible(), "#app 未渲染"
-    assert "首页" in page.locator("#app").inner_text() or "首页" in page.title()
+    assert "运营工作台" in page.locator("#app").inner_text() or "运营工作台" in page.title()
 
 
 def test_nav_links_reachable(page, base_url):
