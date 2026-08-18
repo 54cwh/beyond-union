@@ -10,12 +10,18 @@ node_modules/
 dist/
 
 # 构建产物
+dist/
 build/
+*.spec
 *.spec.bak
 
 # EXE
 *.exe
 *.onefile
+
+# Python 缓存
+__pycache__/
+*.py[cod]
 
 # 数据（真实数据不入库）
 data/*.csv
