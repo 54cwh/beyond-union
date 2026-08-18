@@ -15,6 +15,10 @@
 ## 快速开始
 
 ```bash
+# 拉取仓库（SSH）
+git clone git@github.com:54cwh/beyond-union.git
+cd beyond-union
+
 # 环境准备
 uv sync
 npm install
