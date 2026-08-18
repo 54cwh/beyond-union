@@ -1,13 +1,13 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 .venv/
 venv/
 .pytest_cache/
+.ruff_cache/
 
 # Node
 node_modules/
-dist/
 
 # 构建产物
 dist/
@@ -17,10 +17,6 @@ build/
 # EXE
 *.exe
 *.onefile
-
-# Python 缓存
-__pycache__/
-*.py[cod]
 
 # 数据（真实数据不入库）
 data/*.csv
