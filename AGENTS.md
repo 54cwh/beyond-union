@@ -93,13 +93,13 @@ tests/              pytest + Playwright
 | 成员 | 🟢 必须装 | 🟡 可选 |
 |------|----------|---------|
 | 全员 | `test-driven-development` · `verification-before-completion` · `webapp-testing` · **context7(MCP)** | — |
-| zzx(A) | `chinese-documentation` | `drawio` · `systematic-debugging` |
-| lcz(B) | `ui-ux-pro-max` · `frontend-design` · `web-design-guidelines` | `theme-factory` |
-| cjx(C) | `ui-ux-pro-max` · `frontend-design` · `systematic-debugging` | `web-design-guidelines` |
-| pcx(D) | `ui-ux-pro-max` · `frontend-design` · `systematic-debugging` | `web-design-guidelines` |
-| cwh(E) | `requesting-code-review` · `receiving-code-review` · `finishing-a-development-branch` · `subagent-driven-development` · `chinese-commit-conventions` | `chinese-code-review` · `chinese-documentation` · `drawio` |
+| zzx(A) | `chinese-documentation` | `systematic-debugging` |
+| lcz(B) | `ui-ux-pro-max` · `frontend-design` · `web-design-guidelines` · **chrome-devtools(MCP)** | `theme-factory` |
+| cjx(C) | `ui-ux-pro-max` · `frontend-design` · `systematic-debugging` · **chrome-devtools(MCP)** | `web-design-guidelines` |
+| pcx(D) | `ui-ux-pro-max` · `frontend-design` · `systematic-debugging` · **chrome-devtools(MCP)** | `web-design-guidelines` |
+| cwh(E) | `requesting-code-review` · `receiving-code-review` · `finishing-a-development-branch` · `subagent-driven-development` · `chinese-commit-conventions` · **chrome-devtools(MCP)** | `chinese-code-review` · `chinese-documentation` |
 
-> 完整说明见 `docs/技术栈定案.md`"技能清单"。
+> 完整说明见 `docs/技术栈定案.md`"技能清单"。chrome-devtools 是开发调试 MCP，做页面的岗位（B/C/D/E）使用。
 
 ---
 
