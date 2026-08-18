@@ -49,11 +49,12 @@ uv run pytest     # E2E + 契约测试（Playwright）
 │   │   └── __tests__/        Vitest 单测
 │   ├── vendor/               本地库（vue / echarts / VERSIONS.md）
 │   └── fonts/                Inter 字体（本地化，离线可用）
-├── data/                     数据 JSON（结构待定，当前 sample.json 占位）
-├── design-system/MASTER.md   视觉宪法（只读）
+├── data/                     数据 JSON（A 数据岗产出 data/demo/*.json 模拟数据）
+├── design-system/MASTER.md   视觉宪法（B 维护）
+├── 北域绿联.spec              PyInstaller 跨平台打包配置
 ├── scripts/
 │   ├── build_exe.sh          打包 EXE（角色 E）
-│   └── build_tailwind.sh     编译 Tailwind
+│   └── build_tailwind.sh     编译 Tailwind（样式归 B）
 ├── tests/                    pytest + Playwright
 │   ├── conftest.py           测试服务器 fixture
 │   ├── test_contract.py      共享契约测试

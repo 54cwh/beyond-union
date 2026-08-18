@@ -1,4 +1,4 @@
-// chart-view.js —— 统一图表展示组件（B 维护，改须审批）
+// chart-view.js —— 统一图表展示组件（B 展示岗维护）
 // 职责：统一 ECharts 生命周期 + 数据适配。页面只传数据，不碰 echarts API。
 // 规则：无 DOM 依赖，只封装逻辑；页面提供容器 <div ref="chart">
 
