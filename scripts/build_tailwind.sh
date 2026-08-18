@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # 编译 Tailwind v3.4 → assets/tailwind.css
 # 任何人改页面 class 后必须重跑本脚本（否则新 class 静默缺样式）
+# 注：TAILWIND_BIN 是"本机工具路径约定"（非项目内路径），是"禁止绝对路径"规则的例外；
+#     仅作为默认值，可用环境变量 TAILWIND_BIN 覆盖为本机实际位置。
 set -euo pipefail
 
 TAILWIND_BIN="${TAILWIND_BIN:-/tmp/tailwindcss}"

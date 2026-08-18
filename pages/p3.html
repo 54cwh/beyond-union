@@ -14,7 +14,7 @@
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
-    // import 按需引入：只用到的才 import，不要全量复制
+    // 本模板列出全部可用 import 作参考；复制后按需保留用到的，删掉不用的
     import { Nav, Data, fetchData } from '../assets/js/common.js';
     import { filterRows, groupBy, toChartData } from '../assets/js/filter.js';
     import { formatNumber, formatMoney, formatPercent, formatDate } from '../assets/js/format.js';
@@ -38,7 +38,9 @@
           <div v-else>
             <!-- 页面内容写在这里 -->
             <!-- 数据加载：const data = await Data.load('demo/xxx')（A 的模拟数据） -->
-            <!-- 图表容器：需要图表的页面保留此 div，不需要可删 -->
+            <!-- 图表容器：需要图表的页面保留此 div，不需要可删。
+                 注意：此容器必须在页面首次渲染时就存在（勿置于 v-if 条件分支内），
+                 mounted 里 createChart($refs.chart) 依赖它已渲染；加载态用 loading/error 变量控制。 -->
             <div ref="chart" class="w-full h-80"></div>
           </div>
         </main>

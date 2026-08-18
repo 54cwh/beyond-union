@@ -20,6 +20,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_PAGE = "pages/p1.html"
 
+# 全局退出事件：/api/shutdown 端点触发，主循环据此退出进程
+SHUTDOWN_EVENT = threading.Event()
+
 
 def find_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -51,6 +54,8 @@ class AppHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"shutting down")
+            # 触发全局退出事件（停服务线程 + 让主循环退出）
+            SHUTDOWN_EVENT.set()
             threading.Thread(target=self.server.shutdown, daemon=True).start()
             return
         super().do_GET()
@@ -69,6 +74,21 @@ def start_server(port):
     return httpd
 
 
+def wait_for_exit():
+    """GUI 降级后保持进程（浏览器模式）：有 stdin 按 Enter，无 stdin 等 /api/shutdown。"""
+    if sys.stdin and sys.stdin.isatty():
+        try:
+            input("按 Enter 退出...")
+        except (KeyboardInterrupt, EOFError):
+            pass
+    else:
+        try:
+            while not SHUTDOWN_EVENT.wait(1):
+                pass
+        except KeyboardInterrupt:
+            pass
+
+
 def open_gui(url):
     try:
         import webview
@@ -78,11 +98,11 @@ def open_gui(url):
     except ImportError:
         print("[warn] pywebview 未安装，降级为浏览器模式")
         webbrowser.open(url)
-        input("按 Enter 退出...")
+        wait_for_exit()
     except Exception as e:  # noqa: BLE001 - GUI 启动兜底降级，有意捕获所有异常
         print(f"[warn] GUI 启动失败（{e}），降级为浏览器模式")
         webbrowser.open(url)
-        input("按 Enter 退出...")
+        wait_for_exit()
 
 
 def main():
@@ -101,7 +121,7 @@ def main():
 
     if mode == "web":
         webbrowser.open(url)
-        print("[app] 浏览器模式。关浏览器标签页不会退出，可用 API 或关闭进程退出")
+        print("[app] 浏览器模式。关浏览器标签页不会退出，可用 /api/shutdown 或 Ctrl+C 退出")
         if sys.stdin and sys.stdin.isatty():
             try:
                 input()
@@ -109,10 +129,10 @@ def main():
                 pass
         else:
             # 无 stdin（EXE console=False / GUI 子系统）：事件循环保活，
-            # 通过 /api/shutdown 端点或 Ctrl+C 退出
+            # 由 /api/shutdown 端点（SHUTDOWN_EVENT）或 Ctrl+C 退出
             try:
-                while True:
-                    threading.Event().wait(60)
+                while not SHUTDOWN_EVENT.wait(1):
+                    pass
             except KeyboardInterrupt:
                 pass
     else:
