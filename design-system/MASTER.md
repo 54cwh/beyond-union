@@ -33,7 +33,7 @@
 
 ### Typography
 
-> **⚠️ 已覆盖**：字体改用 **Inter 本地化（西文/数字）+ 系统中文栈**（见 `技术栈定案.md` 字体决策），弃用 Fira 系与 Google Fonts CDN（离线打包失效）。下方 Fira 内容为 ui-ux-pro-max 原始推荐，仅作参考，实际以 `common.css` 的 `--font-body/--font-heading` 为准。
+> **⚠️ 已覆盖**：字体改用 **Inter 本地化（西文/数字）+ 系统中文栈**（见 `../docs/技术栈定案.md` 字体决策），弃用 Fira 系与 Google Fonts CDN（离线打包失效）。下方 Fira 内容为 ui-ux-pro-max 原始推荐，仅作参考，实际以 `common.css` 的 `--font-body/--font-heading` 为准。
 
 - **Heading Font:** Fira Code
 - **Body Font:** Fira Sans
