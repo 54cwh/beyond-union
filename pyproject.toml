@@ -16,7 +16,12 @@ dev = [
     "playwright>=1.49,<1.50",
     "pytest>=8.3,<8.4",
     "pytest-playwright>=0.5,<0.6",
+    "ruff>=0.16.3",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff.lint]
+# BLE001: 允许盲捕获 Exception（GUI 启动降级到浏览器模式的预期行为）
+ignore = ["BLE001"]

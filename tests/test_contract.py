@@ -1,10 +1,11 @@
 """共享契约测试（E 维护）：焊死公共接口，防 5 人 AI 互相踩踏。
 
 覆盖：
-  ① 数据文件：data/*.json 存在且可解析（字段契约待定，先校验基本有效性）
+  ① 数据文件：data/*.json 存在且是合法 JSON（字段契约待定，先校验基本有效性）
   ② 共享资产：页面引用的 common.js / tailwind.css / vendor 文件存在且路径有效
   ③ 导航：所有页面渲染出站点导航，且能到达目标页
 """
+import json
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,6 +20,14 @@ REQUIRED_ASSETS = [
     "assets/js/common.js",
 ]
 
+# 页面间接依赖的关键资产（经由 common.css 引用）
+REQUIRED_FONTS = [
+    "assets/fonts/inter-latin-400-normal.woff2",
+    "assets/fonts/inter-latin-500-normal.woff2",
+    "assets/fonts/inter-latin-600-normal.woff2",
+    "assets/fonts/inter-latin-700-normal.woff2",
+]
+
 
 def test_pages_exist():
     for p in PAGES:
@@ -26,16 +35,24 @@ def test_pages_exist():
 
 
 def test_data_files_exist():
-    """数据契约待定；当前只校验 data/ 目录存在且 json 可解析（若有）。"""
+    """数据契约待定；当前校验 data/ 目录存在且所有 json 都是合法 JSON。"""
     data_dir = BASE_DIR / "data"
     assert data_dir.exists(), "缺少 data/ 目录"
-    for json_file in data_dir.glob("*.json"):
-        assert json_file.read_text(encoding="utf-8").strip(), f"{json_file.name} 为空"
+    json_files = list(data_dir.glob("*.json"))
+    if json_files:
+        for json_file in json_files:
+            try:
+                json.loads(json_file.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as e:
+                raise AssertionError(f"{json_file.name} 不是合法 JSON: {e}")
 
 
 def test_shared_assets_exist():
     for asset in REQUIRED_ASSETS:
         assert (BASE_DIR / asset).exists(), f"缺少共享资产: {asset}"
+    for font in REQUIRED_FONTS:
+        assert (BASE_DIR / font).exists(), f"缺少字体资产: {font}（离线打包必须本地化）"
+    assert (BASE_DIR / "assets/fonts").exists(), "缺少字体目录"
 
 
 def test_pages_reference_assets():

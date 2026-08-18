@@ -8,7 +8,6 @@
 """
 import argparse
 import json
-import os
 import socket
 import sys
 import threading
@@ -18,7 +17,6 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-PAGES_DIR = BASE_DIR / "pages"
 DEFAULT_PAGE = "pages/p1.html"
 
 
@@ -30,8 +28,6 @@ def find_free_port():
 
 class AppHandler(SimpleHTTPRequestHandler):
     """带 /api/shutdown 和 /api/health 的静态文件服务器"""
-
-    server_ready = False
 
     def __init__(self, *args, directory=None, **kwargs):
         super().__init__(*args, directory=directory, **kwargs)
