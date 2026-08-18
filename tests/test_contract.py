@@ -1,9 +1,9 @@
 """共享契约测试（E 维护）：焊死公共接口，防 5 人 AI 互相踩踏。
 
 覆盖：
-  ① 数据文件：data/*.json 存在且是合法 JSON（字段契约待定，先校验基本有效性）
-  ② 共享资产：页面引用的 common.js / tailwind.css / vendor 文件存在且路径有效
-  ③ 导航：所有页面渲染出站点导航，且能到达目标页
+  ① 数据文件：data/ 下所有 json 存在且是合法 JSON（含 data/demo/ 模拟数据）
+  ② 共享资产：页面引用的 common.js / chart-view.js / vendor 文件存在且路径有效
+  ③ 导航：6 个页面渲染出站点导航，且能到达目标页
 """
 import json
 from pathlib import Path
@@ -36,7 +36,7 @@ def test_pages_exist():
 
 
 def test_data_files_exist():
-    """数据契约待定；当前校验 data/ 目录存在且所有 json 都是合法 JSON。"""
+    """校验 data/ 目录存在且所有 json 都是合法 JSON（含 data/demo/ 模拟数据）。"""
     data_dir = BASE_DIR / "data"
     assert data_dir.exists(), "缺少 data/ 目录"
     json_files = list(data_dir.glob("*.json"))

@@ -27,7 +27,7 @@ function renderNav() {
 const _cache = {};
 
 async function loadData(id) {
-  // 数据契约待定：当前约定读取 data/<id>.json，结构确定后再细化
+  // 读取 data/<id>.json（模拟数据在 data/demo/，由 A 数据岗产出）
   if (_cache[id]) return _cache[id];
   const resp = await fetch(`data/${id}.json`);
   if (!resp.ok) throw new Error(`数据加载失败: ${id} (${resp.status})`);
