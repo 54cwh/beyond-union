@@ -13,6 +13,8 @@
 - 纯前端 + JSON，本地运行，无服务器
 - 打包为单 EXE（pywebview 双模式），可离线
 - 产品需求：`docs/需求.md`
+- 仓库：`git@github.com:54cwh/beyond-union.git`（SSH）
+- **成员开工第一步**：读 `docs/开工指南.md`（保姆级步骤）；AI 干活前先看"分工速查"和"铁律"
 
 ## 技术栈（锁死，禁止换）
 
@@ -38,14 +40,15 @@ bash scripts/build_tailwind.sh  # 编译 Tailwind（改 class 后必跑）
 ```
 
 ## 铁律（AI 最容易犯的错）
-- 开工前问用户是否已经完成 git pull操作
 
-1. **禁止本机绝对路径**：不写 `/home/xxx/`、`C:\...`Wo/QmwXkU、`/mnt/`。页面内引用共享资源用 `../assets/`；导航/数据加载用根路径 `/pages/`、`/data/`（common.js 已示范）
+1. **禁止本机绝对路径**：不写 `/home/xxx/`、`C:\...`、`/mnt/`。页面内引用共享资源用 `../assets/`；导航/数据加载用根路径 `/pages/`、`/data/`（common.js 已示范）
 2. **计算逻辑放 A 的计算层**：筛选/聚合/格式化用 `assets/js/filter.js`、`format.js`，**禁止在页面/Vue 里自写**；缺功能向 A 提
 3. **图表走 B 的组件**：`chart-view.js` 统一封装；页面传数据、不碰 echarts API
 4. **全局组件只由 E/B 提供**：Copilot 壳/问答库归 E，可信 AI 卡片/溯源组件归 B；页面是消费者
 5. **领域自治**：只改自己岗位工作区的文件；改**接口**（函数签名/字段/导出）须同步文档并通知消费方
 6. **文档先行**：页面/数据/组件开工前先写对应设计说明（见 `docs/分工说明.md` 岗位文档职责）
+7. **打包是最后一步**：开发/测试/验收全程走 web（`uv run python -m http.server 8000`），不要中途打包 EXE
+8. **每天开工先 git pull**：拉最新代码（别人可能改了公共组件/数据契约），在旧代码上开发会合并冲突
 
 ## 目录结构
 
@@ -57,7 +60,7 @@ assets/js/          纯函数/组件（common、chart-view、filter、format + _
 assets/vendor/      本地库（vue/echarts）+ VERSIONS.md
 assets/fonts/       Inter 字体（本地化）
 data/               数据（A 产出 data/demo/ + CONTRACT.md）
-docs/               公共文档（需求/技术栈定案/分工说明/协作说明）
+docs/               公共文档（开工指南/需求/技术栈定案/分工说明/协作说明）
 design-system/      MASTER.md 视觉宪法（B 维护）
 scripts/            打包/编译脚本
 tests/              pytest + Playwright
@@ -70,9 +73,9 @@ tests/              pytest + Playwright
 |------|------|
 | `docs/开工指南.md` | **保姆级开工步骤**（装工具→clone→建分支→开发→提交），不熟 git 先看这个 |
 | `docs/需求.md` | 产品需求（12 页 → 6 页）|
-| `docs/技术栈定案.md` | 技术决策、锁死细则、版本表、待建清单 |
+| `docs/技术栈定案.md` | 技术决策、锁死细则、版本表、待建清单、**技能清单** |
 | `docs/分工说明.md` | **岗位工作区**（每人分支/文件/文档）、依赖、里程碑 |
-| `docs/协作说明.md` | 文件所有权、Git 流程、测试、验收 |
+| `docs/协作说明.md` | 文件所有权、Git 流程、测试、验收（规则速查）|
 | `design-system/MASTER.md` | 视觉宪法（配色/字体/风格）|
 | `README.md` | 项目介绍 |
 
