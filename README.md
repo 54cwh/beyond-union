@@ -31,6 +31,7 @@ uv run pytest     # E2E + 契约测试（Playwright）
 ## 目录
 
 ```
+├── AGENTS.md                  给 AI 代理的项目速览（技术栈/铁律/分工）
 ├── app.py                    双模式启动器（GUI 默认 + --web 兜底）
 ├── template.html             标准页面骨架（6 页从它复制）
 ├── pyproject.toml / uv.lock  Python 依赖（uv 管理）
