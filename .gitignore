@@ -1,15 +1,27 @@
-# Python
+# ===== Python =====
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.pytype/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.coverage.xml
 
-# Node
+# ===== Node =====
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
 
-# 构建产物
+# ===== 构建产物 =====
 dist/
 build/
 *.spec.bak
@@ -18,11 +30,43 @@ build/
 *.exe
 *.onefile
 
-# 数据（真实数据不入库）
+# ===== 测试产物（Playwright）=====
+test-results/
+playwright-report/
+blob-report/
+
+# ===== 数据（真实数据不入库，页面只读 data/demo/ 模拟数据）=====
 data/*.csv
 data/*.xlsx
+data/*.parquet
+data/*.db
+data/*.sqlite*
+data/*.bak
+data/*.tmp
+!data/demo/*.json
 
-# 编辑器
+# ===== 本地工具（本机编译产物不入库）=====
+tailwindcss
+tailwindcss-*
+/tmp/*.css
+
+# ===== 环境变量 / 密钥（绝不入库）=====
+.env
+.env.*
+!.env.example
+
+# ===== 编辑器 / 系统 =====
 .vscode/
 .idea/
 .DS_Store
+*.swp
+*~
+*.tmp
+Thumbs.db
+
+# ===== 日志 =====
+*.log
+logs/
+
+# ===== 打包临时（PyInstaller 工作目录）=====
+*.manifest
