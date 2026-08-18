@@ -97,7 +97,7 @@ tests/              pytest + Playwright
 | lcz(B) | `ui-ux-pro-max` · `frontend-design` · `web-design-guidelines` | `theme-factory` |
 | cjx(C) | `ui-ux-pro-max` · `frontend-design` · `systematic-debugging` | `web-design-guidelines` |
 | pcx(D) | `ui-ux-pro-max` · `frontend-design` · `systematic-debugging` | `web-design-guidelines` |
-| cwh(E) | `requesting-code-review` · `receiving-code-review` · `finishing-a-development-branch` · `subagent-driven-development` | `chinese-documentation` · `drawio` |
+| cwh(E) | `requesting-code-review` · `receiving-code-review` · `finishing-a-development-branch` · `subagent-driven-development` · `chinese-commit-conventions` | `chinese-code-review` · `chinese-documentation` · `drawio` |
 
 > 完整说明见 `docs/技术栈定案.md`"技能清单"。
 
