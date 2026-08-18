@@ -36,7 +36,7 @@ uv run pytest     # E2E + 契约测试（Playwright）
 ├── pyproject.toml / uv.lock  Python 依赖（uv 管理）
 ├── package.json              Node 依赖（Vitest）
 ├── tailwind.config.js        Tailwind v3 配置（content 扫描路径）
-├── pages/                    5 个页面（p1 首页 ~ p5 结论）
+├── pages/                    6 个页面（p1 运营工作台 ~ p6 经营成效）
 ├── assets/
 │   ├── common.css            视觉变量 + 字体 + 基础样式
 │   ├── tailwind.css          预编译产物（scripts/build_tailwind.sh 生成）
