@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { filterRows, groupBy, aggregateFn } from "../filter.js";
+import { filterRows, groupBy, aggregateFn, toChartData } from "../filter.js";
 
 const data = [
   { year: 2020, region: "华东", amount: 100, category: "A" },
@@ -56,5 +56,22 @@ describe("aggregateFn", () => {
 
   it("未知函数回退 count", () => {
     expect(aggregateFn("nope")(data)).toBe(4);
+  });
+});
+
+describe("toChartData", () => {
+  const groups = groupBy(data, "year", [{ field: "amount", as: "total", fn: "sum" }]);
+
+  it("映射为 [{label, value}]", () => {
+    const out = toChartData(groups, "year", "total");
+    expect(out).toEqual([
+      { label: 2020, value: 300 },
+      { label: 2021, value: 350 },
+    ]);
+  });
+
+  it("缺失值回退 0", () => {
+    const out = toChartData(groups, "year", "nope");
+    expect(out.every((d) => d.value === 0)).toBe(true);
   });
 });

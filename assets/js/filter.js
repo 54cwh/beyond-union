@@ -78,3 +78,18 @@ export function aggregateFn(fn) {
   };
   return fns[fn] || fns.count;
 }
+
+/**
+ * 将 groupBy 聚合结果适配为图表数据 [{label, value}]。
+ * 数据计算层（A 维护）统一提供，页面/展示层不写胶水代码。
+ * @param {Array<Object>} groups groupBy 的输出
+ * @param {string} labelField 标签字段（如维度 year）
+ * @param {string} valueField 数值字段（如聚合结果的 total）
+ * @returns {Array<{label: string|number, value: number}>}
+ */
+export function toChartData(groups, labelField, valueField) {
+  return groups.map((g) => ({
+    label: g[labelField],
+    value: Number(g[valueField]) || 0,
+  }));
+}
