@@ -1,7 +1,7 @@
 [project]
 name = "beyond-union"
 version = "0.1.0"
-description = "挑战杯 Demo：纯前端 + JSON + 双模式打包"
+description = "北域绿联：纯前端 + JSON + 双模式打包"
 requires-python = ">=3.12"
 dependencies = [
     "pywebview>=5.4,<6",

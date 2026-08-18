@@ -1,4 +1,4 @@
-"""挑战杯 Demo 双模式启动器
+"""北域绿联 双模式启动器
 
 用法:
     python app.py                 # 默认 GUI 窗口 (pywebview)
@@ -63,7 +63,7 @@ def open_gui(url):
     try:
         import webview
 
-        webview.create_window("挑战杯 Demo", url, width=1280, height=800)
+        webview.create_window("北域绿联", url, width=1280, height=800)
         webview.start()
     except ImportError:
         print("[warn] pywebview 未安装，降级为浏览器模式")
@@ -76,7 +76,7 @@ def open_gui(url):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="挑战杯 Demo 启动器")
+    parser = argparse.ArgumentParser(description="北域绿联 启动器")
     parser.add_argument("--mode", choices=["gui", "web"], default="gui")
     parser.add_argument("--web", action="store_true", help="浏览器模式（快捷方式）")
     parser.add_argument("--port", type=int, default=0, help="指定端口（默认自动找空闲）")

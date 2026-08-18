@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# 打包挑战杯 Demo 为单 EXE（E 职责，在 Windows 或 Wine+Windows Python 下执行）
+# 打包北域绿联 为单 EXE（E 职责，在 Windows 或 Wine+Windows Python 下执行）
 # 用法: bash scripts/build_exe.sh
 set -euo pipefail
 
 # 产物目录
 DIST="dist"
-APP_NAME="挑战杯Demo"
+APP_NAME="北域绿联"
 
 # 打包：--onefile 单 EXE，--add-data 打入全部资源
 uv run pyinstaller \

@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** 挑战杯 Demo
+**Project:** 北域绿联（beyond-union）
 **Generated:** 2026-08-19 04:04:11
 **Category:** Analytics Dashboard
 
