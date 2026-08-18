@@ -91,11 +91,20 @@ def main():
 
     if mode == "web":
         webbrowser.open(url)
-        print("[app] 浏览器模式。按 Enter 退出（浏览器标签页关闭不会退出）")
-        try:
-            input()
-        except (KeyboardInterrupt, EOFError):
-            pass
+        print("[app] 浏览器模式。关浏览器标签页不会退出，可用 API 或关闭进程退出")
+        if sys.stdin and sys.stdin.isatty():
+            try:
+                input()
+            except (KeyboardInterrupt, EOFError):
+                pass
+        else:
+            # 无 stdin（EXE console=False / GUI 子系统）：事件循环保活，
+            # 通过 /api/shutdown 端点或 Ctrl+C 退出
+            try:
+                while True:
+                    threading.Event().wait(60)
+            except KeyboardInterrupt:
+                pass
     else:
         open_gui(url)
 
