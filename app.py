@@ -32,6 +32,13 @@ class AppHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, directory=None, **kwargs):
         super().__init__(*args, directory=directory, **kwargs)
 
+    def handle_one_request(self):
+        """吞掉客户端中断（BrokenPipe/ConnectionReset），避免日志刷屏。"""
+        try:
+            super().handle_one_request()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
     def do_GET(self):
         if self.path == "/api/health":
             self.send_response(200)
@@ -48,7 +55,10 @@ class AppHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def log_message(self, format, *args):
-        sys.stdout.write("[server] %s\n" % (format % args))
+        try:
+            sys.stdout.write("[server] %s\n" % (format % args))
+        except Exception:
+            pass
 
 
 def start_server(port):
