@@ -28,12 +28,33 @@ uv run pytest     # E2E + 契约测试（Playwright）
 ## 目录
 
 ```
-pages/            5 个页面（p1 首页 ~ p5 结论）
-assets/           公共资源（vendor 本地库 / common / 纯函数 js / tailwind 产物）
-data/             数据 JSON（结构待定）
-design-system/    视觉宪法 MASTER.md
-tests/            E2E + 契约测试
-scripts/          Tailwind 编译脚本
+├── app.py                    双模式启动器（GUI 默认 + --web 兜底）
+├── template.html             标准页面骨架（5 页从它复制）
+├── pyproject.toml / uv.lock  Python 依赖（uv 管理）
+├── package.json              Node 依赖（Vitest）
+├── tailwind.config.js        Tailwind v3 配置（content 扫描路径）
+├── pages/                    5 个页面（p1 首页 ~ p5 结论）
+├── assets/
+│   ├── common.css            视觉变量 + 字体 + 基础样式
+│   ├── tailwind.css          预编译产物（scripts/build_tailwind.sh 生成）
+│   ├── tailwind.src.css      Tailwind 输入源
+│   ├── js/                   纯函数层（ESM，可单测）
+│   │   ├── common.js         基础设施（导航 / 数据加载）
+│   │   ├── filter.js         筛选 / 聚合
+│   │   ├── format.js         格式化
+│   │   └── __tests__/        Vitest 单测
+│   ├── vendor/               本地库（vue / echarts / VERSIONS.md）
+│   └── fonts/                Inter 字体（本地化，离线可用）
+├── data/                     数据 JSON（结构待定，当前 sample.json 占位）
+├── design-system/MASTER.md   视觉宪法（只读）
+├── scripts/
+│   ├── build_exe.sh          打包 EXE（角色 E）
+│   └── build_tailwind.sh     编译 Tailwind
+├── tests/                    pytest + Playwright
+│   ├── conftest.py           测试服务器 fixture
+│   ├── test_contract.py      共享契约测试
+│   └── test_pX.py            每模块 E2E（p1 为示例）
+└── 协作说明.md / 技术栈定案.md   协作手册 / 技术决策
 ```
 
 ## 协作
