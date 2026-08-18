@@ -12,7 +12,6 @@ dist/
 # 构建产物
 dist/
 build/
-*.spec
 *.spec.bak
 
 # EXE

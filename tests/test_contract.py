@@ -74,6 +74,23 @@ def test_nav_renders_on_every_page(page, base_url):
         assert nav.is_visible(), f"{p}.html 导航未渲染"
         links = nav.locator("a")
         assert links.count() == 6, f"{p}.html 导航应有 6 项，实得 {links.count()}"
-        for i in range(5):
+        for i in range(6):
             href = links.nth(i).get_attribute("href")
-            assert href.startswith("pages/p"), f"{p}.html 导航链接异常: {href}"
+            assert href.startswith("/pages/p"), f"{p}.html 导航链接异常: {href}"
+
+
+def test_nav_clicks_reach_each_page(page, base_url):
+    """导航：真实点击每个导航项，目标页必须实际加载（非 404 假绿）。"""
+    for p in PAGES:
+        page.goto(f"{base_url}/pages/p1.html")
+        page.wait_for_load_state("networkidle")
+        target = page.locator(f'#site-nav a[href="/pages/{p}.html"]')
+        assert target.is_visible(), f"找不到导航到 {p} 的链接"
+        target.click()
+        page.wait_for_load_state("networkidle")
+        # 关键断言：URL 确实是目标页（若导航 href 解析错误会变 404 或跳错页）
+        assert page.url.endswith(f"/pages/{p}.html"), (
+            f"点击后 URL 应为 /pages/{p}.html，实得 {page.url}"
+        )
+        # 页面真实渲染出 #app（404 页面没有）
+        assert page.locator("#app").count() > 0, f"{p}.html 未渲染（可能 404）"

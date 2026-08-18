@@ -32,7 +32,7 @@ uv run pytest     # E2E + 契约测试（Playwright）
 
 ```
 ├── app.py                    双模式启动器（GUI 默认 + --web 兜底）
-├── template.html             标准页面骨架（5 页从它复制）
+├── template.html             标准页面骨架（6 页从它复制）
 ├── pyproject.toml / uv.lock  Python 依赖（uv 管理）
 ├── package.json              Node 依赖（Vitest）
 ├── tailwind.config.js        Tailwind v3 配置（content 扫描路径）
