@@ -23,6 +23,5 @@ dev = [
 testpaths = ["tests"]
 
 [tool.ruff.lint]
-# BLE001: 允许盲捕获 Exception（GUI 启动降级到浏览器模式的预期行为）
-# S110: 允许 try-except-pass（日志输出失败不影响功能，属预期）
-ignore = ["BLE001", "S110"]
+# 全局不忽略规则；预期的盲捕获用局部 `# noqa: BLE001` 标注
+ignore = []

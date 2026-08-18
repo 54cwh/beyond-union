@@ -12,6 +12,7 @@ import socket
 import sys
 import threading
 import webbrowser
+from contextlib import suppress
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -55,10 +56,9 @@ class AppHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def log_message(self, format, *args):
-        try:
+        # 日志失败（stdout 不可用/参数不匹配）不影响功能，静默忽略
+        with suppress(Exception):
             sys.stdout.write("[server] %s\n" % (format % args))
-        except Exception:
-            pass
 
 
 def start_server(port):
@@ -79,7 +79,7 @@ def open_gui(url):
         print("[warn] pywebview 未安装，降级为浏览器模式")
         webbrowser.open(url)
         input("按 Enter 退出...")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - GUI 启动兜底降级，有意捕获所有异常
         print(f"[warn] GUI 启动失败（{e}），降级为浏览器模式")
         webbrowser.open(url)
         input("按 Enter 退出...")
