@@ -36,16 +36,16 @@ def test_pages_exist():
 
 
 def test_data_files_exist():
-    """校验 data/ 目录存在且所有 json 都是合法 JSON（含 data/demo/ 模拟数据）。"""
+    """校验 data/ 目录存在且所有 json（含 data/demo/）都是合法 JSON。"""
     data_dir = BASE_DIR / "data"
     assert data_dir.exists(), "缺少 data/ 目录"
-    json_files = list(data_dir.glob("*.json"))
-    if json_files:
-        for json_file in json_files:
-            try:
-                json.loads(json_file.read_text(encoding="utf-8"))
-            except json.JSONDecodeError as e:
-                raise AssertionError(f"{json_file.name} 不是合法 JSON: {e}")
+    # rglob 递归覆盖 data/demo/；模拟数据交付前允许为空，交付后必须有 json
+    json_files = list(data_dir.rglob("*.json"))
+    for json_file in json_files:
+        try:
+            json.loads(json_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            raise AssertionError(f"{json_file.name} 不是合法 JSON: {e}")
 
 
 def test_shared_assets_exist():

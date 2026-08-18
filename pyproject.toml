@@ -2,7 +2,7 @@
 name = "beyond-union"
 version = "0.1.0"
 description = "北域绿联：纯前端 + JSON + 双模式打包"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "pywebview>=5.4,<6",
     "bottle>=0.13,<0.14",
