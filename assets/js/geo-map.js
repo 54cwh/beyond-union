@@ -36,6 +36,7 @@ const THEMES = {
     flowBlend: null,
     riverColor: "#3B82F6",
     cityBorder: "#34D399",
+    graticuleColor: "#CBD5E1",
   },
   dark: {
     background: "#0B1220",
@@ -57,6 +58,7 @@ const THEMES = {
     flowBlend: "lighter",
     riverColor: "#60A5FA",
     cityBorder: "#10B981",
+    graticuleColor: "#334155",
   },
 };
 
@@ -198,6 +200,28 @@ export function createGeoMap(el, options) {
       silent: true,
       data: provinceLines.map((ring) => ({ coords: ring })),
       lineStyle: { color: t.ink, width: 2.6, opacity: 0.9 },
+    };
+  }
+
+  // 经纬网网格（细虚线 graticule，作底图地理参照）
+  function graticuleSeries() {
+    const t = theme();
+    const step = 5;
+    const data = [];
+    for (let lng = Math.ceil(BOUNDS.minX / step) * step; lng <= BOUNDS.maxX; lng += step) {
+      data.push({ coords: [[lng, BOUNDS.minY], [lng, BOUNDS.maxY]] });
+    }
+    for (let lat = Math.ceil(BOUNDS.minY / step) * step; lat <= BOUNDS.maxY; lat += step) {
+      data.push({ coords: [[BOUNDS.minX, lat], [BOUNDS.maxX, lat]] });
+    }
+    return {
+      type: "lines",
+      name: "经纬网",
+      coordinateSystem: "geo",
+      zlevel: 0,
+      silent: true,
+      data: data,
+      lineStyle: { color: t.graticuleColor, width: 0.5, opacity: 0.3, type: "dashed" },
     };
   }
 
@@ -634,7 +658,7 @@ export function createGeoMap(el, options) {
     else opt = (kpi === "risk" ? riskOption() : choroplethOption(kpi, kpiLabel, theme().kpiRamp));
     // 底图参照叠加到所有含 geo 的图层（bar3d 用 geo3D，跳过）：水系 → 省界
     if (layer !== "bar3d" && opt.geo) {
-      const extras = [];
+      const extras = [graticuleSeries()];
       if (rivers && rivers.length) extras.push(riverSeries());
       if (cityLines.length) extras.push(cityBorderSeries());
       if (provinceLines.length) extras.push(provinceBorderSeries());
