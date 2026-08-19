@@ -1,0 +1,160 @@
+{
+  "stations": [
+    {
+      "id": "HLJ-01",
+      "name": "大庆杜蒙风电场",
+      "type": "wind",
+      "province": "黑龙江省",
+      "city": "大庆市",
+      "lng": 124.45,
+      "lat": 46.83,
+      "capacity": 450,
+      "status": "运行",
+      "model": "金风 3.0MW x150"
+    },
+    {
+      "id": "HLJ-02",
+      "name": "齐齐哈尔龙江光伏电站",
+      "type": "solar",
+      "province": "黑龙江省",
+      "city": "齐齐哈尔市",
+      "lng": 123.92,
+      "lat": 47.35,
+      "capacity": 220,
+      "status": "运行",
+      "model": "晶科 545Wp x40万"
+    },
+    {
+      "id": "HLJ-03",
+      "name": "佳木斯桦南风电场",
+      "type": "wind",
+      "province": "黑龙江省",
+      "city": "佳木斯市",
+      "lng": 130.57,
+      "lat": 46.22,
+      "capacity": 300,
+      "status": "运行",
+      "model": "远景 4.0MW x75"
+    },
+    {
+      "id": "JL-01",
+      "name": "白城通榆风电基地",
+      "type": "wind",
+      "province": "吉林省",
+      "city": "白城市",
+      "lng": 123.08,
+      "lat": 44.81,
+      "capacity": 600,
+      "status": "运行",
+      "model": "金风 3.6MW x167"
+    },
+    {
+      "id": "JL-02",
+      "name": "松原乾安光伏电站",
+      "type": "solar",
+      "province": "吉林省",
+      "city": "松原市",
+      "lng": 124.02,
+      "lat": 44.99,
+      "capacity": 180,
+      "status": "运行",
+      "model": "天合 660Wp x27万"
+    },
+    {
+      "id": "JL-03",
+      "name": "四平双辽风电场",
+      "type": "wind",
+      "province": "吉林省",
+      "city": "四平市",
+      "lng": 123.5,
+      "lat": 43.52,
+      "capacity": 250,
+      "status": "运行",
+      "model": "远景 3.2MW x78"
+    },
+    {
+      "id": "LN-01",
+      "name": "大连庄河海上风电",
+      "type": "wind",
+      "province": "辽宁省",
+      "city": "大连市",
+      "lng": 122.97,
+      "lat": 39.68,
+      "capacity": 350,
+      "status": "运行",
+      "model": "明阳 8.0MW x44"
+    },
+    {
+      "id": "LN-02",
+      "name": "朝阳建平风电场",
+      "type": "wind",
+      "province": "辽宁省",
+      "city": "朝阳市",
+      "lng": 119.7,
+      "lat": 41.9,
+      "capacity": 280,
+      "status": "运行",
+      "model": "金风 3.0MW x93"
+    },
+    {
+      "id": "LN-03",
+      "name": "阜新沉陷区光伏电站",
+      "type": "solar",
+      "province": "辽宁省",
+      "city": "阜新市",
+      "lng": 121.67,
+      "lat": 42.02,
+      "capacity": 200,
+      "status": "运行",
+      "model": "隆基 590Wp x34万"
+    },
+    {
+      "id": "NM-01",
+      "name": "通辽奈曼风电基地",
+      "type": "wind",
+      "province": "内蒙古自治区",
+      "city": "通辽市",
+      "lng": 120.66,
+      "lat": 42.84,
+      "capacity": 700,
+      "status": "运行",
+      "model": "金风 4.0MW x175"
+    },
+    {
+      "id": "NM-02",
+      "name": "赤峰翁牛特旗风电场",
+      "type": "wind",
+      "province": "内蒙古自治区",
+      "city": "赤峰市",
+      "lng": 119.03,
+      "lat": 42.94,
+      "capacity": 500,
+      "status": "运行",
+      "model": "远景 3.5MW x143"
+    },
+    {
+      "id": "NM-03",
+      "name": "兴安盟科右中旗光伏电站",
+      "type": "solar",
+      "province": "内蒙古自治区",
+      "city": "兴安盟",
+      "lng": 121.47,
+      "lat": 45.06,
+      "capacity": 260,
+      "status": "运行",
+      "model": "晶澳 600Wp x43万"
+    },
+    {
+      "id": "NM-04",
+      "name": "呼伦贝尔风光储一体化",
+      "type": "storage",
+      "province": "内蒙古自治区",
+      "city": "呼伦贝尔市",
+      "lng": 119.77,
+      "lat": 49.21,
+      "capacity": 300,
+      "status": "在建",
+      "model": "磷酸铁锂 300MWh"
+    }
+  ]
+}
