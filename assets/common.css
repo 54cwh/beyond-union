@@ -22,8 +22,8 @@
   --space-3xl: 64px;
 
   /* 字体：Inter 本地化（西文/数字）+ 系统中文栈 */
-  --font-body: "Inter", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
-  --font-heading: "Inter", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  --font-body: "Times New Roman", "Noto Serif SC", serif;
+  --font-heading: "Times New Roman", "Noto Serif SC", serif;
 
   /* 数据可视化状态色（dataviz skill）— 针对暗表面 #1A1E2F 优化
      ordinal green ramp + 二次编码（省名标签始终可见）
@@ -68,6 +68,36 @@
   font-display: swap;
 }
 
+/* 思源宋体（简体中文，本地子集化内嵌，OFL 许可） */
+@font-face {
+  font-family: "Noto Serif SC";
+  src: url("./fonts/noto-serif-sc-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Serif SC";
+  src: url("./fonts/noto-serif-sc-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Serif SC";
+  src: url("./fonts/noto-serif-sc-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Serif SC";
+  src: url("./fonts/noto-serif-sc-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* 基础排版 */
 body {
   background-color: var(--color-background);
@@ -95,7 +125,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 数据数字：等宽，对齐工整 */
 .tabular {
-  font-family: "Inter", monospace;
+  font-family: "Times New Roman", "Noto Serif SC", serif;
   font-variant-numeric: tabular-nums;
 }
 
