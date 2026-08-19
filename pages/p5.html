@@ -28,12 +28,17 @@
     .p5-stat-card {
       position: relative;
       overflow: hidden;
+      background-color: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(21, 128, 61, 0.06);
       transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
     }
     .p5-stat-card:hover {
       transform: translateY(-2px);
       border-color: var(--color-accent);
-      box-shadow: 0 10px 25px rgba(34, 197, 94, 0.10);
+      box-shadow: 0 8px 24px rgba(21, 128, 61, 0.12);
     }
     .p5-stat-card::after {
       content: "";
@@ -43,15 +48,19 @@
       width: 90px;
       height: 90px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(34, 197, 94, 0.15), transparent 70%);
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.12), transparent 70%);
       pointer-events: none;
     }
     .p5-stat-value {
       font-family: "Inter", monospace;
       font-variant-numeric: tabular-nums;
-      font-weight: 700;
-      font-size: 26px;
+      font-weight: 800;
+      font-size: 30px;
       line-height: 1.2;
+      background: var(--gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .p5-stat-label {
       font-size: 12px;
@@ -60,26 +69,35 @@
     }
 
     .p5-panel {
-      background-color: var(--color-muted);
+      background-color: #FFFFFF;
       border: 1px solid var(--color-border);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 14px 16px;
-      transition: border-color 180ms ease;
+      box-shadow: 0 1px 3px rgba(21, 128, 61, 0.05);
+      transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
     }
-    .p5-panel:hover { border-color: rgba(34, 197, 94, 0.35); }
+    .p5-panel:hover {
+      border-color: var(--color-accent);
+      box-shadow: 0 8px 24px rgba(21, 128, 61, 0.10);
+    }
     .p5-panel-title {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
+      background: var(--gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .p5-panel-title::before {
       content: "";
       width: 3px;
       height: 14px;
       border-radius: 2px;
-      background: var(--color-accent);
+      background: var(--gradient-accent);
+      -webkit-text-fill-color: initial;
     }
 
     .p5-filter-btn {
@@ -94,9 +112,11 @@
     .p5-filter-btn:hover { opacity: 1; }
     .p5-filter-btn.active {
       opacity: 1;
-      color: var(--color-accent);
-      border-color: var(--color-accent);
-      background: rgba(34, 197, 94, 0.10);
+      color: #FFFFFF;
+      border-color: transparent;
+      background: var(--gradient-accent);
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+      font-weight: 600;
     }
 
     .p5-table {
@@ -107,13 +127,17 @@
     .p5-table thead th {
       text-align: left;
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      opacity: 0.45;
+      opacity: 0.5;
       padding: 8px 10px;
       border-bottom: 1px solid var(--color-border);
       white-space: nowrap;
+      background-color: #FFFFFF;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
     .p5-table tbody tr {
       transition: background-color 150ms ease;
@@ -122,7 +146,7 @@
     .p5-table tbody tr:hover { background-color: rgba(34, 197, 94, 0.06); }
     .p5-table tbody td {
       padding: 10px;
-      border-bottom: 1px solid rgba(51, 65, 85, 0.45);
+      border-bottom: 1px solid rgba(187, 247, 208, 0.6);
       vertical-align: top;
     }
     .p5-table tbody tr:last-child td { border-bottom: none; }
@@ -144,12 +168,12 @@
       padding: 2px 10px;
       border-radius: 999px;
       border: 1px solid var(--color-border);
-      background-color: var(--color-secondary);
-      transition: border-color 180ms ease;
+      background-color: #FFFFFF;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
     }
-    .p5-chip:hover { border-color: var(--color-accent); }
+    .p5-chip:hover { border-color: var(--color-accent); box-shadow: 0 2px 8px rgba(34, 197, 94, 0.10); }
 
-    .p5-bar-track { background-color: var(--color-secondary); border-radius: 999px; height: 8px; overflow: hidden; }
+    .p5-bar-track { background-color: #F0FDF4; border-radius: 999px; height: 8px; overflow: hidden; }
     .p5-bar-fill {
       height: 100%;
       border-radius: 999px;
@@ -157,22 +181,24 @@
       transition: width 400ms ease;
     }
 
-    .p5-stars { letter-spacing: 1px; color: var(--color-accent); font-size: 11px; }
+    .p5-stars { letter-spacing: 1px; color: var(--color-accent-dark); font-size: 11px; }
 
     .p5-link-flow { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; }
     .p5-link-node {
       flex: 1 1 0;
       min-width: 110px;
-      background-color: var(--color-muted);
+      background-color: #FFFFFF;
       border: 1px solid var(--color-border);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 10px 8px;
       text-align: center;
-      transition: border-color 180ms ease, background-color 180ms ease;
+      box-shadow: 0 1px 3px rgba(21, 128, 61, 0.05);
+      transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
     }
     .p5-link-node.active {
       border-color: var(--color-accent);
-      background-color: rgba(34, 197, 94, 0.08);
+      background-color: rgba(34, 197, 94, 0.06);
+      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.12);
     }
     .p5-link-arrow { align-self: center; color: var(--color-accent); font-size: 16px; flex-shrink: 0; }
 
@@ -180,12 +206,15 @@
       font-size: 11px;
       padding: 3px 10px;
       border-radius: 6px;
-      border: 1px solid var(--color-accent);
-      color: var(--color-accent);
+      border: none;
+      background: var(--gradient-accent);
+      color: #FFFFFF;
+      font-weight: 600;
       transition: all 160ms ease;
       white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
     }
-    .p5-adv-btn:hover { background-color: var(--color-accent); color: var(--color-on-primary); }
+    .p5-adv-btn:hover { opacity: 0.88; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35); }
   </style>
 </head>
 <body class="min-h-screen">
