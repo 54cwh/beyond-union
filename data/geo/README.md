@@ -74,12 +74,16 @@ db.provinceByName("辽宁");           // 短名/全称 → 省份对象
 
 ## 渲染：assets/js/geo-map.js
 
-`createGeoMap(el, { geoJson, provinces, stations, flows })` 四图层：
+`createGeoMap(el, { geoJson, provinces, stations, flows })` 五图层 + 双主题 + 省份联动：
 
 - **KPI 着色**：capacity / generation / revenue 连续色带（#DCFCE7→#16A34A），risk 分档色（低=绿 / 中低=琥珀 / 中=红）
 - **资源图层**：wind（风速）/ solar（辐照）连续着色
 - **场站分布**：scatter / effectScatter（储能脉冲），符号大小 = √容量，点击回调
+- **夜间模式**：setTheme("dark") 切换暗色发光主题（深空蓝底 + 光晕 + lighter 混合），p1 工具栏一键切换
+- **省份联动**：点击省份 → 顶部核心数字 KPI 切到该省，点「当前视角」返回全景
+- **查询 API**：geo-db.js 提供 provinceByName / stationsByProvince / searchStations / stationTotals / resolveFlows（含单测）
 - **输电流向**：lines 轨迹 + 流动箭头（resolveFlows 解析坐标）
+- **发电热力**：scatter 热力（符号 = √发电量，发光光晕）
 
 ## 更新方式
 

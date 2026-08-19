@@ -692,3 +692,26 @@ button, [role="button"], .clickable, a {
 @media (max-width: 960px) {
   .geo-map__chart { height: 260px; }
 }
+
+/* ---- 地图联动：视角切换（点击省份 → 顶部 KPI 切到该省） ---- */
+.p1-scope-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.p1-scope {
+  padding: 6px 14px; border-radius: 999px; font-size: 12px; cursor: pointer;
+  border: 1px solid var(--color-border); background: var(--color-muted); color: var(--color-foreground);
+  transition: all 0.15s;
+}
+.p1-scope:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
+.p1-scope.active { background: var(--gradient-accent); color: #FFFFFF; border-color: transparent; font-weight: 600; }
+
+/* ---- 地图升级①：夜间模式（暗色 + 发光） ---- */
+.geo-map__spacer { flex: 1; }
+.geo-map--dark .geo-map__chart {
+  background: #0B1220; border-color: #1F3A5F;
+}
+.geo-map--dark .geo-map__toolbar .geo-map__btn:not(.active) {
+  background: #101D33; border-color: #1F3A5F; color: #E5E7EB;
+}
+.geo-map--dark .geo-map__detail {
+  background: #101D33; border-color: #1F3A5F; color: #E5E7EB;
+}
+.geo-map--dark .geo-map__detail-name { color: #34D399; }

@@ -43,8 +43,8 @@ export function searchStations(list, keyword) {
   return list.filter((s) =>
     s.name.toLowerCase().includes(kw) ||
     s.city.toLowerCase().includes(kw) ||
-    s.province.includes(keyword) ||
-    s.type.includes(keyword)
+    s.province.includes(kw) ||
+    s.type.includes(kw)
   );
 }
 

@@ -33,7 +33,7 @@
         return {
           title: "运营工作台",
           // 顶部核心数字（项目中心总览）
-          topStats: [
+          baseTopStats: [
             { label: "管理企业", value: "3 家" },
             { label: "新能源项目", value: "12 个" },
             { label: "总装机容量", value: "1.28 GW" },
@@ -93,6 +93,7 @@
             { key: "resource", label: "资源图层" },
             { key: "station", label: "场站分布" },
             { key: "flow", label: "输电流向" },
+            { key: "heat", label: "发电热力" },
           ],
           activeKPI: "capacity",
           geoKPIs: [
@@ -108,6 +109,8 @@
           ],
           geoSelected: null,
           geoSummary: "",
+          geoTheme: "light",
+          geoScope: null,
 
           // 可信 AI 建议卡片（八要素：结论/置信度/依据/模型/数据来源；风险提示用默认值）
           aiSuggestion: {
@@ -143,12 +146,43 @@
           },
         };
       },
+      computed: {
+        // 地图联动：省份视角 → 顶部核心数字切换；null 为全景
+        topStats() {
+          if (this.geoScope) return this.provinceTopStats(this.geoScope);
+          return this.baseTopStats;
+        },
+        scopeLabel() {
+          return this.geoScope ? this.geoScope.short + "（点击返回全景）" : "东北区域全景";
+        },
+        geoMapClass() {
+          return { "geo-map--dark": this.geoTheme === "dark" };
+        },
+      },
+
       methods: {
         trendClass(trend) { return trend.indexOf("-") === 0 ? "down" : "up"; },
 
         // 区域经营地图：图层 / KPI / 资源切换（转发给 geo-map.js）
         isKpiLayer() { return this.geoLayer === "kpi"; },
         isResourceLayer() { return this.geoLayer === "resource"; },
+
+        // 地图联动：省份 KPI → 顶部数字；重置回全景
+        provinceTopStats(p) {
+          return [
+            { label: "场站数量", value: p.stationCount + " 个" },
+            { label: "装机容量", value: p.capacity + " GW" },
+            { label: "储能规模", value: p.storage + " MWh" },
+            { label: "今日发电", value: p.generation + " MWh" },
+            { label: "经营收益", value: "¥" + p.revenue + " 万" },
+            { label: "风险等级", value: p.risk },
+          ];
+        },
+        resetScope() { this.geoScope = null; },
+        toggleGeoTheme() {
+          this.geoTheme = this.geoTheme === "dark" ? "light" : "dark";
+          if (this.gm) this.gm.setTheme(this.geoTheme);
+        },
         setGeoLayer(layer) {
           this.geoLayer = layer;
           if (this.gm) this.gm.setLayer(layer);
@@ -166,6 +200,7 @@
         onGeoClick(e) {
           if (!e || !e.meta) { this.geoSelected = null; return; }
           if (e.kind === "province") {
+            this.geoScope = e.meta;
             this.geoSelected = {
               title: e.meta.name,
               text: "装机 " + e.meta.capacity + " GW · 今日发电 " + e.meta.generation + " MWh · 收益 " + e.meta.revenue + " 万 · 风险 " + e.meta.risk,
@@ -224,6 +259,13 @@
             </div>
             <button type="button" class="p1-demo-btn" @click="startDemo">开始演示</button>
           </header>
+
+          <!-- 视角切换（地图联动：点省份 → 顶部数字切到该省；点此返回全景） -->
+          <div class="p1-scope-row">
+            <button type="button" class="p1-scope" :class="{ active: geoScope }" @click="resetScope">
+              当前视角：{{ scopeLabel }}
+            </button>
+          </div>
 
           <!-- 顶部核心数字 -->
           <div class="p1-top-stats">
@@ -301,7 +343,7 @@
                 <h2 class="p1-section__title">区域经营地图</h2>
                 <span class="p1-section__hint">东北四省 · GeoJSON 矢量地图</span>
               </div>
-              <div class="geo-map">
+              <div class="geo-map" :class="geoMapClass">
                 <div class="geo-map__toolbar">
                   <div class="geo-map__group">
                     <button v-for="l in geoLayers" :key="l.key" type="button"
@@ -317,6 +359,12 @@
                     <button v-for="r in geoResources" :key="r.key" type="button"
                       class="geo-map__btn geo-map__btn--mini" :class="{ active: r.key === activeResource }"
                       @click="setGeoResource(r.key)">{{ r.label }}</button>
+                  </div>
+                  <div class="geo-map__spacer"></div>
+                  <div class="geo-map__group">
+                    <button type="button" class="geo-map__btn" @click="toggleGeoTheme">
+                      {{ geoTheme === "dark" ? "日间模式" : "夜间模式" }}
+                    </button>
                   </div>
                 </div>
                 <div ref="geoMap" class="geo-map__chart"></div>
