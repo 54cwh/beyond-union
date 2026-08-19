@@ -17,12 +17,14 @@
   <script type="module">
     // p1 运营工作台（B 展示岗）
     // 数据：先内联 demo 数字（需求.md 示例）；待 A 产出 data/demo/*.json 后切 Data.load。
-    // 图表：本页无 ECharts（链路图 / 气泡地图均为 HTML/CSS，见 chart-view.md 边界）。
+    // 图表：链路图/气泡为 HTML/CSS；区域经营地图用 ECharts 矢量地图（geo-map.js，见 data/geo/README.md）。
     import { Nav } from '../assets/js/common.js';
-    // 契约(test_contract.py)要求 chart-view.js 引用；本页链路图/气泡地图为 HTML/CSS，不使用
+    // 契约(test_contract.py)要求 chart-view.js 引用；本页区域地图经 geo-map.js 调用 echarts
     import { createChart } from '../assets/js/chart-view.js';
     import { createAICard } from '../assets/js/ai-card.js';
     import { createProvenance } from '../assets/js/provenance.js';
+    import { loadGeoDB, stationTypeLabel } from '../assets/js/geo-db.js';
+    import { createGeoMap } from '../assets/js/geo-map.js';
 
     Nav();
 
@@ -31,7 +33,7 @@
         return {
           title: "运营工作台",
           // 顶部核心数字（项目中心总览）
-          topStats: [
+          baseTopStats: [
             { label: "管理企业", value: "3 家" },
             { label: "新能源项目", value: "12 个" },
             { label: "总装机容量", value: "1.28 GW" },
@@ -84,15 +86,31 @@
             "确认经营日报",
           ],
 
-          // 区域经营地图（气泡，切换维度；risk 同时决定气泡边框颜色）
-          mapMode: "装机容量",
-          mapModes: ["装机容量", "今日发电", "经营收益", "风险"],
-          regions: [
-            { name: "内蒙古", x: "12%", y: "30%", capacity: "3.4 GW", generation: "158 MWh", revenue: "¥88 万", risk: "中" },
-            { name: "黑龙江", x: "74%", y: "18%", capacity: "2.1 GW", generation: "96 MWh", revenue: "¥52 万", risk: "低" },
-            { name: "吉林", x: "56%", y: "46%", capacity: "1.28 GW", generation: "128.6 MWh", revenue: "¥82 万", risk: "中低" },
-            { name: "辽宁", x: "42%", y: "78%", capacity: "2.8 GW", generation: "120 MWh", revenue: "¥71 万", risk: "低" },
+          // 区域经营地图（ECharts 矢量地图 + 地理信息数据库，见 data/geo/README.md）
+          geoLayer: "kpi",
+          geoLayers: [
+            { key: "kpi", label: "KPI 着色" },
+            { key: "resource", label: "资源图层" },
+            { key: "station", label: "场站分布" },
+            { key: "flow", label: "输电流向" },
+            { key: "heat", label: "发电热力" },
           ],
+          activeKPI: "capacity",
+          geoKPIs: [
+            { key: "capacity", label: "装机容量" },
+            { key: "generation", label: "今日发电" },
+            { key: "revenue", label: "经营收益" },
+            { key: "risk", label: "风险" },
+          ],
+          activeResource: "wind",
+          geoResources: [
+            { key: "wind", label: "平均风速" },
+            { key: "solar", label: "太阳能辐射" },
+          ],
+          geoSelected: null,
+          geoSummary: "",
+          geoTheme: "light",
+          geoScope: null,
 
           // 可信 AI 建议卡片（八要素：结论/置信度/依据/模型/数据来源；风险提示用默认值）
           aiSuggestion: {
@@ -128,18 +146,71 @@
           },
         };
       },
+      computed: {
+        // 地图联动：省份视角 → 顶部核心数字切换；null 为全景
+        topStats() {
+          if (this.geoScope) return this.provinceTopStats(this.geoScope);
+          return this.baseTopStats;
+        },
+        scopeLabel() {
+          return this.geoScope ? this.geoScope.short + "（点击返回全景）" : "东北区域全景";
+        },
+        geoMapClass() {
+          return { "geo-map--dark": this.geoTheme === "dark" };
+        },
+      },
+
       methods: {
-        // 区域气泡取值（按当前维度，数据预置、无聚合计算）
         trendClass(trend) { return trend.indexOf("-") === 0 ? "down" : "up"; },
 
-        regionValue(region) {
-          const keyMap = {
-            "装机容量": "capacity",
-            "今日发电": "generation",
-            "经营收益": "revenue",
-            "风险": "risk",
-          };
-          return region[keyMap[this.mapMode] || "capacity"];
+        // 区域经营地图：图层 / KPI / 资源切换（转发给 geo-map.js）
+        isKpiLayer() { return this.geoLayer === "kpi"; },
+        isResourceLayer() { return this.geoLayer === "resource"; },
+
+        // 地图联动：省份 KPI → 顶部数字；重置回全景
+        provinceTopStats(p) {
+          return [
+            { label: "场站数量", value: p.stationCount + " 个" },
+            { label: "装机容量", value: p.capacity + " GW" },
+            { label: "储能规模", value: p.storage + " MWh" },
+            { label: "今日发电", value: p.generation + " MWh" },
+            { label: "经营收益", value: "¥" + p.revenue + " 万" },
+            { label: "风险等级", value: p.risk },
+          ];
+        },
+        resetScope() { this.geoScope = null; },
+        toggleGeoTheme() {
+          this.geoTheme = this.geoTheme === "dark" ? "light" : "dark";
+          if (this.gm) this.gm.setTheme(this.geoTheme);
+        },
+        setGeoLayer(layer) {
+          this.geoLayer = layer;
+          if (this.gm) this.gm.setLayer(layer);
+        },
+        setGeoKPI(key) {
+          this.activeKPI = key;
+          if (this.gm) this.gm.setKPI(key);
+        },
+        setGeoResource(key) {
+          this.activeResource = key;
+          if (this.gm) this.gm.setResource(key);
+        },
+
+        // 地图点击 → 底部详情条（省份 / 场站）
+        onGeoClick(e) {
+          if (!e || !e.meta) { this.geoSelected = null; return; }
+          if (e.kind === "province") {
+            this.geoScope = e.meta;
+            this.geoSelected = {
+              title: e.meta.name,
+              text: "装机 " + e.meta.capacity + " GW · 今日发电 " + e.meta.generation + " MWh · 收益 " + e.meta.revenue + " 万 · 风险 " + e.meta.risk,
+            };
+          } else {
+            this.geoSelected = {
+              title: e.meta.name,
+              text: stationTypeLabel(e.meta.type) + " · " + e.meta.city + " · " + e.meta.capacity + " MW · " + e.meta.status,
+            };
+          }
         },
 
         // 打开溯源弹层
@@ -188,6 +259,13 @@
             </div>
             <button type="button" class="p1-demo-btn" @click="startDemo">开始演示</button>
           </header>
+
+          <!-- 视角切换（地图联动：点省份 → 顶部数字切到该省；点此返回全景） -->
+          <div class="p1-scope-row">
+            <button type="button" class="p1-scope" :class="{ active: geoScope }" @click="resetScope">
+              当前视角：{{ scopeLabel }}
+            </button>
+          </div>
 
           <!-- 顶部核心数字 -->
           <div class="p1-top-stats">
@@ -258,35 +336,45 @@
             </section>
           </div>
 
-          <!-- 地图行：区域经营地图 + 重点/待办 -->
+          <!-- 地图行：区域经营地图（ECharts 矢量地图 + 地理信息数据库）+ 重点/待办 -->
           <div class="p1-pair-row p1-pair-row--wide">
             <section class="p1-section">
               <div class="p1-section__head">
                 <h2 class="p1-section__title">区域经营地图</h2>
-                <span class="p1-section__hint">黑吉辽蒙 · 示意</span>
+                <span class="p1-section__hint">东北四省 · GeoJSON 矢量地图</span>
               </div>
-              <div class="bubble-map">
-                <div class="bubble-map__toggle">
-                  <button
-                    v-for="m in mapModes"
-                    :key="m"
-                    type="button"
-                    class="bubble-map__toggle-btn"
-                    :class="{ active: m === mapMode }"
-                    @click="mapMode = m"
-                  >{{ m }}</button>
-                </div>
-                <div class="bubble-map__canvas">
-                  <div
-                    v-for="r in regions"
-                    :key="r.name"
-                    class="bubble"
-                    :style="{ left: r.x, top: r.y }"
-                    :data-risk="r.risk"
-                  >
-                    <div class="bubble__name">{{ r.name }}</div>
-                    <div class="bubble__value">{{ regionValue(r) }}</div>
+              <div class="geo-map" :class="geoMapClass">
+                <div class="geo-map__toolbar">
+                  <div class="geo-map__group">
+                    <button v-for="l in geoLayers" :key="l.key" type="button"
+                      class="geo-map__btn" :class="{ active: l.key === geoLayer }"
+                      @click="setGeoLayer(l.key)">{{ l.label }}</button>
                   </div>
+                  <div v-if="isKpiLayer()" class="geo-map__group">
+                    <button v-for="k in geoKPIs" :key="k.key" type="button"
+                      class="geo-map__btn geo-map__btn--mini" :class="{ active: k.key === activeKPI }"
+                      @click="setGeoKPI(k.key)">{{ k.label }}</button>
+                  </div>
+                  <div v-if="isResourceLayer()" class="geo-map__group">
+                    <button v-for="r in geoResources" :key="r.key" type="button"
+                      class="geo-map__btn geo-map__btn--mini" :class="{ active: r.key === activeResource }"
+                      @click="setGeoResource(r.key)">{{ r.label }}</button>
+                  </div>
+                  <div class="geo-map__spacer"></div>
+                  <div class="geo-map__group">
+                    <button type="button" class="geo-map__btn" @click="toggleGeoTheme">
+                      {{ geoTheme === "dark" ? "日间模式" : "夜间模式" }}
+                    </button>
+                  </div>
+                </div>
+                <div ref="geoMap" class="geo-map__chart"></div>
+                <div v-if="geoSummary" class="geo-map__detail geo-map__detail--err">{{ geoSummary }}</div>
+                <div v-else-if="geoSelected" class="geo-map__detail">
+                  <b class="geo-map__detail-name">{{ geoSelected.title }}</b>
+                  <span class="geo-map__detail-text">{{ geoSelected.text }}</span>
+                </div>
+                <div v-else class="geo-map__detail geo-map__detail--empty">
+                  点击省份或场站查看详情 · 数据字典见 data/geo/README.md
                 </div>
               </div>
             </section>
@@ -315,12 +403,30 @@
         // 可信 AI 卡片（ai-card.js，八要素）
         this.aiCard = createAICard(this.$refs.aiCard);
         this.aiCard.setData(this.aiSuggestion, { pending: true, onAction: this.handleAIAction });
+        // 区域经营地图（ECharts 矢量地图 + data/geo 地理信息数据库）
+        loadGeoDB(window.fetch, "../").then((db) => {
+          this.geoDb = db;
+          this.gm = createGeoMap(this.$refs.geoMap, {
+            geoJson: db.geoJson,
+            provinces: db.provinces,
+            stations: db.stations,
+            flows: db.flows,
+          });
+          this.gm.init();
+          this.gm.setKPI(this.activeKPI);
+          this.gm.setLayer(this.geoLayer);
+          this.gm.bindClick(this.onGeoClick);
+        }).catch((err) => {
+          this.geoSummary = "地理数据加载失败：" + (err && err.message ? err.message : String(err));
+        });
+
         // 数据溯源弹层（provenance.js，7 字段）
         this.prov = createProvenance(this.$refs.provenance);
       },
 
       beforeUnmount() {
         if (this.aiCard) { this.aiCard.dispose(); this.aiCard = null; }
+        if (this.gm) { this.gm.dispose(); this.gm = null; }
         if (this.prov) { this.prov.dispose(); this.prov = null; }
       },
     });

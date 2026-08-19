@@ -664,3 +664,54 @@ button, [role="button"], .clickable, a {
 @media (max-width: 960px) {
   .p1-main-row, .p1-pair-row, .p1-pair-row--wide { grid-template-columns: 1fr; }
 }
+
+/* ---- 区域经营地图（ECharts 矢量地图，p1 地图行，geo-map.js） ---- */
+.geo-map { display: flex; flex-direction: column; gap: 10px; }
+.geo-map__toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.geo-map__group { display: flex; gap: 6px; flex-wrap: wrap; }
+.geo-map__btn {
+  padding: 5px 12px; border-radius: 999px; border: 1px solid var(--color-border);
+  background: var(--color-muted); color: var(--color-foreground);
+  font-size: 12px; cursor: pointer; transition: all 0.15s;
+}
+.geo-map__btn:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
+.geo-map__btn.active { background: var(--gradient-accent); color: #FFFFFF; border-color: transparent; }
+.geo-map__btn--mini { padding: 4px 10px; font-size: 11px; }
+.geo-map__chart {
+  height: 340px; width: 100%; background: #FFFFFF;
+  border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden;
+}
+.geo-map__detail {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 8px 12px; border-radius: 8px; background: var(--color-muted);
+  border: 1px solid var(--color-border); font-size: 12px; color: var(--color-foreground);
+}
+.geo-map__detail--empty { color: #6B7280; }
+.geo-map__detail--err { color: #EF4444; }
+.geo-map__detail-name { color: var(--color-accent-dark); font-weight: 700; }
+@media (max-width: 960px) {
+  .geo-map__chart { height: 260px; }
+}
+
+/* ---- 地图联动：视角切换（点击省份 → 顶部 KPI 切到该省） ---- */
+.p1-scope-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.p1-scope {
+  padding: 6px 14px; border-radius: 999px; font-size: 12px; cursor: pointer;
+  border: 1px solid var(--color-border); background: var(--color-muted); color: var(--color-foreground);
+  transition: all 0.15s;
+}
+.p1-scope:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
+.p1-scope.active { background: var(--gradient-accent); color: #FFFFFF; border-color: transparent; font-weight: 600; }
+
+/* ---- 地图升级①：夜间模式（暗色 + 发光） ---- */
+.geo-map__spacer { flex: 1; }
+.geo-map--dark .geo-map__chart {
+  background: #0B1220; border-color: #1F3A5F;
+}
+.geo-map--dark .geo-map__toolbar .geo-map__btn:not(.active) {
+  background: #101D33; border-color: #1F3A5F; color: #E5E7EB;
+}
+.geo-map--dark .geo-map__detail {
+  background: #101D33; border-color: #1F3A5F; color: #E5E7EB;
+}
+.geo-map--dark .geo-map__detail-name { color: #34D399; }
