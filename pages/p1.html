@@ -27,6 +27,8 @@
     import { createProvenance } from '../assets/js/provenance.js';
     import { loadGeoDB, stationTypeLabel } from '../assets/js/geo-db.js';
     import { createGeoMap } from '../assets/js/geo-map.js';
+    import { createDemoStream } from '../assets/js/demo-stream.js';
+    import { CountUp } from '../assets/js/count-up.js';
 
     Nav();
 
@@ -46,20 +48,20 @@
 
           // 今日经营结果（6 KPI，trend 空则不显示）
           todayStats: [
-            { label: "今日发电量", value: "128.6 MWh", trend: "+4.2%" },
-            { label: "计划完成率", value: "96.8%", trend: "+1.1%" },
-            { label: "储能 SOC", value: "64%", trend: "" },
-            { label: "今日上网电量", value: "112.4 MWh", trend: "+3.5%" },
-            { label: "预计经营收益", value: "¥82.4 万", trend: "+5.0%" },
-            { label: "偏差成本", value: "¥3.1 万", trend: "-0.8%" },
+            { label: "今日发电量", value: 128.6, unit: " MWh", decimals: 1, target: 130, targetText: "130 MWh", trend: "+4.2%" },
+            { label: "计划完成率", value: 96.8, unit: "%", decimals: 1, target: 100, targetText: "100%", trend: "+1.1%" },
+            { label: "储能 SOC", value: 64, unit: "%", decimals: 0, target: 80, targetText: "80%", trend: "" },
+            { label: "今日上网电量", value: 112.4, unit: " MWh", decimals: 1, target: 118, targetText: "118 MWh", trend: "+3.5%" },
+            { label: "预计经营收益", value: 82.4, unit: " 万", decimals: 1, prefix: "¥", target: 80, targetText: "¥80 万", trend: "+5.0%" },
+            { label: "偏差成本", value: 3.1, unit: " 万", decimals: 1, prefix: "¥", target: 2.0, targetText: "¥2.0 万", lowerIsBetter: true, trend: "-0.8%" },
           ],
 
           // 明日经营预测（4 KPI）
           tomorrowStats: [
-            { label: "明日预计发电", value: "142.3 MWh" },
-            { label: "可交易电量", value: "128.7 MWh" },
-            { label: "可调储能", value: "18.2 MWh" },
-            { label: "预计市场价格", value: "¥312 / MWh" },
+            { label: "明日预计发电", value: 142.3, unit: " MWh", decimals: 1, target: 150, targetText: "150 MWh" },
+            { label: "可交易电量", value: 128.7, unit: " MWh", decimals: 1, target: 132, targetText: "132 MWh" },
+            { label: "可调储能", value: 18.2, unit: " MWh", decimals: 1, target: 20, targetText: "20 MWh" },
+            { label: "预计市场价格", value: 312, unit: " / MWh", decimals: 0, prefix: "¥", target: 300, targetText: "¥300 / MWh" },
           ],
           aiStrategy: "中长期 72% · 现货 28%",
 
@@ -140,6 +142,11 @@
           },
           aiNotice: "",
 
+          // 演示实时推演（demo-stream.js 驱动）
+          demoActive: false,
+          demoPaused: false,
+          demoStepLabel: "",
+
           // 溯源信息（KPI 卡「查看数据来源」→ provenance.open）
           sourceInfo: {
             "今日发电量": { sources: ["SCADA 采集", "场站计量"], updateTime: "15:40", quality: "99.2%", raw: "128.6 MWh", process: "采集 → 清洗 → 汇总", model: { name: "DataPipe", version: "1.0" } },
@@ -171,6 +178,23 @@
 
       methods: {
         trendClass(trend) { return trend.indexOf("-") === 0 ? "down" : "up"; },
+
+        // KPI 目标 vs 实际：进度条 + 达成/超支判定
+        kpiGoal(s) {
+          const target = Number(s.target);
+          if (!target) return { pct: 0, color: "var(--gradient-accent)", text: "目标 --" };
+          const ratio = Number(s.value) / target;
+          const pct = Math.min(100, Math.round(ratio * 100));
+          const lowerIsBetter = s.lowerIsBetter === true;
+          let color = "var(--gradient-accent)";
+          if (lowerIsBetter && ratio > 1) {
+            color = "linear-gradient(90deg, #F97316 0%, #EF4444 100%)";
+          } else if (!lowerIsBetter && ratio < 0.95) {
+            color = "linear-gradient(90deg, #EAB308 0%, #F97316 100%)";
+          }
+          const status = (lowerIsBetter && ratio > 1) ? ("超支 " + pct + "%") : ("达成 " + pct + "%");
+          return { pct, color, text: "目标 " + s.targetText + " · " + status };
+        },
 
         // 区域经营地图：图层 / KPI / 资源切换（转发给 geo-map.js）
         isKpiLayer() { return this.geoLayer === "kpi"; },
@@ -268,9 +292,44 @@
 
         // 开始演示 → 由 E 注入的 window.__demo.start()，未注入则静默降级
         startDemo() {
-          if (window.__demo && typeof window.__demo.start === "function") {
+          if (!window.__demo) return;
+          // 兜底：若 mounted 时 window.__demo 尚未就绪（DOMContentLoaded 竞态），这里补订阅
+          if (!this._demoBound) {
+            window.__demo.on(this._demoHandler);
+            this._demoBound = true;
+          }
+          if (typeof window.__demo.start === "function") {
             window.__demo.start();
           }
+        },
+
+        // 演示实时推演：demo.js 事件总线 → demo-stream 曲线联动
+        onDemoStart() {
+          this.demoActive = true;
+          this.demoPaused = false;
+          this.$nextTick(() => {
+            if (!this.demoStream) this.demoStream = createDemoStream(this.$refs.demoStreamChart);
+            this.demoStream.reset();
+          });
+        },
+        onDemoStep(e) {
+          this.demoStepLabel = e.msg || "";
+          if (this.demoStream) this.demoStream.applyStep(e.index);
+        },
+        onDemoEnd(e) {
+          this.demoPaused = false;
+          if (e.type === "done") this.demoStepLabel = "演示完成：预测 → 优化 → 交易 → 决策闭环已走通";
+        },
+        toggleDemoPause() {
+          if (!window.__demo) return;
+          if (this.demoPaused) { window.__demo.resume(); }
+          else { window.__demo.pause(); }
+          this.demoPaused = (window.__demo.isPaused && window.__demo.isPaused()) ? true : this.demoPaused;
+        },
+        resetDemo() {
+          if (!window.__demo) return;
+          window.__demo.stop();
+          window.__demo.start();
         },
       },
       template: `
@@ -286,6 +345,20 @@
             </div>
             <button type="button" class="p1-demo-btn" @click="startDemo">开始演示</button>
           </header>
+
+          <!-- 演示实时推演曲线（演示启动后显示；demo-stream.js 驱动） -->
+          <section v-show="demoActive" class="p1-section p1-demo-stream">
+            <div class="p1-section__head">
+              <h2 class="p1-section__title">实时推演 · 今日发电预测</h2>
+              <div class="p1-demo-stream__controls">
+                <button type="button" class="p1-demo-stream__btn" @click="toggleDemoPause">{{ demoPaused ? "继续" : "暂停" }}</button>
+                <button type="button" class="p1-demo-stream__btn p1-demo-stream__btn--ghost" @click="resetDemo">重置</button>
+                <span class="p1-demo-stream__hint">滚轮缩放 · 拖动底部滑块</span>
+              </div>
+            </div>
+            <div class="p1-demo-stream__status">{{ demoStepLabel || "演示启动中…" }}</div>
+            <div ref="demoStreamChart" class="p1-demo-stream__chart"></div>
+          </section>
 
           <!-- 视角切换（地图联动：点省份 → 顶部数字切到该省；点此返回全景） -->
           <div class="p1-scope-row">
@@ -391,8 +464,15 @@
               <div class="p1-kpi-grid">
                 <div v-for="s in todayStats" :key="s.label" class="kpi-card">
                   <div class="kpi-card__label">{{ s.label }}</div>
-                  <div class="kpi-card__value">{{ s.value }}</div>
+                  <div class="kpi-card__value">
+                    <count-up :value="s.value" :decimals="s.decimals" :prefix="s.prefix || ''" :duration="1000" />
+                    <span class="kpi-card__unit">{{ s.unit }}</span>
+                  </div>
                   <div v-if="s.trend" class="kpi-card__trend" :class="trendClass(s.trend)">{{ s.trend }}</div>
+                  <div class="kpi-card__goal">
+                    <div class="kpi-card__goal-track"><div class="kpi-card__goal-fill" :style="{ width: kpiGoal(s).pct + '%', background: kpiGoal(s).color }"></div></div>
+                    <div class="kpi-card__goal-text">{{ kpiGoal(s).text }}</div>
+                  </div>
                   <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
                 </div>
               </div>
@@ -405,7 +485,14 @@
               <div class="p1-kpi-grid">
                 <div v-for="s in tomorrowStats" :key="s.label" class="kpi-card">
                   <div class="kpi-card__label">{{ s.label }}</div>
-                  <div class="kpi-card__value">{{ s.value }}</div>
+                  <div class="kpi-card__value">
+                    <count-up :value="s.value" :decimals="s.decimals" :prefix="s.prefix || ''" :duration="1000" />
+                    <span class="kpi-card__unit">{{ s.unit }}</span>
+                  </div>
+                  <div class="kpi-card__goal">
+                    <div class="kpi-card__goal-track"><div class="kpi-card__goal-fill" :style="{ width: kpiGoal(s).pct + '%', background: kpiGoal(s).color }"></div></div>
+                    <div class="kpi-card__goal-text">{{ kpiGoal(s).text }}</div>
+                  </div>
                   <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
                 </div>
               </div>
@@ -460,6 +547,19 @@
 
         // 数据溯源弹层（provenance.js，7 字段）
         this.prov = createProvenance(this.$refs.provenance);
+
+        // 演示实时推演曲线：订阅 demo.js 事件总线，驱动 demo-stream 联动
+        this._demoHandler = (e) => {
+          if (e.type === "start") { this.onDemoStart(); }
+          else if (e.type === "step") { this.onDemoStep(e); }
+          else if (e.type === "pause") { this.demoPaused = true; }
+          else if (e.type === "resume") { this.demoPaused = false; }
+          else if (e.type === "done") { this.onDemoEnd(e); }
+        };
+        if (window.__demo && typeof window.__demo.on === "function") {
+          window.__demo.on(this._demoHandler);
+          this._demoBound = true;
+        }
       },
 
       beforeUnmount() {
@@ -467,9 +567,14 @@
         if (this.gm) { this.gm.dispose(); this.gm = null; }
         if (this.playTimer) { clearInterval(this.playTimer); this.playTimer = null; }
         if (this.prov) { this.prov.dispose(); this.prov = null; }
+        if (window.__demo && typeof window.__demo.off === "function") {
+          window.__demo.off(this._demoHandler);
+        }
+        if (this.demoStream) { this.demoStream.dispose(); this.demoStream = null; }
       },
     });
 
+    app.component('count-up', CountUp);
     app.mount('#app');
   </script>
 </body>
