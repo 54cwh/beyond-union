@@ -14,48 +14,400 @@
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
-    // 本模板列出全部可用 import 作参考；复制后按需保留用到的，删掉不用的
-    import { Nav, Data, fetchData } from '../assets/js/common.js';
-    import { filterRows, groupBy, toChartData } from '../assets/js/filter.js';
-    import { formatNumber, formatMoney, formatPercent, formatDate } from '../assets/js/format.js';
+    import { Nav, Data } from '../assets/js/common.js';
+    import { formatNumber, formatPercent } from '../assets/js/format.js';
     import { createChart } from '../assets/js/chart-view.js';
+    import { createAICard } from '../assets/js/ai-card.js';
+    import { createProvenance } from '../assets/js/provenance.js';
 
     Nav();
+
+    // ===== 风险分级临时规则（pages/p2.md 3.2：阈值抽配置常量，待 A 提供 classifyRisk 后替换）=====
+    const RISK_RULES = {
+      high: { bandwidthPct: 15, label: '预测不确定性高', color: '#D95926' },
+      mid: { bandwidthPct: 10, label: '波动加大', color: '#C98500' },
+      low: { label: '低风险', color: '#22C55E' },
+    };
+    // 时间尺度：7D 需 168h，数据仅 96h → 7D 置灰
+    const SCALE_HOURS = { '24H': 24, '48H': 48, '7D': 168 };
 
     const app = Vue.createApp({
       data() {
         return {
-          title: "发电预测",
-          loading: false,
+          title: "发电预测中心",
+          loading: true,
           error: "",
+          scale: "24H",
+          gen: null,
+          weather: null,
+          market: null,
+          factors: [
+            { name: '风速', value: 42 },
+            { name: '风向', value: 16 },
+            { name: '设备可用率', value: 15 },
+            { name: '温度', value: 9 },
+            { name: '气压', value: 8 },
+            { name: '其他', value: 10 },
+          ],
+          forecastChart: null,
+          priceChart: null,
+          factorChart: null,
+          card: null,
+          prov: null,
         };
       },
       template: `
         <main>
-          <h1 class="text-2xl mb-4">{{ title }}</h1>
-          <p v-if="loading" class="text-gray-400">加载中…</p>
-          <p v-else-if="error" class="text-red-400">{{ error }}</p>
-          <div v-else>
-            <!-- 页面内容写在这里 -->
-            <!-- 数据加载：const data = await Data.load('demo/xxx')（A 的模拟数据） -->
-            <!-- 图表容器：需要图表的页面保留此 div，不需要可删。
-                 注意：此容器必须在页面首次渲染时就存在（勿置于 v-if 条件分支内），
-                 mounted 里 createChart($refs.chart) 依赖它已渲染；加载态用 loading/error 变量控制。 -->
-            <div ref="chart" class="w-full h-80"></div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h1 class="text-2xl">{{ title }}</h1>
+            <div class="flex items-center gap-3 text-sm text-gray-400">
+              <span v-if="gen">{{ metaLine }}</span>
+              <span v-if="isLevel1" class="px-2 py-0.5 rounded-full border border-accent text-accent text-xs">模拟数据</span>
+              <button v-if="gen" class="text-accent" @click="showSource">查看数据来源</button>
+            </div>
           </div>
+
+          <p v-if="loading" class="text-gray-400">加载中…</p>
+          <div v-else-if="error" class="text-red-400">
+            <p>{{ error }}</p>
+            <button class="mt-3 px-4 py-2 rounded bg-accent text-background font-semibold" @click="loadData">重试</button>
+          </div>
+
+          <template v-else>
+            <!-- ===== 模块1 · 顶部核心数字 ===== -->
+            <section class="mb-6">
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div v-for="k in todayKpis" :key="k.label" class="card">
+                  <div class="text-sm text-gray-400">{{ k.label }}</div>
+                  <div class="text-2xl tabular mt-1" :style="{ color: k.color }">
+                    {{ k.value }} <span class="text-sm">{{ k.unit }}</span>
+                  </div>
+                  <div v-if="k.sub" class="text-xs text-gray-400 mt-1">{{ k.sub }}</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ===== 模块2 · 主预测图 ===== -->
+            <section class="card mb-6">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <h2 class="text-lg font-semibold">主预测图（实际 / 预测 / 置信区间）</h2>
+                <div class="flex gap-1 text-sm">
+                  <button v-for="s in ['24H','48H','7D']" :key="s" @click="setScale(s)"
+                    :disabled="s === '7D' && !can7D"
+                    :title="s === '7D' && !can7D ? '当前仅提供 96 小时预测，待数据扩充后开放' : ''"
+                    :class="scale === s ? 'px-3 py-1 rounded bg-accent text-background font-semibold' : 'px-3 py-1 rounded border border-gray-600 text-gray-300'">
+                    {{ s }}
+                  </button>
+                </div>
+              </div>
+              <div ref="forecastChart" class="w-full h-80"></div>
+              <p class="text-xs text-gray-500 mt-2">置信区间为 ±8.4%（Level 1 模拟增强）；7D 需 168h 数据，当前仅提供 96h</p>
+            </section>
+
+            <!-- ===== 模块3 · 预测风险时间轴 ===== -->
+            <section class="card mb-6">
+              <h2 class="text-lg font-semibold mb-3">预测风险时间轴</h2>
+              <div v-if="riskSegments.length" class="flex h-5 rounded overflow-hidden mb-2">
+                <div v-for="(seg, i) in riskSegments" :key="i"
+                  class="cursor-pointer" :title="seg.tip"
+                  :style="{ width: seg.widthPct + '%', background: seg.color }"></div>
+              </div>
+              <div class="flex flex-wrap gap-4 text-xs text-gray-400 mb-2">
+                <span v-for="r in riskLegend" :key="r.label" class="flex items-center gap-1">
+                  <span class="inline-block w-3 h-3 rounded-full" :style="{ background: r.color }"></span>{{ r.label }}
+                </span>
+                <span class="ml-auto">hover 查看时段与原因</span>
+              </div>
+              <p class="text-xs text-gray-500">⚠️ 风险分级为临时规则（置信区间带宽占比 ≥15% 橙 / ≥10% 黄），待 A 提供 classifyRisk 正式计算后替换。</p>
+            </section>
+
+            <!-- ===== 模块4 · 影响因子 + 模型验证 ===== -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div class="card">
+                <h2 class="text-lg font-semibold mb-1">影响因子贡献
+                  <span class="text-xs text-gray-500">（示例贡献结构 · 模拟）</span>
+                </h2>
+                <div ref="factorChart" class="w-full h-64"></div>
+              </div>
+              <div class="card">
+                <h2 class="text-lg font-semibold mb-3">模型验证
+                  <span class="text-xs text-gray-500">（30 天序列待 A 补充，当前为指标卡片）</span>
+                </h2>
+                <table class="w-full text-sm">
+                  <tbody>
+                    <tr v-for="m in modelCards" :key="m.label" class="border-b border-gray-800">
+                      <td class="py-2">{{ m.label }}</td>
+                      <td class="py-2 tabular text-right">{{ m.value }}</td>
+                      <td class="py-2 text-right text-xs text-gray-500">{{ m.tag }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- ===== 模块5 · 经营影响分析 ===== -->
+            <section class="card mb-6">
+              <h2 class="text-lg font-semibold mb-3">经营影响分析</h2>
+              <div ref="aiCard" class="mb-4"></div>
+              <h3 class="text-base font-semibold mb-2">日前电价参考（未来 {{ scale }}）</h3>
+              <div ref="priceChart" class="w-full h-48 mb-4"></div>
+              <div class="flex flex-wrap gap-3">
+                <a href="/pages/p3.html" class="px-4 py-2 rounded bg-accent text-background font-semibold">重新计算储能方案</a>
+                <a href="/pages/p4.html" class="px-4 py-2 rounded border border-accent text-accent font-semibold">重新计算交易方案</a>
+              </div>
+            </section>
+          </template>
+
+          <div ref="prov"></div>
         </main>
       `,
+      computed: {
+        riskLegend() {
+          return [
+            { label: RISK_RULES.low.label, color: RISK_RULES.low.color },
+            { label: RISK_RULES.mid.label, color: RISK_RULES.mid.color },
+            { label: RISK_RULES.high.label, color: RISK_RULES.high.color },
+          ];
+        },
+        // ===== 顶部元信息 =====
+        metaLine() {
+          if (!this.gen) return "";
+          return "数据更新 " + this.gen.meta.updated + " · " + this.gen.meta.level;
+        },
+        isLevel1() {
+          return this.gen && String(this.gen.meta.level || "").indexOf("Level 1") === 0;
+        },
+        // ===== 模块1：顶部核心数字 =====
+        todayKpis() {
+          if (!this.gen) return [];
+          const t = this.gen.today;
+          return [
+            { label: "未来24h预计发电", value: formatNumber(t.total, 1), unit: "MWh",
+              sub: "风 " + formatNumber(t.wind, 1) + " / 光 " + formatNumber(t.pv, 1), color: "#F8FAFC" },
+            { label: "预测置信度", value: formatPercent(t.confidence), unit: "", color: "#22C55E" },
+            { label: "预计最大偏差", value: "±" + formatNumber(t.max_dev_pct, 1), unit: "%", color: "#EF4444" },
+            { label: "可交易电量", value: formatNumber(t.tradable, 1), unit: "MWh", color: "#38BDF8" },
+            { label: "可调储能", value: formatNumber(t.storage_available_mwh, 1), unit: "MWh", color: "#22C55E" },
+          ];
+        },
+        // ===== 主预测图视图（按时间尺度截取）=====
+        can7D() {
+          return this.gen && this.gen.forecast.length >= SCALE_HOURS['7D'];
+        },
+        view() {
+          if (!this.gen) return null;
+          const f = this.gen.forecast || [];
+          const a = this.gen.actual || [];
+          const n = Math.min(SCALE_HOURS[this.scale] || 24, f.length);
+          return {
+            hours: n,
+            labels: f.slice(0, n).map((x) => x.time.slice(11, 16)),
+            actual: a.slice(0, n).map((x) => x.gen_total),
+            forecast: f.slice(0, n).map((x) => x.gen_total),
+            upper: f.slice(0, n).map((x) => x.upper),
+            lower: f.slice(0, n).map((x) => x.lower),
+            price: f.slice(0, n).map((x) => ({ label: x.time.slice(11, 16), value: x.price_day_ahead })),
+          };
+        },
+        // ===== 模块3：风险时间轴（临时规则，合并连续同等级时段）=====
+        riskSegments() {
+          const v = this.view;
+          if (!v) return [];
+          const f = this.gen.forecast || [];
+          const w = this.weather ? this.weather.forecast : [];
+          const hours = v.hours;
+          const levels = [];
+          for (let i = 0; i < hours; i++) {
+            const row = f[i];
+            if (!row) { levels.push({ level: 'low' }); continue; }
+            let level = 'low';
+            const bw = row.gen_total > 0.5 ? ((row.upper - row.lower) / row.gen_total) * 100 : 0;
+            if (bw >= RISK_RULES.high.bandwidthPct) level = 'high';
+            else if (bw >= RISK_RULES.mid.bandwidthPct) level = 'mid';
+            levels.push({ level, time: row.time });
+          }
+          // 合并连续同等级 → 时段
+          const segs = [];
+          levels.forEach((x, i) => {
+            const last = segs[segs.length - 1];
+            if (last && last.level === x.level) { last.endIdx = i; last.end = x.time; }
+            else segs.push({ level: x.level, start: x.time, end: x.time, startIdx: i, endIdx: i });
+          });
+          return segs.map((s) => ({
+            ...s,
+            widthPct: ((s.endIdx - s.startIdx + 1) / hours) * 100,
+            color: RISK_RULES[s.level].color,
+            label: RISK_RULES[s.level].label,
+            tip: `${s.start.slice(11, 16)}–${s.end.slice(11, 16)} ${RISK_RULES[s.level].label}`
+              + (s.level === 'low' ? '，预测表现平稳' : '（临时规则，待 A 提供正式计算）'),
+          }));
+        },
+        // ===== 模块4：影响因子 + 模型验证 =====
+        factorTotal() {
+          return this.factors.reduce((s, x) => s + x.value, 0);
+        },
+        modelCards() {
+          if (!this.gen) return [];
+          const m = this.gen.model;
+          return [
+            { label: "风电预测 MAPE", value: formatPercent(m.wind.mape_pct), tag: m.wind.name + " " + m.wind.version },
+            { label: "光伏预测 MAPE", value: formatPercent(m.pv.mape_pct), tag: m.pv.name + " " + m.pv.version },
+            { label: "昨日预测", value: "127.3 MWh", tag: "模拟" },
+            { label: "昨日实际", value: "124.8 MWh", tag: "误差 1.96%（模拟）" },
+          ];
+        },
+        // ===== 模块5：经营影响分析（pages/p2.md 5.2 链路规则）=====
+        impactConclusion() {
+          if (!this.gen) return "";
+          const t = this.gen.today;
+          // 昨日对照字段缺失 → 降级文案
+          if (!this.gen.yesterday) {
+            return "当前缺少昨日对照数据，暂无法判断经营指标环比变化。建议以当前预测区间、可交易电量与电价趋势进行保守决策。";
+          }
+          const y = this.gen.yesterday;
+          if (t.tradable < y.tradable * 0.9) {
+            return "预计未来 24 小时可交易电量下降，现货偏差风险增加。建议降低现货交易比例，并优先保留储能调节能力，以降低偏差考核风险。";
+          }
+          if (t.tradable > y.tradable * 1.1) {
+            return "预计未来 24 小时可交易电量增加，交易空间扩大。建议结合日前电价走势，评估适度提升现货或中长期交易比例。";
+          }
+          return "预计未来 24 小时发电与可交易电量整体平稳，偏差风险可控。建议维持当前储能及交易策略，并持续关注高风险时段。";
+        },
+        impactChain() {
+          if (!this.gen || this.gen.yesterday) return [];
+          return [
+            "发电变化 → 可交易电量 → 现货偏差风险（缺少昨日对照，环比暂不判定）",
+            "可交易电量 128.7 MWh · 可调储能 18.2 MWh · 置信度 91%",
+          ];
+        },
+        aiCardData() {
+          if (!this.gen) return null;
+          const m = this.gen.model;
+          return {
+            conclusion: this.impactConclusion,
+            impact: this.impactChain[0] || "",
+            confidence: Math.round((this.gen.today.confidence || 0.87) * 100),
+            reasons: this.impactChain,
+            model: { name: m.wind.name, version: m.wind.version },
+            dataSources: [
+              { source: this.gen.meta.source, time: this.gen.meta.updated },
+              { source: "气象更新 (Open-Meteo/ERA5)", time: this.gen.meta.updated },
+            ],
+            riskNote: "该结果仅作为辅助决策建议（Level 1 模型模拟）",
+            actions: [
+              { label: "查看依据", value: "view-evidence" },
+              { label: "加入任务", value: "add-task" },
+              { label: "重新模拟", value: "re-simulate" },
+            ],
+          };
+        },
+      },
+      methods: {
+        // ===== 数据加载 =====
+        async loadData() {
+          this.loading = true;
+          this.error = "";
+          try {
+            const [gen, weather, market] = await Promise.all([
+              Data("demo/generation"),
+              Data("demo/weather"),
+              Data("demo/market"),
+            ]);
+            this.gen = gen;
+            this.weather = weather;
+            this.market = market;
+            this.loading = false;
+            this.$nextTick(() => this.renderCharts());
+          } catch (e) {
+            this.error = e.message || "数据加载失败";
+            this.loading = false;
+          }
+        },
+        // ===== 图表渲染（容器须已渲染，勿在 v-if 内创建）=====
+        renderCharts() {
+          const v = this.view;
+          if (!v) return;
+          const fc = this.$refs.forecastChart;
+          if (fc) {
+            if (!this.forecastChart) this.forecastChart = createChart(fc);
+            this.forecastChart.setData({
+              labels: v.labels,
+              actual: v.actual,
+              forecast: v.forecast,
+              upper: v.upper,
+              lower: v.lower,
+            }, { type: "confidence" });
+          }
+          const pc = this.$refs.priceChart;
+          if (pc) {
+            if (!this.priceChart) this.priceChart = createChart(pc);
+            this.priceChart.setData(v.price, { type: "line", smooth: true, name: "日前电价(元/MWh)" });
+          }
+          const ff = this.$refs.factorChart;
+          if (ff && !this.factorChart) {
+            this.factorChart = createChart(ff);
+            this.factorChart.setData(this.factors, { type: "pie", donut: true });
+          }
+          const ac = this.$refs.aiCard;
+          if (ac) {
+            if (!this.card) this.card = createAICard(ac);
+            if (this.aiCardData) {
+              this.card.setData(this.aiCardData, { onAction: (a) => this.onCardAction(a) });
+            }
+          }
+        },
+        // 时间尺度切换：仅重刷主预测图 + 电价参考图（联动）
+        refreshCharts() {
+          const v = this.view;
+          if (!v) return;
+          if (this.forecastChart) {
+            this.forecastChart.setData({
+              labels: v.labels, actual: v.actual, forecast: v.forecast, upper: v.upper, lower: v.lower,
+            }, { type: "confidence" });
+          }
+          if (this.priceChart) {
+            this.priceChart.setData(v.price, { type: "line", smooth: true, name: "日前电价(元/MWh)" });
+          }
+        },
+        setScale(s) {
+          if (s === "7D" && !this.can7D) return; // 数据不足禁止切换
+          this.scale = s;
+        },
+        onCardAction(a) {
+          if (a.value === "view-evidence") this.showSource();
+          else if (a.value === "add-task") location.href = "/pages/p5.html";
+          // re-simulate：演示模式占位，暂不实现
+        },
+        // ===== 溯源弹层（B 的 provenance.js）=====
+        showSource() {
+          if (!this.gen || !this.prov) return;
+          this.prov.open({
+            name: "明日发电预测（142.3 MWh）",
+            sources: [this.gen.meta.source],
+            updateTime: this.gen.meta.updated,
+            quality: "空值率 0%，字段类型校验通过（data/CONTRACT.md）",
+            raw: "data/demo/generation.json（forecast 96h / actual 96h）",
+            process: "本地物理模型，真实气象驱动；置信区间 ±8.4% 为 Level 1 模拟增强",
+            model: { name: this.gen.model.wind.name, version: this.gen.model.wind.version },
+          });
+        },
+      },
       mounted() {
-        // 图表：用统一组件，数据形如 [{label, value}]
-        // 聚合结果用 toChartData() 适配后再喂图表
-        this.chart = createChart(this.$refs.chart);
-        this.chart.setData([{ label: '示例', value: 10 }]);
+        this.prov = createProvenance(this.$refs.prov);
+        this.loadData();
+      },
+      watch: {
+        scale() {
+          this.$nextTick(() => this.refreshCharts());
+        },
       },
       beforeUnmount() {
-        // 统一组件负责 dispose，页面只需调用
-        if (this.chart) { this.chart.dispose(); this.chart = null; }
+        if (this.forecastChart) { this.forecastChart.dispose(); this.forecastChart = null; }
+        if (this.priceChart) { this.priceChart.dispose(); this.priceChart = null; }
+        if (this.factorChart) { this.factorChart.dispose(); this.factorChart = null; }
+        if (this.card) { this.card.dispose(); this.card = null; }
+        if (this.prov) { this.prov.dispose(); this.prov = null; }
       },
-      computed: {},
     });
 
     app.mount('#app');
