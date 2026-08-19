@@ -60,14 +60,14 @@
         <main>
           <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h1 class="text-2xl">{{ title }}</h1>
-            <div class="flex items-center gap-3 text-sm text-gray-400">
+            <div class="flex items-center gap-3 text-sm text-foreground opacity-60">
               <span v-if="gen">{{ metaLine }}</span>
               <span v-if="isLevel1" class="px-2 py-0.5 rounded-full border border-accent text-accent text-xs">模拟数据</span>
               <button v-if="gen" class="text-accent" @click="showSource">查看数据来源</button>
             </div>
           </div>
 
-          <p v-if="loading" class="text-gray-400">加载中…</p>
+          <p v-if="loading" class="text-foreground opacity-60">加载中…</p>
           <div v-else-if="error" class="text-red-400">
             <p>{{ error }}</p>
             <button class="mt-3 px-4 py-2 rounded bg-accent text-background font-semibold" @click="loadData">重试</button>
@@ -78,11 +78,11 @@
             <section class="mb-6">
               <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <div v-for="k in todayKpis" :key="k.label" class="card">
-                  <div class="text-sm text-gray-400">{{ k.label }}</div>
+                  <div class="text-sm text-foreground opacity-60">{{ k.label }}</div>
                   <div class="text-2xl tabular mt-1" :style="{ color: k.color }">
                     {{ k.value }} <span class="text-sm">{{ k.unit }}</span>
                   </div>
-                  <div v-if="k.sub" class="text-xs text-gray-400 mt-1">{{ k.sub }}</div>
+                  <div v-if="k.sub" class="text-xs text-foreground opacity-60 mt-1">{{ k.sub }}</div>
                 </div>
               </div>
             </section>
@@ -95,13 +95,13 @@
                   <button v-for="s in ['24H','48H','7D']" :key="s" @click="setScale(s)"
                     :disabled="s === '7D' && !can7D"
                     :title="s === '7D' && !can7D ? '当前仅提供 96 小时预测，待数据扩充后开放' : ''"
-                    :class="scale === s ? 'px-3 py-1 rounded bg-accent text-background font-semibold' : 'px-3 py-1 rounded border border-gray-600 text-gray-300'">
+                    :class="scale === s ? 'px-3 py-1 rounded bg-accent text-background font-semibold' : 'px-3 py-1 rounded border border-border text-foreground opacity-70'">
                     {{ s }}
                   </button>
                 </div>
               </div>
               <div ref="forecastChart" class="w-full h-80"></div>
-              <p class="text-xs text-gray-500 mt-2">置信区间为 ±8.4%（Level 1 模拟增强）；7D 需 168h 数据，当前仅提供 96h</p>
+              <p class="text-xs text-foreground opacity-50 mt-2">置信区间为 ±8.4%（Level 1 模拟增强）；7D 需 168h 数据，当前仅提供 96h</p>
             </section>
 
             <!-- ===== 模块3 · 预测风险时间轴 ===== -->
@@ -112,33 +112,33 @@
                   class="cursor-pointer" :title="seg.tip"
                   :style="{ width: seg.widthPct + '%', background: seg.color }"></div>
               </div>
-              <div class="flex flex-wrap gap-4 text-xs text-gray-400 mb-2">
+              <div class="flex flex-wrap gap-4 text-xs text-foreground opacity-60 mb-2">
                 <span v-for="r in riskLegend" :key="r.label" class="flex items-center gap-1">
                   <span class="inline-block w-3 h-3 rounded-full" :style="{ background: r.color }"></span>{{ r.label }}
                 </span>
                 <span class="ml-auto">hover 查看时段与原因</span>
               </div>
-              <p class="text-xs text-gray-500">⚠️ 风险分级为临时规则（置信区间带宽占比 ≥15% 橙 / ≥10% 黄），待 A 提供 classifyRisk 正式计算后替换。</p>
+              <p class="text-xs text-foreground opacity-50">⚠️ 风险分级为临时规则（置信区间带宽占比 ≥15% 橙 / ≥10% 黄），待 A 提供 classifyRisk 正式计算后替换。</p>
             </section>
 
             <!-- ===== 模块4 · 影响因子 + 模型验证 ===== -->
             <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div class="card">
                 <h2 class="text-lg font-semibold mb-1">影响因子贡献
-                  <span class="text-xs text-gray-500">（示例贡献结构 · 模拟）</span>
+                  <span class="text-xs text-foreground opacity-50">（示例贡献结构 · 模拟）</span>
                 </h2>
                 <div ref="factorChart" class="w-full h-64"></div>
               </div>
               <div class="card">
                 <h2 class="text-lg font-semibold mb-3">模型验证
-                  <span class="text-xs text-gray-500">（30 天序列待 A 补充，当前为指标卡片）</span>
+                  <span class="text-xs text-foreground opacity-50">（30 天序列待 A 补充，当前为指标卡片）</span>
                 </h2>
                 <table class="w-full text-sm">
                   <tbody>
-                    <tr v-for="m in modelCards" :key="m.label" class="border-b border-gray-800">
+                    <tr v-for="m in modelCards" :key="m.label" class="border-b border-border">
                       <td class="py-2">{{ m.label }}</td>
                       <td class="py-2 tabular text-right">{{ m.value }}</td>
-                      <td class="py-2 text-right text-xs text-gray-500">{{ m.tag }}</td>
+                      <td class="py-2 text-right text-xs text-foreground opacity-50">{{ m.tag }}</td>
                     </tr>
                   </tbody>
                 </table>

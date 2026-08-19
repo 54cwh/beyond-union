@@ -73,14 +73,14 @@
         <main>
           <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h1 class="text-2xl">{{ title }}</h1>
-            <div class="flex items-center gap-3 text-sm text-gray-400">
+            <div class="flex items-center gap-3 text-sm text-foreground opacity-60">
               <span v-if="storage">{{ metaLine }}</span>
               <span v-if="isLevel1" class="px-2 py-0.5 rounded-full border border-accent text-accent text-xs">模拟数据</span>
               <button v-if="storage" class="text-accent" @click="showSource">查看数据来源</button>
             </div>
           </div>
 
-          <p v-if="loading" class="text-gray-400">加载中…</p>
+          <p v-if="loading" class="text-foreground opacity-60">加载中…</p>
           <div v-else-if="error" class="text-red-400">
             <p>{{ error }}</p>
             <button class="mt-3 px-4 py-2 rounded bg-accent text-background font-semibold" @click="loadData">重试</button>
@@ -91,11 +91,11 @@
             <section class="mb-6">
               <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div v-for="k in kpis" :key="k.label" class="card">
-                  <div class="text-sm text-gray-400">{{ k.label }}</div>
+                  <div class="text-sm text-foreground opacity-60">{{ k.label }}</div>
                   <div class="text-2xl tabular mt-1" :style="{ color: k.color }">
                     {{ k.value }} <span class="text-sm">{{ k.unit }}</span>
                   </div>
-                  <div v-if="k.sub" class="text-xs text-gray-400 mt-1">{{ k.sub }}</div>
+                  <div v-if="k.sub" class="text-xs text-foreground opacity-60 mt-1">{{ k.sub }}</div>
                 </div>
               </div>
             </section>
@@ -106,31 +106,31 @@
                 <h2 class="text-lg font-semibold">能源优化时间轴（风电 / 光伏 / 储能 / 并网）</h2>
                 <div class="flex gap-1 text-sm">
                   <button v-for="s in scales" :key="s.key" @click="setScale(s.key)"
-                    :class="scale === s.key ? 'px-3 py-1 rounded bg-accent text-background font-semibold' : 'px-3 py-1 rounded border border-gray-600 text-gray-300'">
+                    :class="scale === s.key ? 'px-3 py-1 rounded bg-accent text-background font-semibold' : 'px-3 py-1 rounded border border-border text-foreground opacity-70'">
                     {{ s.key }}
                   </button>
                 </div>
               </div>
               <div ref="timelineChart" class="w-full h-80"></div>
-              <p class="text-xs text-gray-500 mt-2">储能功率正=充电、负=放电；充放电节点由 storage_power 正负切换推导（11:00 充 / 13:00 停 / 17:00 放 / 19:00 停）</p>
+              <p class="text-xs text-foreground opacity-50 mt-2">储能功率正=充电、负=放电；充放电节点由 storage_power 正负切换推导（11:00 充 / 13:00 停 / 17:00 放 / 19:00 停）</p>
             </section>
 
             <!-- ===== 电价小图（独立，避免量纲混轴）===== -->
             <section class="card mb-6">
               <h2 class="text-lg font-semibold mb-2">市场价格参考（日前电价）</h2>
               <div ref="priceChart" class="w-full h-48"></div>
-              <p class="text-xs text-gray-500 mt-2">与主时间轴共用 {{ scale }} 时间尺度；19:00 晚峰约 586 元/MWh</p>
+              <p class="text-xs text-foreground opacity-50 mt-2">与主时间轴共用 {{ scale }} 时间尺度；19:00 晚峰约 586 元/MWh</p>
             </section>
 
             <!-- ===== 模块3 · 四方案对比 ===== -->
             <section class="card mb-6">
               <h2 class="text-lg font-semibold mb-3">四方案对比
-                <span class="text-xs text-gray-500">（模拟示例值，方案 E 循环/SOC 终值实读 schedule）</span>
+                <span class="text-xs text-foreground opacity-50">（模拟示例值，方案 E 循环/SOC 终值实读 schedule）</span>
               </h2>
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                   <thead>
-                    <tr class="text-left text-gray-400 border-b border-gray-700">
+                    <tr class="text-left text-foreground opacity-60 border-b border-border">
                       <th class="py-2 pr-3">方案</th>
                       <th class="py-2 pr-3">预计收益</th>
                       <th class="py-2 pr-3">弃电率</th>
@@ -143,7 +143,7 @@
                   </thead>
                   <tbody>
                     <tr v-for="r in schemeRows" :key="r.name"
-                      class="border-b border-gray-800 tabular"
+                      class="border-b border-border tabular"
                       :class="r.recommend ? 'bg-secondary' : ''">
                       <td class="py-2 pr-3 font-semibold">
                         {{ r.name }}
@@ -160,7 +160,7 @@
                   </tbody>
                 </table>
               </div>
-              <p class="text-xs text-gray-500 mt-2">D 收益最高但 2 次循环、风险高；E 风险调整后最优（同 p4 决策解释逻辑）。示例值配置在 SCHEME_ROWS 常量，待 A 提供 schemes[] 后整体替换。</p>
+              <p class="text-xs text-foreground opacity-50 mt-2">D 收益最高但 2 次循环、风险高；E 风险调整后最优（同 p4 决策解释逻辑）。示例值配置在 SCHEME_ROWS 常量，待 A 提供 schemes[] 后整体替换。</p>
             </section>
 
             <!-- ===== 模块4 · AI 推荐 ===== -->
@@ -173,19 +173,19 @@
             <section class="card mb-6">
               <div class="flex items-center justify-between mb-2">
                 <h2 class="text-lg font-semibold">模型约束</h2>
-                <button class="px-3 py-1 rounded border border-gray-600 text-gray-300 text-sm" @click="showConstraint = !showConstraint">
+                <button class="px-3 py-1 rounded border border-border text-foreground opacity-70 text-sm" @click="showConstraint = !showConstraint">
                   {{ showConstraint ? '收起' : '查看模型约束' }}
                 </button>
               </div>
               <table v-if="showConstraint" class="w-full text-sm">
                 <tbody>
-                  <tr v-for="c in constraints" :key="c.label" class="border-b border-gray-800">
-                    <td class="py-2 text-gray-400">{{ c.label }}</td>
+                  <tr v-for="c in constraints" :key="c.label" class="border-b border-border">
+                    <td class="py-2 text-foreground opacity-60">{{ c.label }}</td>
                     <td class="py-2 tabular text-right">{{ c.value }}</td>
                   </tr>
                 </tbody>
               </table>
-              <p v-else class="text-xs text-gray-500">点击【查看模型约束】查看 SOC 上下限、充放电功率、效率与循环约束（数据来自 storage.params）。</p>
+              <p v-else class="text-xs text-foreground opacity-50">点击【查看模型约束】查看 SOC 上下限、充放电功率、效率与循环约束（数据来自 storage.params）。</p>
             </section>
           </template>
 
