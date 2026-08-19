@@ -7,8 +7,10 @@
   <link rel="stylesheet" href="../assets/tailwind.css">
   <link rel="stylesheet" href="../assets/common.css">
   <script src="../assets/vendor/vue.global.prod.js"></script>
-  <!-- 共享契约(test_contract.py)要求引用；p1 无 ECharts 图表，仅保留不加载使用 -->
+  <!-- 共享契约(test_contract.py)要求引用；p1 地图经 geo-map.js 调用 echarts；3D 柱状需 echarts-gl -->
   <script src="../assets/vendor/echarts.min.js"></script>
+  <!-- 3D 柱状图层依赖 echarts-gl（在 echarts 之后加载，扩展全局 echarts） -->
+  <script src="../assets/vendor/echarts-gl.min.js"></script>
 </head>
 <body class="min-h-screen">
   <nav id="site-nav" class="sticky top-0 z-40 px-4 py-3 border-b border-border" style="background:var(--color-background)"></nav>
@@ -94,6 +96,9 @@
             { key: "station", label: "场站分布" },
             { key: "flow", label: "输电流向" },
             { key: "heat", label: "发电热力" },
+            { key: "assoc", label: "场站关联" },
+            { key: "bubble", label: "时间轴气泡" },
+            { key: "bar3d", label: "3D 柱状" },
           ],
           activeKPI: "capacity",
           geoKPIs: [
@@ -111,6 +116,10 @@
           geoSummary: "",
           geoTheme: "light",
           geoScope: null,
+          geoTime: 0,
+          geoPlaying: false,
+          geoPeriods: [],
+          playTimer: null,
 
           // 可信 AI 建议卡片（八要素：结论/置信度/依据/模型/数据来源；风险提示用默认值）
           aiSuggestion: {
@@ -195,6 +204,24 @@
           this.activeResource = key;
           if (this.gm) this.gm.setResource(key);
         },
+        isBubbleLayer() { return this.geoLayer === "bubble"; },
+        setGeoTime(i) {
+          this.geoTime = i;
+          if (this.gm) this.gm.setTime(i);
+        },
+        playGeoTime() {
+          if (this.geoPlaying) {
+            if (this.playTimer) { clearInterval(this.playTimer); this.playTimer = null; }
+            this.geoPlaying = false;
+            return;
+          }
+          this.geoPlaying = true;
+          const n = this.geoPeriods.length || 7;
+          this.playTimer = setInterval(() => {
+            this.geoTime = (this.geoTime + 1) % n;
+            if (this.gm) this.gm.setTime(this.geoTime);
+          }, 900);
+        },
 
         // 地图点击 → 底部详情条（省份 / 场站）
         onGeoClick(e) {
@@ -267,6 +294,56 @@
             </button>
           </div>
 
+          <!-- 区域经营地图（ECharts 矢量地图，第一页置顶大图） -->
+          <section class="p1-section p1-map-hero">
+            <div class="p1-section__head">
+              <h2 class="p1-section__title">区域经营地图</h2>
+              <span class="p1-section__hint">东北四省 · GeoJSON 矢量地图 · 八图层</span>
+            </div>
+            <div class="geo-map" :class="geoMapClass">
+              <div class="geo-map__toolbar">
+                <div class="geo-map__group">
+                  <button v-for="l in geoLayers" :key="l.key" type="button"
+                    class="geo-map__btn" :class="{ active: l.key === geoLayer }"
+                    @click="setGeoLayer(l.key)">{{ l.label }}</button>
+                </div>
+                <div v-if="isKpiLayer()" class="geo-map__group">
+                  <button v-for="k in geoKPIs" :key="k.key" type="button"
+                    class="geo-map__btn geo-map__btn--mini" :class="{ active: k.key === activeKPI }"
+                    @click="setGeoKPI(k.key)">{{ k.label }}</button>
+                </div>
+                <div v-if="isResourceLayer()" class="geo-map__group">
+                  <button v-for="r in geoResources" :key="r.key" type="button"
+                    class="geo-map__btn geo-map__btn--mini" :class="{ active: r.key === activeResource }"
+                    @click="setGeoResource(r.key)">{{ r.label }}</button>
+                </div>
+                <div v-if="isBubbleLayer()" class="geo-map__group">
+                  <button v-for="(pt, i) in geoPeriods" :key="pt" type="button"
+                    class="geo-map__btn geo-map__btn--mini" :class="{ active: i === geoTime }"
+                    @click="setGeoTime(i)">{{ pt }}</button>
+                  <button type="button" class="geo-map__btn geo-map__btn--mini" @click="playGeoTime">
+                    {{ geoPlaying ? "暂停" : "播放" }}
+                  </button>
+                </div>
+                <div class="geo-map__spacer"></div>
+                <div class="geo-map__group">
+                  <button type="button" class="geo-map__btn" @click="toggleGeoTheme">
+                    {{ geoTheme === "dark" ? "日间模式" : "夜间模式" }}
+                  </button>
+                </div>
+              </div>
+              <div ref="geoMap" class="geo-map__chart"></div>
+              <div v-if="geoSummary" class="geo-map__detail geo-map__detail--err">{{ geoSummary }}</div>
+              <div v-else-if="geoSelected" class="geo-map__detail">
+                <b class="geo-map__detail-name">{{ geoSelected.title }}</b>
+                <span class="geo-map__detail-text">{{ geoSelected.text }}</span>
+              </div>
+              <div v-else class="geo-map__detail geo-map__detail--empty">
+                点击省份或场站查看详情 · 数据字典见 data/geo/README.md
+              </div>
+            </div>
+          </section>
+
           <!-- 顶部核心数字 -->
           <div class="p1-top-stats">
             <div v-for="s in topStats" :key="s.label" class="p1-top-stat">
@@ -336,49 +413,8 @@
             </section>
           </div>
 
-          <!-- 地图行：区域经营地图（ECharts 矢量地图 + 地理信息数据库）+ 重点/待办 -->
-          <div class="p1-pair-row p1-pair-row--wide">
-            <section class="p1-section">
-              <div class="p1-section__head">
-                <h2 class="p1-section__title">区域经营地图</h2>
-                <span class="p1-section__hint">东北四省 · GeoJSON 矢量地图</span>
-              </div>
-              <div class="geo-map" :class="geoMapClass">
-                <div class="geo-map__toolbar">
-                  <div class="geo-map__group">
-                    <button v-for="l in geoLayers" :key="l.key" type="button"
-                      class="geo-map__btn" :class="{ active: l.key === geoLayer }"
-                      @click="setGeoLayer(l.key)">{{ l.label }}</button>
-                  </div>
-                  <div v-if="isKpiLayer()" class="geo-map__group">
-                    <button v-for="k in geoKPIs" :key="k.key" type="button"
-                      class="geo-map__btn geo-map__btn--mini" :class="{ active: k.key === activeKPI }"
-                      @click="setGeoKPI(k.key)">{{ k.label }}</button>
-                  </div>
-                  <div v-if="isResourceLayer()" class="geo-map__group">
-                    <button v-for="r in geoResources" :key="r.key" type="button"
-                      class="geo-map__btn geo-map__btn--mini" :class="{ active: r.key === activeResource }"
-                      @click="setGeoResource(r.key)">{{ r.label }}</button>
-                  </div>
-                  <div class="geo-map__spacer"></div>
-                  <div class="geo-map__group">
-                    <button type="button" class="geo-map__btn" @click="toggleGeoTheme">
-                      {{ geoTheme === "dark" ? "日间模式" : "夜间模式" }}
-                    </button>
-                  </div>
-                </div>
-                <div ref="geoMap" class="geo-map__chart"></div>
-                <div v-if="geoSummary" class="geo-map__detail geo-map__detail--err">{{ geoSummary }}</div>
-                <div v-else-if="geoSelected" class="geo-map__detail">
-                  <b class="geo-map__detail-name">{{ geoSelected.title }}</b>
-                  <span class="geo-map__detail-text">{{ geoSelected.text }}</span>
-                </div>
-                <div v-else class="geo-map__detail geo-map__detail--empty">
-                  点击省份或场站查看详情 · 数据字典见 data/geo/README.md
-                </div>
-              </div>
-            </section>
-
+          <!-- 重点与待办 -->
+          <div class="p1-pair-row">
             <section class="p1-section">
               <div class="p1-section__head"><h2 class="p1-section__title">今日三项重点</h2></div>
               <div v-for="f in focusItems" :key="f.title" class="focus-item">
@@ -406,11 +442,13 @@
         // 区域经营地图（ECharts 矢量地图 + data/geo 地理信息数据库）
         loadGeoDB(window.fetch, "../").then((db) => {
           this.geoDb = db;
+          this.geoPeriods = db.periods;
           this.gm = createGeoMap(this.$refs.geoMap, {
             geoJson: db.geoJson,
             provinces: db.provinces,
             stations: db.stations,
             flows: db.flows,
+            periods: db.periods,
           });
           this.gm.init();
           this.gm.setKPI(this.activeKPI);
@@ -427,6 +465,7 @@
       beforeUnmount() {
         if (this.aiCard) { this.aiCard.dispose(); this.aiCard = null; }
         if (this.gm) { this.gm.dispose(); this.gm = null; }
+        if (this.playTimer) { clearInterval(this.playTimer); this.playTimer = null; }
         if (this.prov) { this.prov.dispose(); this.prov = null; }
       },
     });

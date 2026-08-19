@@ -681,6 +681,12 @@ button, [role="button"], .clickable, a {
   height: 340px; width: 100%; background: #FFFFFF;
   border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden;
 }
+/* 地图 hero（p1 第一页置顶大图，居中）：图表加高 */
+.p1-map-hero { max-width: 100%; }
+.p1-map-hero .geo-map__chart { height: 480px; }
+@media (max-width: 768px) {
+  .p1-map-hero .geo-map__chart { height: 340px; }
+}
 .geo-map__detail {
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
   padding: 8px 12px; border-radius: 8px; background: var(--color-muted);

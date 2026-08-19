@@ -90,6 +90,7 @@ export async function loadGeoDB(fetchImpl, baseUrl) {
     load(base + "data/geo/flows.json").then((r) => r.json()),
   ]);
   const pList = provinces.provinces;
+  const periods = provinces.periods || [];
   const sList = stations.stations;
   const fList = flows.flows;
   return {
@@ -103,5 +104,6 @@ export async function loadGeoDB(fetchImpl, baseUrl) {
     stationTotals: () => stationsByProvinceTotals(sList, pList),
     resolveFlows: () => resolveFlows(fList, pList),
     provinceByName: (name) => provinceByName(pList, name),
+    periods: periods,
   };
 }
