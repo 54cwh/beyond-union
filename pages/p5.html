@@ -239,7 +239,7 @@
           </header>
 
           <!-- ================= 政策板块 ================= -->
-          <template v-if="tab==='policy'">
+          <div v-show="tab==='policy'">
             <div class="p5-grid mb-4">
               <div class="p5-col-3 p5-stat-card card">
                 <div class="p5-stat-value tabular">{{ policies.length }}</div>
@@ -260,24 +260,15 @@
             </div>
 
             <div class="p5-grid">
-              <!-- 左 4 列：分类/地区分布 -->
+              <!-- 左 4 列：分类饼图 + 地区覆盖 -->
               <div class="p5-col-4 space-y-3">
                 <div class="p5-panel">
-                  <div class="flex justify-between items-center mb-3">
+                  <div class="flex justify-between items-center mb-2">
                     <h2 class="p5-panel-title">分类分布</h2>
                     <span class="p1-section__hint">{{ policies.length }} 条</span>
                   </div>
-                  <div class="space-y-2.5">
-                    <div v-for="c in catDist" :key="c.name" class="flex items-center gap-2">
-                      <span class="text-xs w-14 shrink-0 opacity-70">{{ c.name }}</span>
-                      <div class="flex-1 p5-bar-track">
-                        <div class="p5-bar-fill" :style="{width: catPct(c.count) + '%'}"></div>
-                      </div>
-                      <span class="text-xs tabular w-5 text-right opacity-70">{{ c.count }}</span>
-                    </div>
-                  </div>
+                  <div ref="catChart" class="w-full h-52"></div>
                 </div>
-
                 <div class="p5-panel">
                   <div class="flex justify-between items-center mb-3">
                     <h2 class="p5-panel-title">地区覆盖</h2>
@@ -351,10 +342,10 @@
                 </div>
               </div>
             </div>
-          </template>
+          </div>
 
           <!-- ================= 决策任务板块 ================= -->
-          <template v-else>
+          <div v-show="tab==='tasks'">
             <div class="p5-grid mb-4">
               <div class="p5-col-3 p5-stat-card card">
                 <div class="p5-stat-value tabular">{{ tasks.length }}</div>
@@ -470,7 +461,7 @@
                 </div>
               </div>
             </div>
-          </template>
+          </div>
         </main>
       `,
       computed: {
@@ -531,9 +522,6 @@
             return { name: m[1], stars };
           }).filter(Boolean);
         },
-        catPct(c) {
-          return this.policies.length ? Math.round((c / this.policies.length) * 100) : 0;
-        },
         statusPct(c) {
           return this.tasks.length ? Math.round((c / this.tasks.length) * 100) : 0;
         },
@@ -560,13 +548,32 @@
             const tasks = await Data("demo/tasks");
             this.policies = policy.list || [];
             this.tasks = tasks.tasks || [];
+            this.renderCatChart();
           } catch (e) {
             this.error = e.message;
           }
         },
+        renderCatChart() {
+          if (!this.catChart) return;
+          const data = this.catDist.map((c) => ({ name: c.name, value: c.count }));
+          this.catChart.setData(data, { type: "pie", donut: true });
+        },
       },
       mounted() {
+        this.catChart = createChart(this.$refs.catChart);
         this.loadData();
+      },
+      beforeUnmount() {
+        if (this.catChart) { this.catChart.dispose(); this.catChart = null; }
+      },
+      watch: {
+        tab() {
+          this.$nextTick(() => {
+            if (this.tab === "policy" && this.catChart) {
+              this.renderCatChart();
+            }
+          });
+        },
       },
     });
 
