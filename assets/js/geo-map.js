@@ -124,6 +124,7 @@ export function createGeoMap(el, options) {
 
   const MAP_VIEW = { map: "ne", roam: true, zoom: 1.12, center: [123.5, 45.0] };
   const CITY_ZOOM = 1.9; // 城市名标签出现的最小缩放倍数
+  const COUNTY_ZOOM = 3.5; // 县名标签出现的最小缩放倍数
   const BOUNDS = geoBounds(geoJson);
 
   // 县域级底图：adcode -> 县名查找表（悬浮/图例显示可读名）
@@ -153,6 +154,33 @@ export function createGeoMap(el, options) {
       return a.n ? { name: a.name, center: [a.sx / a.n, a.sy / a.n] } : null;
     }).filter(Boolean);
   })();
+
+  // 县域质心（放大到县时显示县名）
+  const countyCenters = (geoJson.features || []).map((f) => {
+    const pr = f.properties || {};
+    const c = pr.centroid || pr.center;
+    if (!c || c.length !== 2 || !isFinite(c[0]) || !isFinite(c[1])) return null;
+    return { name: String(pr.name || ""), center: [c[0], c[1]], adcode: pr.adcode, provinceName: pr.provinceName, cityName: pr.cityName };
+  }).filter((c) => c && c.name);
+
+  // 下钻查找表：adcode → 要素；省/市 → 要素集合（用于求 bbox）
+  const featureByAdcode = Object.create(null);
+  const provinceFeats = Object.create(null);
+  const cityFeats = Object.create(null);
+  (geoJson.features || []).forEach((f) => {
+    const pr = f.properties || {};
+    if (pr.adcode != null) featureByAdcode[String(pr.adcode)] = f;
+    if (pr.provinceName) (provinceFeats[pr.provinceName] = provinceFeats[pr.provinceName] || []).push(f);
+    if (pr.provinceName && pr.cityName) {
+      const k = pr.provinceName + "|" + pr.cityName;
+      (cityFeats[k] = cityFeats[k] || []).push(f);
+    }
+  });
+  // 下钻状态：level 0=全景 1=省 2=市 3=县
+  let drill = { level: 0, province: null, city: null, county: null };
+  // 当前视角（供 render 保留下钻后的缩放/中心，避免切图层/主题时被 MAP_VIEW 重置）
+  let viewZoom = MAP_VIEW.zoom;
+  let viewCenter = [MAP_VIEW.center[0], MAP_VIEW.center[1]];
 
   // 把省份 KPI/风险展开到县域（name=adcode，meta 仍为所属省份，供 tooltip/点击回传）
   function countyData(field) {
@@ -187,7 +215,7 @@ export function createGeoMap(el, options) {
     };
   }
 
-  function geoBase() { return { ...MAP_VIEW, ...mapSeries() }; }
+  function geoBase() { return { map: "ne", roam: true, zoom: viewZoom, center: viewCenter, ...mapSeries() }; }
 
   // 省份外边界粗线（lines 挂 geo，随漫游/缩放同步；silent 不拦截点击）
   function provinceBorderSeries() {
@@ -720,36 +748,73 @@ export function createGeoMap(el, options) {
       }
     } catch (e) {}
 
-    // 省份名标签：低缩放显示；放大显示市名时隐藏（渐进式，避免与市名重叠）
-    if (geoZoom() <= CITY_ZOOM) {
+    // 省/市/县三级名标签：下钻时按层级（省下钻→市名、市下钻→县名），全景时按缩放渐进
+    function placeLabels(items, font) {
+      const placed = [];
+      const out = [];
+      const W = chart.getWidth(), H = chart.getHeight();
+      items.slice().sort((a, b) => a.center[0] - b.center[0]).forEach((c) => {
+        const px = chart.convertToPixel(coordSys, c.center);
+        if (!px || !isFinite(px[0]) || !isFinite(px[1])) return;
+        if (px[0] < -24 || px[0] > W + 24 || px[1] < -24 || px[1] > H + 24) return;
+        const w = c.name.length * 10 + 6;
+        const h = 14;
+        const bx = px[0] - w / 2, by = px[1] + 1;
+        for (const b of placed) {
+          if (bx < b.x + b.w && bx + w > b.x && by < b.y + b.h && by + h > b.y) return;
+        }
+        placed.push({ x: bx, y: by, w: w, h: h });
+        out.push({ type: "text", left: px[0], top: px[1] + 2, style: { text: c.name, fill: t.inkSoft, font: font, textAlign: "center" }, z: 99, silent: true });
+      });
+      return out;
+    }
+    const _z = geoZoom();
+    const _tier = drill.level >= 2 ? "county" : (drill.level === 1 ? "city" : (_z <= CITY_ZOOM ? "province" : (_z <= COUNTY_ZOOM ? "city" : "county")));
+    if (_tier === "province") {
       try {
         provinces.forEach((p) => {
           const px = chart.convertToPixel(coordSys, p.center);
           els.push({ type: "text", left: px[0], top: px[1] - 9, style: { text: p.name, fill: t.ink, font: "700 13px 'Noto Serif SC','Inter',sans-serif", textAlign: "center" }, z: 100, silent: true });
         });
       } catch (e) {}
-    }
-
-    // 城市名标签：放大显示，贪心避让重叠（密集地区自动稀疏标注）
-    if (geoZoom() > CITY_ZOOM) {
-      try {
-        const placed = [];
-        const items = cityCenters.slice().sort((a, b) => a.center[0] - b.center[0]);
-        items.forEach((c) => {
-          const px = chart.convertToPixel(coordSys, c.center);
-          const w = c.name.length * 10 + 6;
-          const h = 14;
-          const bx = px[0] - w / 2, by = px[1] + 1;
-          for (const b of placed) {
-            if (bx < b.x + b.w && bx + w > b.x && by < b.y + b.h && by + h > b.y) return;
-          }
-          placed.push({ x: bx, y: by, w: w, h: h });
-          els.push({ type: "text", left: px[0], top: px[1] + 2, style: { text: c.name, fill: t.inkSoft, font: "500 10px 'Inter','Noto Sans SC',sans-serif", textAlign: "center" }, z: 99, silent: true });
-        });
-      } catch (e) {}
+    } else if (_tier === "city") {
+      try { els.push.apply(els, placeLabels(cityCenters, "500 10px 'Inter','Noto Sans SC',sans-serif")); } catch (e) {}
+    } else {
+      try { els.push.apply(els, placeLabels(countyCenters, "400 9px 'Inter','Noto Sans SC',sans-serif")); } catch (e) {}
     }
 
     chart.setOption({ graphic: els });
+  }
+
+  // —— 下钻（省→市→县）：点击地图逐级缩放，返回上级逐级还原 ——
+  function coordsBBox(c, acc) {
+    if (Array.isArray(c) && typeof c[0] === "number" && typeof c[1] === "number") {
+      if (c[0] < acc.minX) acc.minX = c[0];
+      if (c[0] > acc.maxX) acc.maxX = c[0];
+      if (c[1] < acc.minY) acc.minY = c[1];
+      if (c[1] > acc.maxY) acc.maxY = c[1];
+      return;
+    }
+    if (Array.isArray(c)) c.forEach((x) => coordsBBox(x, acc));
+  }
+  function fitToBBox(minX, minY, maxX, maxY, minZoom) {
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const w = Math.max(maxX - minX, 0.2), h = Math.max(maxY - minY, 0.2);
+    const fullW = BOUNDS.maxX - BOUNDS.minX, fullH = BOUNDS.maxY - BOUNDS.minY;
+    const zoom = Math.min(MAP_VIEW.zoom * fullW / w, MAP_VIEW.zoom * fullH / h) * 0.7;
+    viewZoom = Math.max(minZoom || 1.2, Math.min(40, zoom));
+    viewCenter = [cx, cy];
+    chart.setOption({ geo: { zoom: viewZoom, center: viewCenter } });
+    applyOverlays();
+  }
+  function setDrill(feats, nextDrill) {
+    if (!chart || layer === "bar3d" || !feats || !feats.length) return;
+    const acc = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+    feats.forEach((f) => coordsBBox(f.geometry && f.geometry.coordinates, acc));
+    if (!isFinite(acc.minX)) return;
+    const minZoom = nextDrill.level >= 3 ? 12 : (nextDrill.level === 2 ? 5 : 2.2);
+    drill = nextDrill;
+    fitToBBox(acc.minX, acc.minY, acc.maxX, acc.maxY, minZoom);
   }
 
   function zoomBy(factor) {
@@ -769,7 +834,20 @@ export function createGeoMap(el, options) {
     if (!clickHandler) return;
     const meta = params.data && params.data.meta;
     if (params.seriesType === "map") {
-      clickHandler({ kind: "province", name: params.name, meta: meta });
+      const ft = featureByAdcode[params.name];
+      const fp = ft && ft.properties;
+      const provName = fp ? fp.provinceName : (meta ? meta.name : null);
+      if (fp) {
+        if (drill.level === 0) {
+          setDrill(provinceFeats[fp.provinceName], { level: 1, province: fp.provinceName, city: null, county: null });
+        } else if (drill.level === 1) {
+          const k = fp.provinceName + "|" + fp.cityName;
+          setDrill(cityFeats[k], { level: 2, province: fp.provinceName, city: fp.cityName, county: null });
+        } else if (drill.level === 2) {
+          setDrill([ft], { level: 3, province: fp.provinceName, city: fp.cityName, county: params.name });
+        }
+      }
+      clickHandler({ kind: "province", name: provName, meta: meta });
     } else if (params.seriesType === "bar3D" && meta) {
       clickHandler({ kind: "province", name: params.name, meta: meta });
     } else if ((params.seriesType === "scatter" || params.seriesType === "effectScatter") && meta && meta.type) {
@@ -800,12 +878,31 @@ export function createGeoMap(el, options) {
     zoomIn() { zoomBy(1.4); return api; },
     zoomOut() { zoomBy(1 / 1.4); return api; },
     resetView() {
+      drill = { level: 0, province: null, city: null, county: null };
+      viewZoom = MAP_VIEW.zoom;
+      viewCenter = [MAP_VIEW.center[0], MAP_VIEW.center[1]];
       if (chart && layer !== "bar3d") {
-        chart.setOption({ geo: { zoom: MAP_VIEW.zoom, center: MAP_VIEW.center } });
+        chart.setOption({ geo: { zoom: viewZoom, center: viewCenter } });
         applyOverlays();
       }
       return api;
     },
+    drillUp() {
+      if (drill.level === 3) {
+        const ft = featureByAdcode[drill.county];
+        const fp = ft && ft.properties;
+        if (fp) {
+          const k = fp.provinceName + "|" + fp.cityName;
+          setDrill(cityFeats[k], { level: 2, province: fp.provinceName, city: fp.cityName, county: null });
+        }
+      } else if (drill.level === 2) {
+        setDrill(provinceFeats[drill.province], { level: 1, province: drill.province, city: null, county: null });
+      } else {
+        api.resetView();
+      }
+      return api;
+    },
+    getDrill() { return { level: drill.level, province: drill.province, city: drill.city, county: drill.county }; },
     bindClick(cb) {
       clickHandler = cb;
       if (chart) {
