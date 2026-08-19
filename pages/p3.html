@@ -14,48 +14,369 @@
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
-    // 本模板列出全部可用 import 作参考；复制后按需保留用到的，删掉不用的
-    import { Nav, Data, fetchData } from '../assets/js/common.js';
-    import { filterRows, groupBy, toChartData } from '../assets/js/filter.js';
-    import { formatNumber, formatMoney, formatPercent, formatDate } from '../assets/js/format.js';
+    import { Nav, Data } from '../assets/js/common.js';
+    import { formatNumber, formatPercent } from '../assets/js/format.js';
     import { createChart } from '../assets/js/chart-view.js';
+    import { createAICard } from '../assets/js/ai-card.js';
+    import { createProvenance } from '../assets/js/provenance.js';
 
     Nav();
+
+    // ===== 时间尺度：储能调度仅 48h，无 7D =====
+    const SCALES = [{ key: '24H', hours: 24 }, { key: '48H', hours: 48 }];
+
+    // ===== 四方案对比：配置化示例值（标注"模拟"，待 A 提供 schemes[] 后整体替换）=====
+    // 方案 E 的循环次数/SOC 终值从 storage.schedule 实读（1 次 / 20%），其余为模拟
+    const SCHEME_ROWS = [
+      { name: '方案 A 基准运行', revenue: '4.85 万', curtailment: '8.2%', peakValley: '121.4 MW', cycles: '0', socEnd: '64%（不动储能）', devRisk: '高', runRisk: '低', recommend: false },
+      { name: '方案 B 削峰填谷', revenue: '5.02 万', curtailment: '5.6%', peakValley: '96.8 MW', cycles: '1', socEnd: '20%', devRisk: '中', runRisk: '低', recommend: false },
+      { name: '方案 C 消纳优先', revenue: '4.96 万', curtailment: '1.8%', peakValley: '88.3 MW', cycles: '1', socEnd: '35%', devRisk: '中', runRisk: '低', recommend: false },
+      { name: '方案 D 收益最大化', revenue: '5.35 万', curtailment: '6.4%', peakValley: '105.2 MW', cycles: '2', socEnd: '20%', devRisk: '高', runRisk: '高', recommend: false },
+      { name: '方案 E AI 综合推荐', revenue: '5.21 万', curtailment: '2.1%', peakValley: '82.6 MW', cycles: '1', socEnd: '20%', devRisk: '低', runRisk: '低', recommend: true },
+    ];
+
+    // ===== 充放电节点推导（正负切换，页面侧展示映射；可向 A 提入计算层）=====
+    function deriveMarks(schedule, hours) {
+      const marks = [];
+      const n = Math.min(schedule.length, hours);
+      for (let i = 1; i < n; i++) {
+        const prev = schedule[i - 1].storage_power, cur = schedule[i].storage_power;
+        const t = schedule[i].time.slice(11, 16);
+        if (prev <= 0 && cur > 0) marks.push({ time: t, label: '开始充电', type: 'charge' });
+        if (prev > 0 && cur <= 0) marks.push({ time: t, label: '停止充电', type: 'charge' });
+        if (prev >= 0 && cur < 0) marks.push({ time: t, label: '开始放电', type: 'discharge' });
+        if (prev < 0 && cur >= 0) marks.push({ time: t, label: '停止放电', type: 'discharge' });
+      }
+      return marks;
+    }
 
     const app = Vue.createApp({
       data() {
         return {
-          title: "风光储优化",
-          loading: false,
+          title: "风光储优化中心",
+          loading: true,
           error: "",
+          scale: "24H",
+          showConstraint: false,
+          scales: SCALES,
+          gen: null,
+          storage: null,
+          market: null,
+          schemeRows: SCHEME_ROWS,
+          timelineChart: null,
+          priceChart: null,
+          card: null,
+          prov: null,
         };
       },
       template: `
         <main>
-          <h1 class="text-2xl mb-4">{{ title }}</h1>
-          <p v-if="loading" class="text-gray-400">加载中…</p>
-          <p v-else-if="error" class="text-red-400">{{ error }}</p>
-          <div v-else>
-            <!-- 页面内容写在这里 -->
-            <!-- 数据加载：const data = await Data.load('demo/xxx')（A 的模拟数据） -->
-            <!-- 图表容器：需要图表的页面保留此 div，不需要可删。
-                 注意：此容器必须在页面首次渲染时就存在（勿置于 v-if 条件分支内），
-                 mounted 里 createChart($refs.chart) 依赖它已渲染；加载态用 loading/error 变量控制。 -->
-            <div ref="chart" class="w-full h-80"></div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h1 class="text-2xl">{{ title }}</h1>
+            <div class="flex items-center gap-3 text-sm text-gray-400">
+              <span v-if="storage">{{ metaLine }}</span>
+              <span v-if="isLevel1" class="px-2 py-0.5 rounded-full border border-accent text-accent text-xs">模拟数据</span>
+              <button v-if="storage" class="text-accent" @click="showSource">查看数据来源</button>
+            </div>
           </div>
+
+          <p v-if="loading" class="text-gray-400">加载中…</p>
+          <div v-else-if="error" class="text-red-400">
+            <p>{{ error }}</p>
+            <button class="mt-3 px-4 py-2 rounded bg-accent text-background font-semibold" @click="loadData">重试</button>
+          </div>
+
+          <template v-else>
+            <!-- ===== 模块1 · 顶部核心数字 ===== -->
+            <section class="mb-6">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div v-for="k in kpis" :key="k.label" class="card">
+                  <div class="text-sm text-gray-400">{{ k.label }}</div>
+                  <div class="text-2xl tabular mt-1" :style="{ color: k.color }">
+                    {{ k.value }} <span class="text-sm">{{ k.unit }}</span>
+                  </div>
+                  <div v-if="k.sub" class="text-xs text-gray-400 mt-1">{{ k.sub }}</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ===== 模块2 · 能源优化时间轴 ===== -->
+            <section class="card mb-6">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <h2 class="text-lg font-semibold">能源优化时间轴（风电 / 光伏 / 储能 / 并网）</h2>
+                <div class="flex gap-1 text-sm">
+                  <button v-for="s in scales" :key="s.key" @click="setScale(s.key)"
+                    :class="scale === s.key ? 'px-3 py-1 rounded bg-accent text-background font-semibold' : 'px-3 py-1 rounded border border-gray-600 text-gray-300'">
+                    {{ s.key }}
+                  </button>
+                </div>
+              </div>
+              <div ref="timelineChart" class="w-full h-80"></div>
+              <p class="text-xs text-gray-500 mt-2">储能功率正=充电、负=放电；充放电节点由 storage_power 正负切换推导（11:00 充 / 13:00 停 / 17:00 放 / 19:00 停）</p>
+            </section>
+
+            <!-- ===== 电价小图（独立，避免量纲混轴）===== -->
+            <section class="card mb-6">
+              <h2 class="text-lg font-semibold mb-2">市场价格参考（日前电价）</h2>
+              <div ref="priceChart" class="w-full h-48"></div>
+              <p class="text-xs text-gray-500 mt-2">与主时间轴共用 {{ scale }} 时间尺度；19:00 晚峰约 586 元/MWh</p>
+            </section>
+
+            <!-- ===== 模块3 · 四方案对比 ===== -->
+            <section class="card mb-6">
+              <h2 class="text-lg font-semibold mb-3">四方案对比
+                <span class="text-xs text-gray-500">（模拟示例值，方案 E 循环/SOC 终值实读 schedule）</span>
+              </h2>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="text-left text-gray-400 border-b border-gray-700">
+                      <th class="py-2 pr-3">方案</th>
+                      <th class="py-2 pr-3">预计收益</th>
+                      <th class="py-2 pr-3">弃电率</th>
+                      <th class="py-2 pr-3">峰谷差</th>
+                      <th class="py-2 pr-3">循环次数</th>
+                      <th class="py-2 pr-3">SOC 终值</th>
+                      <th class="py-2 pr-3">偏差风险</th>
+                      <th class="py-2 pr-3">运行风险</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="r in schemeRows" :key="r.name"
+                      class="border-b border-gray-800 tabular"
+                      :class="r.recommend ? 'bg-secondary' : ''">
+                      <td class="py-2 pr-3 font-semibold">
+                        {{ r.name }}
+                        <span v-if="r.recommend" class="ml-1 px-1.5 py-0.5 rounded text-xs border border-accent text-accent">AI 推荐</span>
+                      </td>
+                      <td class="py-2 pr-3" :class="r.recommend ? 'text-accent' : ''">{{ r.revenue }}</td>
+                      <td class="py-2 pr-3">{{ r.curtailment }}</td>
+                      <td class="py-2 pr-3">{{ r.peakValley }}</td>
+                      <td class="py-2 pr-3">{{ r.cycles }}</td>
+                      <td class="py-2 pr-3">{{ r.socEnd }}</td>
+                      <td class="py-2 pr-3" :class="r.devRisk === '高' ? 'text-red-400' : ''">{{ r.devRisk }}</td>
+                      <td class="py-2 pr-3" :class="r.runRisk === '高' ? 'text-red-400' : ''">{{ r.runRisk }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">D 收益最高但 2 次循环、风险高；E 风险调整后最优（同 p4 决策解释逻辑）。示例值配置在 SCHEME_ROWS 常量，待 A 提供 schemes[] 后整体替换。</p>
+            </section>
+
+            <!-- ===== 模块4 · AI 推荐 ===== -->
+            <section class="card mb-6">
+              <h2 class="text-lg font-semibold mb-3">AI 推荐</h2>
+              <div ref="aiCard"></div>
+            </section>
+
+            <!-- ===== 模块5 · 模型约束 ===== -->
+            <section class="card mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <h2 class="text-lg font-semibold">模型约束</h2>
+                <button class="px-3 py-1 rounded border border-gray-600 text-gray-300 text-sm" @click="showConstraint = !showConstraint">
+                  {{ showConstraint ? '收起' : '查看模型约束' }}
+                </button>
+              </div>
+              <table v-if="showConstraint" class="w-full text-sm">
+                <tbody>
+                  <tr v-for="c in constraints" :key="c.label" class="border-b border-gray-800">
+                    <td class="py-2 text-gray-400">{{ c.label }}</td>
+                    <td class="py-2 tabular text-right">{{ c.value }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p v-else class="text-xs text-gray-500">点击【查看模型约束】查看 SOC 上下限、充放电功率、效率与循环约束（数据来自 storage.params）。</p>
+            </section>
+          </template>
+
+          <div ref="prov"></div>
         </main>
       `,
+      computed: {
+        // ===== 顶部元信息 =====
+        metaLine() {
+          if (!this.storage) return "";
+          return "数据更新 " + this.storage.meta.updated;
+        },
+        isLevel1() {
+          return this.storage && String(this.storage.meta.level || "").indexOf("Level 1") === 0;
+        },
+        // ===== 模块1：顶部 4 卡 =====
+        peakPrice() {
+          if (!this.market) return null;
+          // 未来 24h 峰值（实测 586.2 @ 19:00）
+          const arr = (this.market.day_ahead || []).slice(0, 24);
+          if (!arr.length) return null;
+          let max = arr[0].price, t = arr[0].time;
+          arr.forEach((x) => { if (x.price > max) { max = x.price; t = x.time; } });
+          return { value: formatNumber(max, 1), time: t.slice(11, 16) };
+        },
+        kpis() {
+          if (!this.gen || !this.storage) return [];
+          const t = this.gen.today, s = this.storage.status;
+          const pk = this.peakPrice;
+          return [
+            { label: "预计风电", value: formatNumber(t.wind, 1), unit: "MWh", color: "#3987e5" },
+            { label: "预计光伏", value: formatNumber(t.pv, 1), unit: "MWh", color: "#d95926" },
+            { label: "当前 SOC", value: formatPercent(s.soc), unit: "", color: "#22C55E" },
+            { label: "预计峰值电价", value: pk ? pk.value : "--", unit: "元/MWh", sub: pk ? "未来24h峰值 @ " + pk.time : "", color: "#C98500" },
+          ];
+        },
+        // ===== 主时间轴视图（取 48h 交集，按档截取）=====
+        hours() {
+          const sc = SCALES.find((s) => s.key === this.scale);
+          return sc ? sc.hours : 24;
+        },
+        view() {
+          if (!this.gen || !this.storage) return null;
+          const f = this.gen.forecast || [];
+          const sch = this.storage.schedule || [];
+          const n = Math.min(this.hours, sch.length, f.length);
+          return {
+            hours: n,
+            labels: sch.slice(0, n).map((x) => x.time.slice(11, 16)),
+            series: [
+              { name: "风电出力", data: f.slice(0, n).map((x) => x.wind_power) },
+              { name: "光伏出力", data: f.slice(0, n).map((x) => x.pv_power) },
+              { name: "储能功率", data: sch.slice(0, n).map((x) => x.storage_power) },
+              { name: "并网功率", data: f.slice(0, n).map((x) => x.gen_total) },
+            ],
+            marks: deriveMarks(sch, n),
+          };
+        },
+        priceView() {
+          if (!this.market) return null;
+          const d = this.market.day_ahead || [];
+          const n = Math.min(this.hours, d.length);
+          return d.slice(0, n).map((x) => ({ label: x.time.slice(11, 16), value: x.price }));
+        },
+        // ===== 模块5：模型约束（读 storage.params）=====
+        constraints() {
+          if (!this.storage) return [];
+          const p = this.storage.params;
+          const grid = this.gen ? (this.gen.meta.wind_capacity_mw + this.gen.meta.pv_capacity_mw) : null;
+          const rows = [
+            { label: "SOC 下限 / 上限", value: formatPercent(p.soc_min, 0) + " / " + formatPercent(p.soc_max, 0) },
+            { label: "最大充放电功率", value: formatNumber(p.power_mw, 0) + " MW" },
+            { label: "充电效率 / 放电效率", value: formatPercent(p.charge_eff, 0) + " / " + formatPercent(p.discharge_eff, 0) },
+            { label: "每日最大循环次数", value: formatNumber(p.max_cycles_per_day, 0) + " 次" },
+            { label: "储能容量", value: formatNumber(p.capacity_mwh, 0) + " MWh" },
+          ];
+          if (grid != null) rows.push({ label: "并网容量（按装机推算）", value: formatNumber(grid, 0) + " MW" });
+          return rows;
+        },
+        // ===== AI 卡片 =====
+        aiCardData() {
+          if (!this.gen || !this.storage) return null;
+          return {
+            conclusion: "推荐方案 E · AI 综合推荐",
+            impact: "预计收益 +0.36 万元（vs 基准 4.85 万），弃电率 -6.1 个百分点（8.2%→2.1%），偏差成本 -12.5%（模拟）",
+            confidence: Math.round((this.gen.today.confidence || 0.89) * 100),
+            reasons: [
+              "午间光伏出力高（11:00–14:00 光伏 25–32 MW），充电消纳富余电量、减少弃光",
+              "晚峰价格预计上涨（17:00–20:00 电价 477–586 元/MWh，19:00 为全天峰值），17:00–18:00 放电套利",
+              "午间充电后 SOC 达上限 90%，下午满电待命应对晚峰",
+              "当前 SOC 64% 满足调度要求，充放空间充足",
+              "每日循环控制在 1 次以内，保护电池寿命（当前 SOH 95%）",
+            ],
+            model: { name: "StorageOptimizer", version: "v1.0" },
+            dataSources: [
+              { source: "储能调度 (物理模型)", time: this.storage.meta.updated },
+              { source: "发电预测 (物理模型)", time: this.gen.meta.updated },
+              { source: "市场数据 (锚点校准)", time: this.market ? this.market.meta.updated : this.storage.meta.updated },
+            ],
+            riskNote: "该结果仅作为辅助决策建议（Level 1 模型模拟）",
+            actions: [
+              { label: "查看依据", value: "view-evidence" },
+              { label: "加入任务", value: "add-task" },
+            ],
+          };
+        },
+      },
+      methods: {
+        async loadData() {
+          this.loading = true;
+          this.error = "";
+          try {
+            const [gen, storage, market] = await Promise.all([
+              Data("demo/generation"),
+              Data("demo/storage"),
+              Data("demo/market"),
+            ]);
+            this.gen = gen;
+            this.storage = storage;
+            this.market = market;
+            this.loading = false;
+            this.$nextTick(() => this.renderCharts());
+          } catch (e) {
+            this.error = e.message || "数据加载失败";
+            this.loading = false;
+          }
+        },
+        renderCharts() {
+          const v = this.view;
+          const pv = this.priceView;
+          const tc = this.$refs.timelineChart;
+          if (tc) {
+            if (!this.timelineChart) this.timelineChart = createChart(tc);
+            this.timelineChart.setData({ labels: v.labels, series: v.series, marks: v.marks }, { type: "timeline" });
+          }
+          const pc = this.$refs.priceChart;
+          if (pc) {
+            if (!this.priceChart) this.priceChart = createChart(pc);
+            this.priceChart.setData(pv, { type: "line", smooth: true, name: "日前电价(元/MWh)" });
+          }
+          const ac = this.$refs.aiCard;
+          if (ac) {
+            if (!this.card) this.card = createAICard(ac);
+            if (this.aiCardData) this.card.setData(this.aiCardData, { onAction: (a) => this.onCardAction(a) });
+          }
+        },
+        refreshCharts() {
+          const v = this.view;
+          const pv = this.priceView;
+          if (this.timelineChart) {
+            this.timelineChart.setData({ labels: v.labels, series: v.series, marks: v.marks }, { type: "timeline" });
+          }
+          if (this.priceChart) {
+            this.priceChart.setData(pv, { type: "line", smooth: true, name: "日前电价(元/MWh)" });
+          }
+        },
+        setScale(s) {
+          this.scale = s;
+        },
+        onCardAction(a) {
+          if (a.value === "view-evidence") this.showSource();
+          else if (a.value === "add-task") location.href = "/pages/p5.html";
+        },
+        showSource() {
+          if (!this.storage || !this.prov) return;
+          this.prov.open({
+            name: "储能调度计划（SOC 64% → 20%，1 次循环）",
+            sources: [this.storage.meta.source],
+            updateTime: this.storage.meta.updated,
+            quality: "空值率 0%，字段类型校验通过（data/CONTRACT.md）",
+            raw: "data/demo/storage.json（params + status + schedule 48h）",
+            process: "物理模型多目标优化；充放电节点由 storage_power 正负切换推导",
+            model: { name: "StorageOptimizer", version: "v1.0" },
+          });
+        },
+      },
       mounted() {
-        // 图表：用统一组件，数据形如 [{label, value}]
-        // 聚合结果用 toChartData() 适配后再喂图表
-        this.chart = createChart(this.$refs.chart);
-        this.chart.setData([{ label: '示例', value: 10 }]);
+        this.prov = createProvenance(this.$refs.prov);
+        this.loadData();
+      },
+      watch: {
+        scale() {
+          this.$nextTick(() => this.refreshCharts());
+        },
       },
       beforeUnmount() {
-        // 统一组件负责 dispose，页面只需调用
-        if (this.chart) { this.chart.dispose(); this.chart = null; }
+        if (this.timelineChart) { this.timelineChart.dispose(); this.timelineChart = null; }
+        if (this.priceChart) { this.priceChart.dispose(); this.priceChart = null; }
+        if (this.card) { this.card.dispose(); this.card = null; }
+        if (this.prov) { this.prov.dispose(); this.prov = null; }
       },
-      computed: {},
     });
 
     app.mount('#app');
