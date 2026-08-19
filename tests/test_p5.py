@@ -41,28 +41,27 @@ def test_p5_policy_module(page, base_url):
 
 
 def test_p5_task_module(page, base_url):
-    """决策任务中心：8 条任务 + 负责人/模型/置信度/风险 + 链路。"""
+    """决策任务中心：任务表格 + 链路。"""
     page.goto(f"{base_url}/pages/p5.html")
     page.locator("button", has_text="决策任务中心").click()
     page.wait_for_timeout(300)
     body = page.inner_text("#app")
     assert "确认明日发电预测" in body
     assert "确认储能运行计划" in body
-    assert "WindForecast" in body
     assert "置信度" in body
-    assert "D2026" in body  # 决策单号
     assert page.locator(".p5-link-node").count() == 7
-    table = page.locator(".p5-table:visible")
-    assert table.locator("tbody tr").count() == 8
+    # 任务表格 8 行（可见表格）
+    t = page.locator(".p5-table:visible").last
+    assert t.locator("tbody tr").count() == 8
 
 
 def test_p5_task_advance(page, base_url):
-    """状态流转：已确认 → 推进 → 待人工确认；状态链说明展示。"""
+    """状态流转：表格行点击推进 → 待人工确认。"""
     page.goto(f"{base_url}/pages/p5.html")
     page.locator("button", has_text="决策任务中心").click()
     page.wait_for_timeout(300)
-    # 第一条任务默认「已确认」，推进到「待人工确认」
-    first = page.locator("button", has_text="推进").first
+    # 第一条任务默认「已确认」，点击行推进到「待人工确认」
+    first = page.locator(".p5-table:visible").last.locator("tbody tr").first
     assert "已确认" in page.inner_text("#app")
     first.click()
     page.wait_for_timeout(200)

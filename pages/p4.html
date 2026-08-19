@@ -274,6 +274,15 @@
           updated: "2026-08-19 15:40",
           marketLoaded: false,
           marketData: null,
+          genData: null,
+          // 市场快讯（模拟新闻，对应市场动态）
+          news: [
+            { id: "N1", title: "吉林电力现货市场转入正式运行，常态化开展日前结算", tag: "现货", time: "08-19 09:30", level: 1 },
+            { id: "N2", title: "东北区域辅助服务市场规则修订，储能参与调频补偿上调", tag: "辅助服务", time: "08-19 08:10", level: 2 },
+            { id: "N3", title: "8 月下旬东北多风，风电出力预计提升，现货价格或承压", tag: "气象", time: "08-18 17:40", level: 1 },
+            { id: "N4", title: "绿电交易规模持续扩大，东北绿电环境溢价区间 30-60 元", tag: "绿电", time: "08-18 10:00", level: 3 },
+            { id: "N5", title: "辽宁发布现货市场结算细则修订稿，差价结算方式明确", tag: "规则", time: "08-17 15:20", level: 2 },
+          ],
           // 2. 企业资源池
           pool: { forecast: 142.3, locked: 65, storage: 18.2, flexible: 59 },
           // 3. 方案生成器
@@ -335,6 +344,27 @@
             return this.marketData.anchors.slice(0, 4);
           }
           return [];
+        },
+        marketRules() {
+          if (this.marketData && this.marketData.rules) {
+            return this.marketData.rules.slice(0, 5);
+          }
+          return [];
+        },
+        quoteItems() {
+          const day = (this.marketData && this.marketData.day_ahead) || [];
+          const rt = (this.marketData && this.marketData.real_time) || [];
+          const ms = (this.marketData && this.marketData.midterm_monthly) || [];
+          const dayAvg = day.length ? Math.round(day.reduce((s, d) => s + d.price, 0) / day.length) : 350;
+          const rtAvg = rt.length ? Math.round(rt.reduce((s, d) => s + d.price, 0) / rt.length) : 214;
+          const midAvg = ms.length ? Math.round(ms.reduce((s, m) => s + m.monthly, 0) / ms.length) : 332;
+          return [
+            { name: "中长期", value: midAvg, unit: "元/MWh", trend: "up" },
+            { name: "日前", value: dayAvg, unit: "元/MWh", trend: "up" },
+            { name: "实时", value: rtAvg, unit: "元/MWh", trend: "down" },
+            { name: "绿电溢价", value: this.greenPremium, unit: "元/MWh", trend: "" },
+            { name: "绿证", value: this.greenCert, unit: "元/个", trend: "" },
+          ];
         },
       },
       methods: {
@@ -421,9 +451,12 @@
             const market = await Data("demo/market");
             this.marketData = market;
             this.marketLoaded = true;
+            let gen = null;
+            try { gen = await Data("demo/generation"); } catch (e) {}
+            this.genData = gen;
             this.$nextTick(() => {
               this.renderMarketChart();
-              this.renderMidtermChart();
+              this.renderGenPriceChart();
             });
           } catch (e) {
             // market.json 缺失时保持内联卡（不阻断页面）
@@ -449,20 +482,24 @@
             ],
           }, { type: "line", smooth: true });
         },
-        // 中长期月度价格折线图
-        renderMidtermChart() {
-          if (!this.$refs.midtermChart) return;
-          if (!this.midtermChart) this.midtermChart = createChart(this.$refs.midtermChart);
-          const ms = (this.marketData && this.marketData.midterm_monthly) || [];
-          if (ms.length === 0) return;
-          this.midtermChart.setData({
-            labels: ms.map((m) => m.month + "月"),
+
+        // 发电 vs 日前电价关联图（24h，双轴）
+        renderGenPriceChart() {
+          if (!this.$refs.genPriceChart) return;
+          if (!this.genPriceChart) this.genPriceChart = createChart(this.$refs.genPriceChart);
+          const fc = (this.genData && this.genData.forecast) || [];
+          if (fc.length === 0) return;
+          const day = fc.slice(0, 24);
+          const labels = day.map((d) => { const t = d.time.split(" ")[1] || ""; return t.slice(0, 5); });
+          this.genPriceChart.setData({
+            labels,
             series: [
-              { name: "月度均价", data: ms.map((m) => m.monthly) },
-              { name: "年度均价", data: ms.map((m) => m.yearly) },
+              { name: "发电出力(MW)", data: day.map((d) => Math.round(d.gen_total * 10) / 10) },
+              { name: "日前电价(元/MWh)", data: day.map((d) => d.price_day_ahead) },
             ],
           }, { type: "line", smooth: true });
         },
+
       },
       mounted() {
         // 首屏自动生成一组默认策略，让页面开箱即有数据
@@ -472,7 +509,7 @@
       beforeUnmount() {
         if (this.riskChart) { this.riskChart.dispose(); this.riskChart = null; }
         if (this.marketChart) { this.marketChart.dispose(); this.marketChart = null; }
-        if (this.midtermChart) { this.midtermChart.dispose(); this.midtermChart = null; }
+        if (this.genPriceChart) { this.genPriceChart.dispose(); this.genPriceChart = null; }
       },
       watch: {
         tab() {
@@ -514,66 +551,79 @@
 
           <!-- ===== Tab1 市场行情 ===== -->
           <div v-show="tab==='market'">
-          <div class="p1-section__head mb-2">
-            <h2 class="p1-section__title">市场雷达</h2>
-            <span class="p1-section__hint">现货分时行情 · 中长期 · 绿色溢价</span>
-          </div>
-          <div class="p4-grid mb-4">
-            <!-- 左：日前 vs 实时分时折线 -->
-            <div class="p4-col-7 p4-panel">
-              <div class="flex justify-between items-center mb-2">
-                <h3 class="text-sm font-semibold">日前 vs 实时价格（24h）</h3>
-                <span class="p1-section__hint">元/MWh</span>
-              </div>
-              <div ref="marketChart" class="w-full h-52"></div>
-            </div>
-            <!-- 右：中长期 / 绿色溢价 卡片 -->
-            <div class="p4-col-5 space-y-3">
-              <div class="p4-stat-card">
-                <div class="flex items-center justify-between">
-                  <span class="p4-stat-label">中长期月度均价</span>
-                  <span class="p1-section__hint">12 月</span>
-                </div>
-                <div class="p4-stat-value tabular">{{ midtermAvg }}<span class="text-xs opacity-50 ml-1">元/MWh</span></div>
-              </div>
-              <div class="p4-stat-card">
-                <div class="flex items-center justify-between">
-                  <span class="p4-stat-label">绿色电力溢价</span>
-                  <span class="text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent-dark font-semibold">绿电</span>
-                </div>
-                <div class="p4-stat-value tabular">{{ greenPremium }}<span class="text-xs opacity-50 ml-1">元/MWh</span></div>
-                <div class="p4-stat-label mt-1">绿证 <span class="tabular">{{ greenCert }}</span> 元/个</div>
+            <!-- 报价条：5 市场价格紧凑横向，涨跌色 -->
+            <div class="flex flex-wrap items-center justify-center gap-2 mb-4 p-3 rounded-xl bg-white border border-border shadow-sm">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F0FDF4]" v-for="m in quoteItems" :key="m.name">
+                <span class="text-xs opacity-60">{{ m.name }}</span>
+                <span class="text-sm font-bold tabular" :style="{color: m.trend === 'up' ? '#15803C' : (m.trend === 'down' ? '#DC2626' : '#334155')}">
+                  {{ m.value }}<span class="text-[10px] opacity-50 ml-0.5">{{ m.unit }}</span>
+                </span>
+                <span v-if="m.trend" class="text-[10px] font-bold" :style="{color: m.trend === 'up' ? '#15803C' : '#DC2626'}">
+                  {{ m.trend === 'up' ? '▲' : '▼' }}
+                </span>
               </div>
             </div>
-          </div>
 
-          <!-- 中长期月度价格趋势 -->
-          <div class="p4-grid mb-4">
-            <div class="p4-col-12 p4-panel">
-              <div class="flex justify-between items-center mb-2">
-                <h3 class="text-sm font-semibold">中长期月度价格趋势</h3>
-                <span class="p1-section__hint">元/MWh · 月度 vs 年度</span>
+            <!-- 两大主图并排：分时行情 + 发电vs电价关联 -->
+            <div class="p4-grid mb-4">
+              <div class="p4-col-7 p4-panel">
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="text-sm font-semibold">日前 vs 实时价格</h3>
+                  <span class="p1-section__hint">24h · 元/MWh</span>
+                </div>
+                <div ref="marketChart" class="w-full h-48"></div>
               </div>
-              <div ref="midtermChart" class="w-full h-52"></div>
+              <div class="p4-col-5 p4-panel">
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="text-sm font-semibold">发电 vs 电价</h3>
+                  <span class="p1-section__hint">新能源反调峰特征</span>
+                </div>
+                <div ref="genPriceChart" class="w-full h-48"></div>
+              </div>
             </div>
-          </div>
 
-          <!-- 市场锚点价格 -->
-          <div class="p4-grid mb-4">
-            <div class="p4-col-12 p4-panel">
-              <div class="flex justify-between items-center mb-3">
-                <h3 class="text-sm font-semibold">市场锚点价格</h3>
-                <span class="p1-section__hint">官方来源可溯源</span>
+            <!-- 信息区：快讯 + 规则 + 锚点 -->
+            <div class="p4-grid">
+              <div class="p4-col-5 p4-panel">
+                <div class="flex justify-between items-center mb-3">
+                  <h3 class="text-sm font-semibold">市场快讯</h3>
+                  <span class="p1-section__hint">{{ news.length }} 条</span>
+                </div>
+                <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  <div v-for="n in news" :key="n.id" class="flex items-start gap-3 p-2.5 rounded-lg hover:bg-[#F0FDF4] transition-colors cursor-pointer">
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent-dark font-semibold shrink-0">{{ n.tag }}</span>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm leading-snug">{{ n.title }}</div>
+                      <div class="text-xs opacity-45 mt-0.5">{{ n.time }}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div v-for="a in anchors" :key="a.name" class="p4-stat-card">
-                  <div class="p4-stat-label">{{ a.name }}</div>
-                  <div class="p4-stat-value tabular mt-1">{{ a.value }}<span class="text-xs opacity-50 ml-1">{{ a.unit }}</span></div>
-                  <div class="text-xs opacity-40 mt-1.5 line-clamp-2">{{ a.source }}</div>
+              <div class="p4-col-4 p4-panel">
+                <div class="flex justify-between items-center mb-3">
+                  <h3 class="text-sm font-semibold">交易规则速览</h3>
+                  <span class="p1-section__hint">各省偏差/结算</span>
+                </div>
+                <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  <div v-for="r in marketRules" :key="r.region + r.category" class="p-2.5 rounded-lg bg-[#F0FDF4] border border-border">
+                    <span class="text-xs font-semibold text-accent-dark">{{ r.region }} · {{ r.category }}</span>
+                    <div class="text-xs opacity-65 leading-snug mt-0.5">{{ r.rule }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p4-col-3 p4-panel">
+                <div class="flex justify-between items-center mb-3">
+                  <h3 class="text-sm font-semibold">锚点价格</h3>
+                  <span class="p1-section__hint">官方</span>
+                </div>
+                <div class="space-y-2">
+                  <div v-for="a in anchors.slice(0, 3)" :key="a.name" class="p-2 rounded-lg bg-white border border-border">
+                    <div class="text-[11px] opacity-60 leading-tight">{{ a.name }}</div>
+                    <div class="text-sm font-bold tabular mt-0.5" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent">{{ a.value }}<span class="text-[10px] opacity-50 ml-0.5">{{ a.unit }}</span></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           </div>
 
           <!-- ===== Tab2 交易决策 ===== -->

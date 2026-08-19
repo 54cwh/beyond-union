@@ -31,7 +31,7 @@
       background-color: #FFFFFF;
       border: 1px solid var(--color-border);
       border-radius: 12px;
-      padding: 16px;
+      padding: 10px 14px;
       box-shadow: 0 1px 3px rgba(21, 128, 61, 0.06);
       transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
     }
@@ -55,8 +55,8 @@
       font-family: "Inter", monospace;
       font-variant-numeric: tabular-nums;
       font-weight: 800;
-      font-size: 30px;
-      line-height: 1.2;
+      font-size: 24px;
+      line-height: 1.1;
       background: var(--gradient-text);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -65,7 +65,7 @@
     .p5-stat-label {
       font-size: 12px;
       opacity: 0.55;
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
     .p5-panel {
@@ -223,24 +223,47 @@
 
     .p5-stars { letter-spacing: 1px; color: var(--color-accent-dark); font-size: 11px; }
 
-    .p5-link-flow { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; }
+    .p5-link-flow { display: flex; align-items: center; gap: 4px; overflow-x: auto; }
     .p5-link-node {
       flex: 1 1 0;
-      min-width: 110px;
-      background-color: #FFFFFF;
-      border: 1px solid var(--color-border);
-      border-radius: 10px;
-      padding: 10px 8px;
-      text-align: center;
-      box-shadow: 0 1px 3px rgba(21, 128, 61, 0.05);
-      transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+      min-width: 96px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
     }
-    .p5-link-node.active {
-      border-color: var(--color-accent);
-      background-color: rgba(34, 197, 94, 0.06);
-      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.12);
+    .p5-link-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #D1D5DB;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 0 1px var(--color-border);
+      transition: all 180ms ease;
     }
-    .p5-link-arrow { align-self: center; color: var(--color-accent); font-size: 16px; flex-shrink: 0; }
+    .p5-link-node.active .p5-link-dot {
+      background-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+    }
+    .p5-link-bar {
+      flex: 1;
+      height: 3px;
+      background-color: var(--color-border);
+      border-radius: 999px;
+      margin: -14px 0 0;
+    }
+    .p5-link-label {
+      font-size: 11px;
+      opacity: 0.6;
+      white-space: nowrap;
+    }
+    .p5-link-count {
+      font-size: 11px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-accent-dark);
+    }
+    .p5-link-node.active .p5-link-label { color: var(--color-accent-dark); opacity: 1; font-weight: 600; }
 
     .p5-adv-btn {
       font-size: 11px;
@@ -309,7 +332,7 @@
 
           <!-- ================= 政策板块 ================= -->
           <div v-show="tab==='policy'">
-            <div class="p5-grid mb-4">
+            <div class="p5-grid mb-3">
               <div class="p5-col-3 p5-stat-card card">
                 <div class="p5-stat-value tabular">{{ policies.length }}</div>
                 <div class="p5-stat-label">政策总数</div>
@@ -440,8 +463,8 @@
           </div>
 
           <!-- ================= 决策任务板块 ================= -->
-          <div v-show="tab==='tasks'">
-            <div class="p5-grid mb-4">
+          <div v-show="tab==='tasks'" class="flex flex-col overflow-hidden" style="height: calc(100vh - 158px)">
+            <div class="p5-grid mb-3 shrink-0">
               <div class="p5-col-3 p5-stat-card card">
                 <div class="p5-stat-value tabular">{{ tasks.length }}</div>
                 <div class="p5-stat-label">今日任务</div>
@@ -461,30 +484,30 @@
             </div>
 
             <!-- 决策闭环链路 -->
-            <section class="p1-section">
-              <div class="p1-section__head">
+            <section class="mb-4 shrink-0">
+              <div class="p1-section__head mb-2">
                 <h2 class="p1-section__title">决策闭环</h2>
-                <span class="p1-section__hint">AI 建议 → 人工确认 → 执行 → 复盘</span>
               </div>
               <div class="p5-link-flow">
                 <template v-for="(s, i) in statusList" :key="s">
                   <div class="p5-link-node" :class="{ active: taskInStatus(s) > 0 }">
-                    <div class="text-[13px] font-semibold">{{ s }}</div>
-                    <div class="text-xs opacity-70 tabular">{{ taskInStatus(s) }} 项</div>
+                    <span class="p5-link-dot"></span>
+                    <span class="p5-link-count tabular">{{ taskInStatus(s) }}</span>
+                    <span class="p5-link-label">{{ s }}</span>
                   </div>
-                  <div v-if="i < statusList.length - 1" class="p5-link-arrow">→</div>
+                  <div v-if="i < statusList.length - 1" class="p5-link-bar"></div>
                 </template>
               </div>
             </section>
 
-            <div class="p5-grid">
+            <div class="p5-grid flex-1 min-h-0">
               <!-- 左 7 列：任务表格 -->
-              <div class="p5-col-7 p5-panel">
-                <div class="flex justify-between items-center mb-3">
+              <div class="p5-col-7 p5-panel flex flex-col min-h-0">
+                <div class="flex justify-between items-center mb-3 shrink-0">
                   <h2 class="p5-panel-title">今日决策任务</h2>
                   <span class="p1-section__hint">点击推进演示流转</span>
                 </div>
-                <div class="max-h-[480px] overflow-y-auto">
+                <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
                   <table class="p5-table">
                     <thead>
                       <tr>
@@ -496,13 +519,13 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="t in tasks" :key="t.id">
+                      <tr v-for="t in tasks" :key="t.id" @click="advanceTask(t)" :title="'点击推进：' + t.status + ' → 下一状态'">
                         <td>
                           <div class="flex items-center gap-2">
                             <span class="text-[11px] px-2 py-0.5 rounded-full bg-secondary border border-border shrink-0">{{ t.type }}</span>
                             <span class="font-medium text-sm">{{ t.title }}</span>
                           </div>
-                          <div class="text-xs opacity-50 mt-0.5 tabular">{{ t.decision_id }} · {{ t.model }}</div>
+                          <div class="text-xs opacity-50 mt-0.5 tabular">{{ t.decision_id }}</div>
                           <div v-if="t.risk" class="text-xs mt-1 text-amber-400">⚠ {{ t.risk }}</div>
                         </td>
                         <td class="text-xs opacity-70 whitespace-nowrap">{{ t.owner }}</td>
@@ -512,8 +535,8 @@
                         <td class="whitespace-nowrap">
                           <span class="p5-badge" :class="statusClass(t.status)">{{ t.status }}</span>
                         </td>
-                        <td>
-                          <button type="button" class="p5-adv-btn" @click.stop="advanceTask(t)">推进 →</button>
+                        <td class="whitespace-nowrap">
+                          <span class="text-xs text-accent-dark font-semibold">推进 ›</span>
                         </td>
                       </tr>
                     </tbody>
@@ -522,13 +545,13 @@
               </div>
 
               <!-- 右 5 列：风险 + 分布 -->
-              <div class="p5-col-5 space-y-3">
-                <div class="p5-panel">
-                  <div class="flex justify-between items-center mb-3">
+              <div class="p5-col-5 space-y-3 flex flex-col min-h-0">
+                <div class="p5-panel flex-1 min-h-0 flex flex-col">
+                  <div class="flex justify-between items-center mb-3 shrink-0">
                     <h2 class="p5-panel-title">风险提示</h2>
                     <span class="p1-section__hint">{{ riskCount }} 项</span>
                   </div>
-                  <div class="space-y-2">
+                  <div class="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
                     <div v-for="t in riskTasks" :key="t.id" class="flex items-start gap-2 text-xs p-2 rounded-lg bg-secondary border border-border">
                       <span class="text-amber-400 mt-0.5 shrink-0">⚠</span>
                       <div>
@@ -539,8 +562,8 @@
                   </div>
                 </div>
 
-                <div class="p5-panel">
-                  <div class="flex justify-between items-center mb-3">
+                <div class="p5-panel flex-1 min-h-0">
+                  <div class="flex justify-between items-center mb-3 shrink-0">
                     <h2 class="p5-panel-title">状态分布</h2>
                     <span class="p1-section__hint">{{ tasks.length }} 项</span>
                   </div>
