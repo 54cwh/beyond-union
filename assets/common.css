@@ -788,8 +788,12 @@ button, [role="button"], .clickable, a {
 .geo-map__btn:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
 .geo-map__btn.active { background: var(--gradient-accent); color: #FFFFFF; border-color: transparent; }
 .geo-map__btn--mini { padding: 4px 10px; font-size: 12px; }
+.geo-map__canvas-wrap { position: relative; }
+.geo-map__zoom { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
+.geo-map__zoom-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-border); background: #FFFFFF; color: var(--color-foreground); font-size: 16px; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.10); transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.geo-map__zoom-btn:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
 .geo-map__chart {
-  height: 340px; width: 100%; background: #FFFFFF;
+  position: relative; height: 340px; width: 100%; background: #FFFFFF;
   border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden;
 }
 /* 地图 hero（p1 第一页置顶大图，居中）：图表加高 */
@@ -825,6 +829,7 @@ button, [role="button"], .clickable, a {
 .geo-map--dark .geo-map__chart {
   background: #0B1220; border-color: #1F3A5F;
 }
+.geo-map--dark .geo-map__zoom-btn { background: #101D33; border-color: #1F3A5F; color: #E5E7EB; }
 .geo-map--dark .geo-map__toolbar .geo-map__btn:not(.active) {
   background: #101D33; border-color: #1F3A5F; color: #E5E7EB;
 }

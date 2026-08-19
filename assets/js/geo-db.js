@@ -83,21 +83,24 @@ export function resolveFlows(flows, provinces) {
 export async function loadGeoDB(fetchImpl, baseUrl) {
   const base = baseUrl || "";
   const load = fetchImpl || window.fetch;
-  const [geoJson, provinces, stations, flows] = await Promise.all([
+  const [geoJson, provinces, stations, flows, riversData] = await Promise.all([
     load(base + "data/geo/ne.json").then((r) => r.json()),
     load(base + "data/geo/provinces.json").then((r) => r.json()),
     load(base + "data/geo/stations.json").then((r) => r.json()),
     load(base + "data/geo/flows.json").then((r) => r.json()),
+    load(base + "data/geo/rivers.json").then((r) => r.json()),
   ]);
   const pList = provinces.provinces;
   const periods = provinces.periods || [];
   const sList = stations.stations;
   const fList = flows.flows;
+  const rList = (riversData && riversData.rivers) || [];
   return {
     geoJson,
     provinces: pList,
     stations: sList,
     flows: fList,
+    rivers: rList,
     stationsByProvince: (name) => stationsByProvince(sList, name),
     stationsByType: (type) => stationsByType(sList, type),
     searchStations: (kw) => searchStations(sList, kw),

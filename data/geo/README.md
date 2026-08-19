@@ -7,7 +7,7 @@
 
 | 文件 | 内容 | 更新频率 |
 | --- | --- | --- |
-| ne.json | 东北四省 GeoJSON（FeatureCollection，adcode 150000/210000/220000/230000） | 边界更新时 |
+| ne.json | 东北四省县域级 GeoJSON（FeatureCollection，385 个区/县/旗，含 `provinceName`/`cityName` 归属字段；顶层 `provinceBounds` 为省界粗线坐标） | 边界更新时 |
 | provinces.json | 省份经营 KPI + 资源禀赋（容量/发电/收益/风险/风速/辐照/储能/场站数/质心） | 每日 |
 | stations.json | 13 个风/光/储场站（坐标/容量/状态/型号） | 新增项目时 |
 | flows.json | 5 条输电流向（起止省、功率、外送标注） | 交易计划更新时 |
@@ -78,6 +78,9 @@ db.provinceByName("辽宁");           // 短名/全称 → 省份对象
 
 `createGeoMap(el, { geoJson, provinces, stations, flows, periods })` 八图层 + 双主题 + 省份联动 + 时间轴：
 
+- **县域级底图**：分隔线精确到县（385 个区/县/旗），县界细线（0.6px）；KPI/风险仍按省份着色（`countyData` 把省份值展开到县域，`nameProperty=adcode` 唯一匹配）
+- **省界粗线**：`provinceBounds` 由县界按省份溶解（边计数=1 即省外边界）再抽稀，以粗 `lines`（挂 geo，随漫游/缩放同步，silent 不拦截点击）叠加在细县界之上，突出四省轮廓（bar3d 除外）
+- **省份名标签**：县域级底图不显示县名，改用 `graphic` 文本在省份质心标注省名
 - **KPI 着色**：capacity / generation / revenue 连续色带（#DCFCE7→#16A34A），risk 分档色（低=绿 / 中低=琥珀 / 中=红）
 - **资源图层**：wind（风速）/ solar（辐照）连续着色
 - **场站分布**：scatter / effectScatter（储能脉冲），符号大小 = √容量，点击回调
@@ -92,7 +95,11 @@ db.provinceByName("辽宁");           // 短名/全称 → 省份对象
 
 ## 更新方式
 
-- 边界（ne.json）：`https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json` 下载后裁切为四省。
+- 边界（ne.json，县域级）：从阿里云 DataV GeoAtlas 三级级联抓取并合并——
+  1. `{省 adcode}_full.json`（150000/210000/220000/230000）→ 地级市清单；
+  2. 每个 `{市 adcode}_full.json` → 区/县/旗特征（level=district）；
+  3. 合并为单一 FeatureCollection，逐特征附加 `provinceAdcode` / `provinceName` / `cityName`；
+  4. 按 `provinceAdcode` 溶解县界成省外边界（多边形边计数=1 即省界），径向抽稀后写入顶层 `provinceBounds`。
 - KPI/资源（provinces.json）：每日从数据管线导出（A 岗）后按上方字段覆写。
 - 场站（stations.json）：新建项目时追加一行。
 

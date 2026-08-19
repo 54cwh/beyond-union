@@ -34,6 +34,8 @@ const THEMES = {
     heatGlow: "rgba(34,197,94,0.5)",
     shadowGlow: "rgba(34,197,94,0.35)",
     flowBlend: null,
+    riverColor: "#3B82F6",
+    cityBorder: "#34D399",
   },
   dark: {
     background: "#0B1220",
@@ -53,6 +55,8 @@ const THEMES = {
     heatGlow: "rgba(52,211,153,0.6)",
     shadowGlow: "rgba(52,211,153,0.5)",
     flowBlend: "lighter",
+    riverColor: "#60A5FA",
+    cityBorder: "#10B981",
   },
 };
 
@@ -105,7 +109,7 @@ function fitCoord(bounds, coord, pad = 0.06) {
 }
 
 export function createGeoMap(el, options) {
-  const { geoJson, provinces, stations, flows, periods } = options;
+  const { geoJson, provinces, stations, flows, periods, rivers } = options;
   let chart = null;
   let layer = "kpi";
   let kpi = "capacity";
@@ -117,7 +121,47 @@ export function createGeoMap(el, options) {
   let timeTimer = null;
 
   const MAP_VIEW = { map: "ne", roam: true, zoom: 1.12, center: [123.5, 45.0] };
+  const CITY_ZOOM = 1.9; // 城市名标签出现的最小缩放倍数
   const BOUNDS = geoBounds(geoJson);
+
+  // 县域级底图：adcode -> 县名查找表（悬浮/图例显示可读名）
+  const countyName = Object.create(null);
+  (geoJson.features || []).forEach((f) => {
+    const pr = f.properties || {};
+    if (pr.adcode != null) countyName[String(pr.adcode)] = pr.name;
+  });
+
+  // 省份外边界（ne.json 顶层 provinceBounds 已按省份溶解+抽稀）：粗线叠加突出省界
+  const provinceLines = (geoJson.provinceBounds || []).map((b) => b.coords || []).filter((c) => c.length > 1);
+  const cityLines = (geoJson.cityBounds || []).map((b) => b.coords || []).filter((c) => c.length > 1);
+
+  // 地级市标签质心：按 cityName 聚合县域质心（放大时显示市名）
+  const cityCenters = (() => {
+    const acc = Object.create(null);
+    (geoJson.features || []).forEach((f) => {
+      const pr = f.properties || {};
+      if (!pr.cityName) return;
+      const key = (pr.provinceName || "") + "|" + pr.cityName;
+      if (!acc[key]) acc[key] = { name: String(pr.cityName).replace(/市$/, ""), sx: 0, sy: 0, n: 0 };
+      const c = pr.centroid || pr.center;
+      if (c && c.length === 2 && isFinite(c[0]) && isFinite(c[1])) { acc[key].sx += c[0]; acc[key].sy += c[1]; acc[key].n += 1; }
+    });
+    return Object.keys(acc).map((k) => {
+      const a = acc[k];
+      return a.n ? { name: a.name, center: [a.sx / a.n, a.sy / a.n] } : null;
+    }).filter(Boolean);
+  })();
+
+  // 把省份 KPI/风险展开到县域（name=adcode，meta 仍为所属省份，供 tooltip/点击回传）
+  function countyData(field) {
+    const provByName = Object.create(null);
+    provinces.forEach((p) => { provByName[p.name] = p; });
+    return (geoJson.features || []).map((f) => {
+      const pr = f.properties || {};
+      const prov = provByName[pr.provinceName] || provByName[pr.name];
+      return { name: String(pr.adcode), value: prov ? prov[field] : 0, meta: prov };
+    });
+  }
 
   function theme() { return THEMES[themeName]; }
 
@@ -125,13 +169,15 @@ export function createGeoMap(el, options) {
   function mapSeries() {
     const t = theme();
     return {
-      label: { show: true, color: t.inkSoft, fontSize: 11 },
-      itemStyle: { areaColor: t.surface, borderColor: t.border, borderWidth: 1.2 },
+      nameProperty: "adcode",
+      label: { show: false, color: t.inkSoft, fontSize: 11 },
+      itemStyle: { areaColor: t.surface, borderColor: t.border, borderWidth: 0.6 },
       emphasis: {
-        label: { show: true, color: t.ink, fontWeight: 700 },
+        label: { show: true, color: t.ink, fontWeight: 700, formatter: (p) => countyName[p.name] || p.name },
         itemStyle: {
           areaColor: t.areaHover,
           borderColor: t.borderHover,
+          borderWidth: 1,
           shadowBlur: 14,
           shadowColor: t.shadowGlow,
         },
@@ -140,6 +186,48 @@ export function createGeoMap(el, options) {
   }
 
   function geoBase() { return { ...MAP_VIEW, ...mapSeries() }; }
+
+  // 省份外边界粗线（lines 挂 geo，随漫游/缩放同步；silent 不拦截点击）
+  function provinceBorderSeries() {
+    const t = theme();
+    return {
+      type: "lines",
+      name: "省界",
+      coordinateSystem: "geo",
+      zlevel: 3,
+      silent: true,
+      data: provinceLines.map((ring) => ({ coords: ring })),
+      lineStyle: { color: t.ink, width: 2.6, opacity: 0.9 },
+    };
+  }
+
+  // 水系（东北主要河流）：细蓝线挂 geo，作为底图地理参照
+  function riverSeries() {
+    const t = theme();
+    return {
+      type: "lines",
+      name: "水系",
+      coordinateSystem: "geo",
+      zlevel: 1,
+      silent: true,
+      data: (rivers || []).map((r) => ({ coords: r.coords })),
+      lineStyle: { color: t.riverColor, width: 1.4, opacity: 0.7 },
+    };
+  }
+
+  // 地级市边界中间层（介于省界粗线与县界细线之间）
+  function cityBorderSeries() {
+    const t = theme();
+    return {
+      type: "lines",
+      name: "市界",
+      coordinateSystem: "geo",
+      zlevel: 2,
+      silent: true,
+      data: cityLines.map((ring) => ({ coords: ring })),
+      lineStyle: { color: t.cityBorder, width: 1.1, opacity: 0.5 },
+    };
+  }
 
   function visualMapText() { return { textStyle: { color: theme().ink, fontSize: 10 } }; }
 // 气泡/时间轴取值：优先 provinces.json 的 history 序列，缺失回退 generation
@@ -155,7 +243,7 @@ export function createGeoMap(el, options) {
   // KPI / 资源 共用的连续色带着色
   function choroplethOption(field, labelFn, ramp) {
     const t = theme();
-    const data = provinces.map((p) => ({ name: p.name, value: p[field], meta: p }));
+    const data = countyData(field);
     const values = provinces.map((p) => Number(p[field]) || 0);
     const min = Math.min(...values);
     const max = Math.max(...values);
@@ -166,7 +254,8 @@ export function createGeoMap(el, options) {
         formatter: function (params) {
           const meta = params.data && params.data.meta;
           if (!meta) return params.name;
-          const lines = [tipTitle(meta.name)];
+          const cname = countyName[params.name];
+          const lines = [tipTitle(cname ? cname + " · " + meta.name : meta.name)];
           lines.push(labelFn(field) + "：" + meta[field]);
           lines.push("装机容量：" + meta.capacity + " GW");
           lines.push("场站数：" + meta.stationCount);
@@ -185,14 +274,17 @@ export function createGeoMap(el, options) {
         itemHeight: 110,
         calculable: true,
       },
-      series: [{ type: "map", ...MAP_VIEW, ...mapSeries(), data: data }],
+      geo: geoBase(),
+      series: [
+        { type: "map", geoIndex: 0, ...mapSeries(), data: data },
+      ],
     };
   }
 
   // 风险分档着色（状态色 + 图例，颜色不单独承载信息）
   function riskOption() {
     const t = theme();
-    const data = provinces.map((p) => ({ name: p.name, value: p.risk, meta: p }));
+    const data = countyData("risk");
     return {
       backgroundColor: t.background,
       tooltip: {
@@ -200,7 +292,8 @@ export function createGeoMap(el, options) {
         formatter: function (params) {
           const meta = params.data && params.data.meta;
           if (!meta) return params.name;
-          const lines = [tipTitle(meta.name)];
+          const cname = countyName[params.name];
+          const lines = [tipTitle(cname ? cname + " · " + meta.name : meta.name)];
           lines.push("风险等级：" + meta.risk);
           lines.push("装机容量：" + meta.capacity + " GW");
           lines.push("场站数：" + meta.stationCount);
@@ -216,7 +309,10 @@ export function createGeoMap(el, options) {
         itemWidth: 14,
         itemHeight: 14,
       },
-      series: [{ type: "map", ...MAP_VIEW, ...mapSeries(), data: data }],
+      geo: geoBase(),
+      series: [
+        { type: "map", geoIndex: 0, ...mapSeries(), data: data },
+      ],
     };
   }
 
@@ -527,18 +623,122 @@ export function createGeoMap(el, options) {
   }
   // 按当前图层/指标选择配置
   function buildOption() {
-    if (layer === "resource") return choroplethOption(resource, resourceLabel, theme().resourceRamp);
-    if (layer === "station") return stationOption();
-    if (layer === "flow") return flowOption();
-    if (layer === "heat") return heatOption();
-    if (layer === "assoc") return assocOption();
-    if (layer === "bubble") return bubbleOption();
-    if (layer === "bar3d") return bar3dOption();
-    return kpi === "risk" ? riskOption() : choroplethOption(kpi, kpiLabel, theme().kpiRamp);
+    let opt;
+    if (layer === "resource") opt = choroplethOption(resource, resourceLabel, theme().resourceRamp);
+    else if (layer === "station") opt = stationOption();
+    else if (layer === "flow") opt = flowOption();
+    else if (layer === "heat") opt = heatOption();
+    else if (layer === "assoc") opt = assocOption();
+    else if (layer === "bubble") opt = bubbleOption();
+    else if (layer === "bar3d") opt = bar3dOption();
+    else opt = (kpi === "risk" ? riskOption() : choroplethOption(kpi, kpiLabel, theme().kpiRamp));
+    // 底图参照叠加到所有含 geo 的图层（bar3d 用 geo3D，跳过）：水系 → 省界
+    if (layer !== "bar3d" && opt.geo) {
+      const extras = [];
+      if (rivers && rivers.length) extras.push(riverSeries());
+      if (cityLines.length) extras.push(cityBorderSeries());
+      if (provinceLines.length) extras.push(provinceBorderSeries());
+      if (extras.length) opt.series = (opt.series || []).concat(extras);
+    }
+    return opt;
+  }
+
+  // 当前 geo 中心/缩放（含漫游后的实时值）
+  function geoCenter() {
+    try {
+      const geo = chart.getModel().getComponent("geo");
+      if (geo && geo.coordinateSystem) return geo.coordinateSystem.getCenter();
+    } catch (e) {}
+    return MAP_VIEW.center;
+  }
+  function geoZoom() {
+    try {
+      const geo = chart.getModel().getComponent("geo");
+      if (geo && geo.coordinateSystem) return geo.coordinateSystem.getZoom();
+    } catch (e) {}
+    return MAP_VIEW.zoom;
+  }
+
+  // 叠加层：指北针 + 比例尺 + 省份/城市名标签（graphic，随漫游/缩放重算）
+  function applyOverlays() {
+    if (!chart || layer === "bar3d") return;
+    const t = theme();
+    const coordSys = { geoIndex: 0 };
+    const els = [];
+
+    // 指北针（固定左上角）
+    els.push(
+      { type: "polygon", left: 20, top: 16, shape: { points: [[0, 12], [6, 0], [12, 12]] }, style: { fill: t.ink }, z: 200, silent: true },
+      { type: "text", left: 26, top: 30, style: { text: "N", fill: t.ink, font: "700 11px 'Inter',sans-serif", textAlign: "center" }, z: 200, silent: true },
+    );
+
+    // 比例尺（固定右下角，长度随 zoom 变）
+    try {
+      const c = geoCenter();
+      const dLng = 0.2;
+      const p0 = chart.convertToPixel(coordSys, [c[0] - dLng / 2, c[1]]);
+      const p1 = chart.convertToPixel(coordSys, [c[0] + dLng / 2, c[1]]);
+      const pxPerDeg = Math.abs(p1[0] - p0[0]) / dLng;
+      const kmPerDeg = 111.32 * Math.cos((c[1] * Math.PI) / 180);
+      const pxPerKm = pxPerDeg / kmPerDeg;
+      let dist = 50, w = 0;
+      for (const d of [1000, 500, 200, 100, 50, 20, 10, 5]) {
+        const ww = d * pxPerKm;
+        if (ww <= 150) { dist = d; w = ww; break; }
+      }
+      if (w > 0) {
+        const x = chart.getWidth() - 16 - w;
+        const label = (dist >= 1000 ? dist / 1000 : dist) + " km";
+        els.push(
+          { type: "rect", left: x, bottom: 26, shape: { width: w, height: 2 }, style: { fill: t.ink, opacity: 0.85 }, z: 200, silent: true },
+          { type: "text", left: x, bottom: 8, style: { text: label, fill: t.inkSoft, font: "10px 'Inter',sans-serif", textAlign: "left" }, z: 200, silent: true },
+        );
+      }
+    } catch (e) {}
+
+    // 省份名标签：低缩放显示；放大显示市名时隐藏（渐进式，避免与市名重叠）
+    if (geoZoom() <= CITY_ZOOM) {
+      try {
+        provinces.forEach((p) => {
+          const px = chart.convertToPixel(coordSys, p.center);
+          els.push({ type: "text", left: px[0], top: px[1] - 9, style: { text: p.name, fill: t.ink, font: "700 13px 'Noto Serif SC','Inter',sans-serif", textAlign: "center" }, z: 100, silent: true });
+        });
+      } catch (e) {}
+    }
+
+    // 城市名标签：放大显示，贪心避让重叠（密集地区自动稀疏标注）
+    if (geoZoom() > CITY_ZOOM) {
+      try {
+        const placed = [];
+        const items = cityCenters.slice().sort((a, b) => a.center[0] - b.center[0]);
+        items.forEach((c) => {
+          const px = chart.convertToPixel(coordSys, c.center);
+          const w = c.name.length * 10 + 6;
+          const h = 14;
+          const bx = px[0] - w / 2, by = px[1] + 1;
+          for (const b of placed) {
+            if (bx < b.x + b.w && bx + w > b.x && by < b.y + b.h && by + h > b.y) return;
+          }
+          placed.push({ x: bx, y: by, w: w, h: h });
+          els.push({ type: "text", left: px[0], top: px[1] + 2, style: { text: c.name, fill: t.inkSoft, font: "500 10px 'Inter','Noto Sans SC',sans-serif", textAlign: "center" }, z: 99, silent: true });
+        });
+      } catch (e) {}
+    }
+
+    chart.setOption({ graphic: els });
+  }
+
+  function zoomBy(factor) {
+    if (!chart || layer === "bar3d") return;
+    chart.setOption({ geo: { zoom: geoZoom() * factor, center: geoCenter() } });
+    applyOverlays();
   }
 
   function render() {
-    if (chart) chart.setOption(buildOption(), true);
+    if (chart) {
+      chart.setOption(buildOption(), true);
+      applyOverlays();
+    }
   }
 
   function clickBridge(params) {
@@ -560,6 +760,7 @@ export function createGeoMap(el, options) {
       echarts.registerMap("ne", geoJson);
       chart = echarts.init(el);
       render();
+      chart.on("georoam", applyOverlays);
       window.addEventListener("resize", api.resize);
       if (clickHandler) chart.on("click", clickBridge);
       return api;
@@ -572,6 +773,15 @@ export function createGeoMap(el, options) {
     getLayer() { return layer; },
     getKPI() { return kpi; },
     getResource() { return resource; },
+    zoomIn() { zoomBy(1.4); return api; },
+    zoomOut() { zoomBy(1 / 1.4); return api; },
+    resetView() {
+      if (chart && layer !== "bar3d") {
+        chart.setOption({ geo: { zoom: MAP_VIEW.zoom, center: MAP_VIEW.center } });
+        applyOverlays();
+      }
+      return api;
+    },
     bindClick(cb) {
       clickHandler = cb;
       if (chart) {
@@ -597,7 +807,7 @@ export function createGeoMap(el, options) {
       }, 900);
       return api;
     },
-    resize() { if (chart) chart.resize(); },
+    resize() { if (chart) { chart.resize(); applyOverlays(); } },
     getChart() { return chart; },
     dispose() {
       if (timeTimer) { clearInterval(timeTimer); timeTimer = null; }

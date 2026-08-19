@@ -246,6 +246,9 @@
             if (this.gm) this.gm.setTime(this.geoTime);
           }, 900);
         },
+        zoomInMap() { if (this.gm) this.gm.zoomIn(); },
+        zoomOutMap() { if (this.gm) this.gm.zoomOut(); },
+        resetGeoView() { if (this.gm) this.gm.resetView(); },
 
         // 地图点击 → 底部详情条（省份 / 场站）
         onGeoClick(e) {
@@ -405,7 +408,14 @@
                   </button>
                 </div>
               </div>
-              <div ref="geoMap" class="geo-map__chart"></div>
+              <div class="geo-map__canvas-wrap">
+                <div ref="geoMap" class="geo-map__chart"></div>
+                <div class="geo-map__zoom">
+                  <button type="button" class="geo-map__zoom-btn" title="放大" @click="zoomInMap">＋</button>
+                  <button type="button" class="geo-map__zoom-btn" title="复位视角" @click="resetGeoView">⟳</button>
+                  <button type="button" class="geo-map__zoom-btn" title="缩小" @click="zoomOutMap">－</button>
+                </div>
+              </div>
               <div v-if="geoSummary" class="geo-map__detail geo-map__detail--err">{{ geoSummary }}</div>
               <div v-else-if="geoSelected" class="geo-map__detail">
                 <b class="geo-map__detail-name">{{ geoSelected.title }}</b>
@@ -535,6 +545,7 @@
             provinces: db.provinces,
             stations: db.stations,
             flows: db.flows,
+            rivers: db.rivers,
             periods: db.periods,
           });
           this.gm.init();
