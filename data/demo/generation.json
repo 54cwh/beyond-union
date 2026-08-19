@@ -1,0 +1,1383 @@
+{
+  "meta": {
+    "name": "发电预测-吉林西部100MW风光储示范项目",
+    "source": "本地物理模型(真实气象驱动)",
+    "updated": "2026-08-19 15:40",
+    "level": "Level 1 模型模拟",
+    "project": "XM001 吉林西部风光储示范项目",
+    "wind_capacity_mw": 100,
+    "pv_capacity_mw": 50,
+    "storage_mwh": 40
+  },
+  "today": {
+    "wind": 91.7,
+    "pv": 50.6,
+    "total": 142.3,
+    "confidence": 0.91,
+    "max_dev_pct": 8.4,
+    "tradable": 128.7,
+    "storage_available_mwh": 18.2,
+    "model": "WindForecast v1.4",
+    "pv_model": "PVForecast v1.2"
+  },
+  "forecast": [
+    {
+      "time": "2026-08-19 00:00:00",
+      "wind_power": 7.09,
+      "pv_power": 0,
+      "gen_total": 7.08,
+      "lower": 6.49,
+      "upper": 7.68,
+      "price_day_ahead": 204.7
+    },
+    {
+      "time": "2026-08-19 01:00:00",
+      "wind_power": 1.4,
+      "pv_power": 0,
+      "gen_total": 1.4,
+      "lower": 1.28,
+      "upper": 1.52,
+      "price_day_ahead": 205.8
+    },
+    {
+      "time": "2026-08-19 02:00:00",
+      "wind_power": 0,
+      "pv_power": 0,
+      "gen_total": 0,
+      "lower": 0.0,
+      "upper": 0.0,
+      "price_day_ahead": 244.7
+    },
+    {
+      "time": "2026-08-19 03:00:00",
+      "wind_power": 1.7,
+      "pv_power": 0,
+      "gen_total": 1.7,
+      "lower": 1.56,
+      "upper": 1.84,
+      "price_day_ahead": 233.3
+    },
+    {
+      "time": "2026-08-19 04:00:00",
+      "wind_power": 0.98,
+      "pv_power": 0,
+      "gen_total": 0.98,
+      "lower": 0.9,
+      "upper": 1.07,
+      "price_day_ahead": 263.9
+    },
+    {
+      "time": "2026-08-19 05:00:00",
+      "wind_power": 1.7,
+      "pv_power": 0,
+      "gen_total": 1.7,
+      "lower": 1.56,
+      "upper": 1.84,
+      "price_day_ahead": 295.3
+    },
+    {
+      "time": "2026-08-19 06:00:00",
+      "wind_power": 2.92,
+      "pv_power": 2.0,
+      "gen_total": 4.91,
+      "lower": 4.5,
+      "upper": 5.33,
+      "price_day_ahead": 335.3
+    },
+    {
+      "time": "2026-08-19 07:00:00",
+      "wind_power": 0,
+      "pv_power": 7.91,
+      "gen_total": 7.91,
+      "lower": 7.24,
+      "upper": 8.57,
+      "price_day_ahead": 358.2
+    },
+    {
+      "time": "2026-08-19 08:00:00",
+      "wind_power": 0,
+      "pv_power": 15.09,
+      "gen_total": 15.09,
+      "lower": 13.82,
+      "upper": 16.36,
+      "price_day_ahead": 370.2
+    },
+    {
+      "time": "2026-08-19 09:00:00",
+      "wind_power": 0,
+      "pv_power": 22.01,
+      "gen_total": 22.02,
+      "lower": 20.17,
+      "upper": 23.86,
+      "price_day_ahead": 432.3
+    },
+    {
+      "time": "2026-08-19 10:00:00",
+      "wind_power": 0,
+      "pv_power": 27.71,
+      "gen_total": 27.71,
+      "lower": 25.38,
+      "upper": 30.04,
+      "price_day_ahead": 427.9
+    },
+    {
+      "time": "2026-08-19 11:00:00",
+      "wind_power": 0,
+      "pv_power": 31.7,
+      "gen_total": 31.7,
+      "lower": 29.04,
+      "upper": 34.37,
+      "price_day_ahead": 476.2
+    },
+    {
+      "time": "2026-08-19 12:00:00",
+      "wind_power": 2.54,
+      "pv_power": 31.54,
+      "gen_total": 34.08,
+      "lower": 31.21,
+      "upper": 36.94,
+      "price_day_ahead": 454.6
+    },
+    {
+      "time": "2026-08-19 13:00:00",
+      "wind_power": 1.12,
+      "pv_power": 30.9,
+      "gen_total": 32.01,
+      "lower": 29.32,
+      "upper": 34.7,
+      "price_day_ahead": 465.5
+    },
+    {
+      "time": "2026-08-19 14:00:00",
+      "wind_power": 0.73,
+      "pv_power": 25.8,
+      "gen_total": 26.53,
+      "lower": 24.3,
+      "upper": 28.76,
+      "price_day_ahead": 447.3
+    },
+    {
+      "time": "2026-08-19 15:00:00",
+      "wind_power": 1.86,
+      "pv_power": 21.72,
+      "gen_total": 23.57,
+      "lower": 21.59,
+      "upper": 25.55,
+      "price_day_ahead": 451.9
+    },
+    {
+      "time": "2026-08-19 16:00:00",
+      "wind_power": 3.31,
+      "pv_power": 17.64,
+      "gen_total": 20.95,
+      "lower": 19.19,
+      "upper": 22.71,
+      "price_day_ahead": 454.3
+    },
+    {
+      "time": "2026-08-19 17:00:00",
+      "wind_power": 3.52,
+      "pv_power": 11.98,
+      "gen_total": 15.51,
+      "lower": 14.2,
+      "upper": 16.81,
+      "price_day_ahead": 492.9
+    },
+    {
+      "time": "2026-08-19 18:00:00",
+      "wind_power": 0,
+      "pv_power": 5.99,
+      "gen_total": 5.99,
+      "lower": 5.49,
+      "upper": 6.5,
+      "price_day_ahead": 558.0
+    },
+    {
+      "time": "2026-08-19 19:00:00",
+      "wind_power": 0,
+      "pv_power": 0.98,
+      "gen_total": 0.98,
+      "lower": 0.89,
+      "upper": 1.06,
+      "price_day_ahead": 586.2
+    },
+    {
+      "time": "2026-08-19 20:00:00",
+      "wind_power": 5.14,
+      "pv_power": 0,
+      "gen_total": 5.14,
+      "lower": 4.71,
+      "upper": 5.58,
+      "price_day_ahead": 477.6
+    },
+    {
+      "time": "2026-08-19 21:00:00",
+      "wind_power": 9.73,
+      "pv_power": 0,
+      "gen_total": 9.73,
+      "lower": 8.92,
+      "upper": 10.55,
+      "price_day_ahead": 385.4
+    },
+    {
+      "time": "2026-08-19 22:00:00",
+      "wind_power": 7.39,
+      "pv_power": 0,
+      "gen_total": 7.39,
+      "lower": 6.77,
+      "upper": 8.01,
+      "price_day_ahead": 281.8
+    },
+    {
+      "time": "2026-08-19 23:00:00",
+      "wind_power": 9.03,
+      "pv_power": 0,
+      "gen_total": 9.03,
+      "lower": 8.27,
+      "upper": 9.78,
+      "price_day_ahead": 239.1
+    },
+    {
+      "time": "2026-08-20 00:00:00",
+      "wind_power": 16.07,
+      "pv_power": 0,
+      "gen_total": 16.07,
+      "lower": 14.72,
+      "upper": 17.42,
+      "price_day_ahead": 210.6
+    },
+    {
+      "time": "2026-08-20 01:00:00",
+      "wind_power": 24.43,
+      "pv_power": 0,
+      "gen_total": 24.43,
+      "lower": 22.38,
+      "upper": 26.49,
+      "price_day_ahead": 181.7
+    },
+    {
+      "time": "2026-08-20 02:00:00",
+      "wind_power": 19.16,
+      "pv_power": 0,
+      "gen_total": 19.16,
+      "lower": 17.55,
+      "upper": 20.77,
+      "price_day_ahead": 223.1
+    },
+    {
+      "time": "2026-08-20 03:00:00",
+      "wind_power": 19.16,
+      "pv_power": 0,
+      "gen_total": 19.16,
+      "lower": 17.55,
+      "upper": 20.77,
+      "price_day_ahead": 260.1
+    },
+    {
+      "time": "2026-08-20 04:00:00",
+      "wind_power": 18.09,
+      "pv_power": 0,
+      "gen_total": 18.09,
+      "lower": 16.57,
+      "upper": 19.61,
+      "price_day_ahead": 258.5
+    },
+    {
+      "time": "2026-08-20 05:00:00",
+      "wind_power": 17.06,
+      "pv_power": 0,
+      "gen_total": 17.06,
+      "lower": 15.63,
+      "upper": 18.49,
+      "price_day_ahead": 312.8
+    },
+    {
+      "time": "2026-08-20 06:00:00",
+      "wind_power": 20.83,
+      "pv_power": 1.95,
+      "gen_total": 22.78,
+      "lower": 20.87,
+      "upper": 24.7,
+      "price_day_ahead": 332.8
+    },
+    {
+      "time": "2026-08-20 07:00:00",
+      "wind_power": 16.07,
+      "pv_power": 7.95,
+      "gen_total": 24.02,
+      "lower": 22.0,
+      "upper": 26.03,
+      "price_day_ahead": 358.2
+    },
+    {
+      "time": "2026-08-20 08:00:00",
+      "wind_power": 19.16,
+      "pv_power": 15.17,
+      "gen_total": 34.33,
+      "lower": 31.44,
+      "upper": 37.21,
+      "price_day_ahead": 403.6
+    },
+    {
+      "time": "2026-08-20 09:00:00",
+      "wind_power": 23.81,
+      "pv_power": 22.14,
+      "gen_total": 45.95,
+      "lower": 42.09,
+      "upper": 49.81,
+      "price_day_ahead": 425.1
+    },
+    {
+      "time": "2026-08-20 10:00:00",
+      "wind_power": 41.85,
+      "pv_power": 27.88,
+      "gen_total": 69.73,
+      "lower": 63.87,
+      "upper": 75.58,
+      "price_day_ahead": 440.2
+    },
+    {
+      "time": "2026-08-20 11:00:00",
+      "wind_power": 69.35,
+      "pv_power": 30.77,
+      "gen_total": 100.12,
+      "lower": 91.71,
+      "upper": 108.53,
+      "price_day_ahead": 461.2
+    },
+    {
+      "time": "2026-08-20 12:00:00",
+      "wind_power": 85.23,
+      "pv_power": 32.73,
+      "gen_total": 117.95,
+      "lower": 108.04,
+      "upper": 127.86,
+      "price_day_ahead": 453.1
+    },
+    {
+      "time": "2026-08-20 13:00:00",
+      "wind_power": 92.0,
+      "pv_power": 31.41,
+      "gen_total": 123.41,
+      "lower": 113.04,
+      "upper": 133.77,
+      "price_day_ahead": 421.9
+    },
+    {
+      "time": "2026-08-20 14:00:00",
+      "wind_power": 92.0,
+      "pv_power": 29.28,
+      "gen_total": 121.28,
+      "lower": 111.09,
+      "upper": 131.47,
+      "price_day_ahead": 432.1
+    },
+    {
+      "time": "2026-08-20 15:00:00",
+      "wind_power": 92.0,
+      "pv_power": 25.8,
+      "gen_total": 117.8,
+      "lower": 107.9,
+      "upper": 127.69,
+      "price_day_ahead": 405.2
+    },
+    {
+      "time": "2026-08-20 16:00:00",
+      "wind_power": 85.23,
+      "pv_power": 20.1,
+      "gen_total": 105.33,
+      "lower": 96.48,
+      "upper": 114.18,
+      "price_day_ahead": 455.6
+    },
+    {
+      "time": "2026-08-20 17:00:00",
+      "wind_power": 50.36,
+      "pv_power": 12.75,
+      "gen_total": 63.11,
+      "lower": 57.81,
+      "upper": 68.41,
+      "price_day_ahead": 502.9
+    },
+    {
+      "time": "2026-08-20 18:00:00",
+      "wind_power": 40.96,
+      "pv_power": 5.57,
+      "gen_total": 46.53,
+      "lower": 42.62,
+      "upper": 50.44,
+      "price_day_ahead": 555.7
+    },
+    {
+      "time": "2026-08-20 19:00:00",
+      "wind_power": 40.09,
+      "pv_power": 0.89,
+      "gen_total": 40.98,
+      "lower": 37.54,
+      "upper": 44.43,
+      "price_day_ahead": 556.3
+    },
+    {
+      "time": "2026-08-20 20:00:00",
+      "wind_power": 49.36,
+      "pv_power": 0,
+      "gen_total": 49.36,
+      "lower": 45.22,
+      "upper": 53.51,
+      "price_day_ahead": 496.1
+    },
+    {
+      "time": "2026-08-20 21:00:00",
+      "wind_power": 86.65,
+      "pv_power": 0,
+      "gen_total": 86.65,
+      "lower": 79.37,
+      "upper": 93.93,
+      "price_day_ahead": 349.9
+    },
+    {
+      "time": "2026-08-20 22:00:00",
+      "wind_power": 92.0,
+      "pv_power": 0,
+      "gen_total": 92.0,
+      "lower": 84.27,
+      "upper": 99.73,
+      "price_day_ahead": 280.2
+    },
+    {
+      "time": "2026-08-20 23:00:00",
+      "wind_power": 68.12,
+      "pv_power": 0,
+      "gen_total": 68.12,
+      "lower": 62.4,
+      "upper": 73.84,
+      "price_day_ahead": 210.2
+    },
+    {
+      "time": "2026-08-21 00:00:00",
+      "wind_power": 52.39,
+      "pv_power": 0,
+      "gen_total": 52.39,
+      "lower": 47.99,
+      "upper": 56.79,
+      "price_day_ahead": 204.6
+    },
+    {
+      "time": "2026-08-21 01:00:00",
+      "wind_power": 42.74,
+      "pv_power": 0,
+      "gen_total": 42.74,
+      "lower": 39.15,
+      "upper": 46.33,
+      "price_day_ahead": 238.3
+    },
+    {
+      "time": "2026-08-21 02:00:00",
+      "wind_power": 29.82,
+      "pv_power": 0,
+      "gen_total": 29.82,
+      "lower": 27.32,
+      "upper": 32.33,
+      "price_day_ahead": 242.5
+    },
+    {
+      "time": "2026-08-21 03:00:00",
+      "wind_power": 25.72,
+      "pv_power": 0,
+      "gen_total": 25.72,
+      "lower": 23.56,
+      "upper": 27.88,
+      "price_day_ahead": 255.1
+    },
+    {
+      "time": "2026-08-21 04:00:00",
+      "wind_power": 21.99,
+      "pv_power": 0,
+      "gen_total": 21.99,
+      "lower": 20.14,
+      "upper": 23.84,
+      "price_day_ahead": 267.3
+    },
+    {
+      "time": "2026-08-21 05:00:00",
+      "wind_power": 19.16,
+      "pv_power": 0,
+      "gen_total": 19.16,
+      "lower": 17.55,
+      "upper": 20.77,
+      "price_day_ahead": 284.0
+    },
+    {
+      "time": "2026-08-21 06:00:00",
+      "wind_power": 23.81,
+      "pv_power": 1.66,
+      "gen_total": 25.46,
+      "lower": 23.33,
+      "upper": 27.6,
+      "price_day_ahead": 332.8
+    },
+    {
+      "time": "2026-08-21 07:00:00",
+      "wind_power": 3.52,
+      "pv_power": 7.1,
+      "gen_total": 10.62,
+      "lower": 9.73,
+      "upper": 11.51,
+      "price_day_ahead": 377.7
+    },
+    {
+      "time": "2026-08-21 08:00:00",
+      "wind_power": 0,
+      "pv_power": 13.6,
+      "gen_total": 13.6,
+      "lower": 12.46,
+      "upper": 14.74,
+      "price_day_ahead": 396.1
+    },
+    {
+      "time": "2026-08-21 09:00:00",
+      "wind_power": 0,
+      "pv_power": 9.14,
+      "gen_total": 9.14,
+      "lower": 8.37,
+      "upper": 9.91,
+      "price_day_ahead": 391.1
+    },
+    {
+      "time": "2026-08-21 10:00:00",
+      "wind_power": 3.73,
+      "pv_power": 24.99,
+      "gen_total": 28.72,
+      "lower": 26.31,
+      "upper": 31.14,
+      "price_day_ahead": 435.5
+    },
+    {
+      "time": "2026-08-21 11:00:00",
+      "wind_power": 5.93,
+      "pv_power": 29.15,
+      "gen_total": 35.09,
+      "lower": 32.14,
+      "upper": 38.04,
+      "price_day_ahead": 417.2
+    },
+    {
+      "time": "2026-08-21 12:00:00",
+      "wind_power": 7.09,
+      "pv_power": 17.89,
+      "gen_total": 24.98,
+      "lower": 22.88,
+      "upper": 27.08,
+      "price_day_ahead": 462.1
+    },
+    {
+      "time": "2026-08-21 13:00:00",
+      "wind_power": 12.88,
+      "pv_power": 19.42,
+      "gen_total": 32.3,
+      "lower": 29.59,
+      "upper": 35.01,
+      "price_day_ahead": 436.1
+    },
+    {
+      "time": "2026-08-21 14:00:00",
+      "wind_power": 12.46,
+      "pv_power": 18.11,
+      "gen_total": 30.56,
+      "lower": 27.99,
+      "upper": 33.13,
+      "price_day_ahead": 419.5
+    },
+    {
+      "time": "2026-08-21 15:00:00",
+      "wind_power": 16.56,
+      "pv_power": 17.47,
+      "gen_total": 34.03,
+      "lower": 31.17,
+      "upper": 36.89,
+      "price_day_ahead": 444.5
+    },
+    {
+      "time": "2026-08-21 16:00:00",
+      "wind_power": 25.07,
+      "pv_power": 8.54,
+      "gen_total": 33.61,
+      "lower": 30.79,
+      "upper": 36.44,
+      "price_day_ahead": 454.2
+    },
+    {
+      "time": "2026-08-21 17:00:00",
+      "wind_power": 34.32,
+      "pv_power": 3.53,
+      "gen_total": 37.85,
+      "lower": 34.67,
+      "upper": 41.03,
+      "price_day_ahead": 492.9
+    },
+    {
+      "time": "2026-08-21 18:00:00",
+      "wind_power": 63.35,
+      "pv_power": 4.25,
+      "gen_total": 67.6,
+      "lower": 61.92,
+      "upper": 73.28,
+      "price_day_ahead": 574.5
+    },
+    {
+      "time": "2026-08-21 19:00:00",
+      "wind_power": 33.54,
+      "pv_power": 0.55,
+      "gen_total": 34.1,
+      "lower": 31.23,
+      "upper": 36.96,
+      "price_day_ahead": 558.5
+    },
+    {
+      "time": "2026-08-21 20:00:00",
+      "wind_power": 3.95,
+      "pv_power": 0,
+      "gen_total": 3.95,
+      "lower": 3.62,
+      "upper": 4.29,
+      "price_day_ahead": 471.9
+    },
+    {
+      "time": "2026-08-21 21:00:00",
+      "wind_power": 8.68,
+      "pv_power": 0,
+      "gen_total": 8.68,
+      "lower": 7.95,
+      "upper": 9.41,
+      "price_day_ahead": 381.3
+    },
+    {
+      "time": "2026-08-21 22:00:00",
+      "wind_power": 59.92,
+      "pv_power": 0,
+      "gen_total": 59.92,
+      "lower": 54.89,
+      "upper": 64.95,
+      "price_day_ahead": 277.6
+    },
+    {
+      "time": "2026-08-21 23:00:00",
+      "wind_power": 36.72,
+      "pv_power": 0,
+      "gen_total": 36.72,
+      "lower": 33.64,
+      "upper": 39.81,
+      "price_day_ahead": 250.5
+    },
+    {
+      "time": "2026-08-22 00:00:00",
+      "wind_power": 27.72,
+      "pv_power": 0,
+      "gen_total": 27.72,
+      "lower": 25.39,
+      "upper": 30.05,
+      "price_day_ahead": 214.2
+    },
+    {
+      "time": "2026-08-22 01:00:00",
+      "wind_power": 28.41,
+      "pv_power": 0,
+      "gen_total": 28.41,
+      "lower": 26.03,
+      "upper": 30.8,
+      "price_day_ahead": 219.8
+    },
+    {
+      "time": "2026-08-22 02:00:00",
+      "wind_power": 23.19,
+      "pv_power": 0,
+      "gen_total": 23.19,
+      "lower": 21.24,
+      "upper": 25.14,
+      "price_day_ahead": 204.4
+    },
+    {
+      "time": "2026-08-22 03:00:00",
+      "wind_power": 27.72,
+      "pv_power": 0,
+      "gen_total": 27.72,
+      "lower": 25.39,
+      "upper": 30.05,
+      "price_day_ahead": 246.1
+    },
+    {
+      "time": "2026-08-22 04:00:00",
+      "wind_power": 30.54,
+      "pv_power": 0,
+      "gen_total": 30.55,
+      "lower": 27.98,
+      "upper": 33.11,
+      "price_day_ahead": 269.2
+    },
+    {
+      "time": "2026-08-22 05:00:00",
+      "wind_power": 23.81,
+      "pv_power": 0,
+      "gen_total": 23.81,
+      "lower": 21.81,
+      "upper": 25.81,
+      "price_day_ahead": 283.6
+    },
+    {
+      "time": "2026-08-22 06:00:00",
+      "wind_power": 20.26,
+      "pv_power": 1.19,
+      "gen_total": 21.45,
+      "lower": 19.65,
+      "upper": 23.25,
+      "price_day_ahead": 326.7
+    },
+    {
+      "time": "2026-08-22 07:00:00",
+      "wind_power": 14.65,
+      "pv_power": 4.17,
+      "gen_total": 18.81,
+      "lower": 17.23,
+      "upper": 20.39,
+      "price_day_ahead": 367.6
+    },
+    {
+      "time": "2026-08-22 08:00:00",
+      "wind_power": 11.64,
+      "pv_power": 8.97,
+      "gen_total": 20.6,
+      "lower": 18.87,
+      "upper": 22.33,
+      "price_day_ahead": 389.9
+    },
+    {
+      "time": "2026-08-22 09:00:00",
+      "wind_power": 12.04,
+      "pv_power": 13.05,
+      "gen_total": 25.09,
+      "lower": 22.98,
+      "upper": 27.2,
+      "price_day_ahead": 393.7
+    },
+    {
+      "time": "2026-08-22 10:00:00",
+      "wind_power": 15.59,
+      "pv_power": 22.23,
+      "gen_total": 37.81,
+      "lower": 34.64,
+      "upper": 40.99,
+      "price_day_ahead": 429.8
+    },
+    {
+      "time": "2026-08-22 11:00:00",
+      "wind_power": 25.72,
+      "pv_power": 26.69,
+      "gen_total": 52.41,
+      "lower": 48.01,
+      "upper": 56.81,
+      "price_day_ahead": 438.9
+    },
+    {
+      "time": "2026-08-22 12:00:00",
+      "wind_power": 25.07,
+      "pv_power": 22.78,
+      "gen_total": 47.85,
+      "lower": 43.83,
+      "upper": 51.87,
+      "price_day_ahead": 453.0
+    },
+    {
+      "time": "2026-08-22 13:00:00",
+      "wind_power": 23.81,
+      "pv_power": 21.63,
+      "gen_total": 45.44,
+      "lower": 41.62,
+      "upper": 49.26,
+      "price_day_ahead": 447.8
+    },
+    {
+      "time": "2026-08-22 14:00:00",
+      "wind_power": 28.41,
+      "pv_power": 27.58,
+      "gen_total": 55.99,
+      "lower": 51.29,
+      "upper": 60.7,
+      "price_day_ahead": 431.6
+    },
+    {
+      "time": "2026-08-22 15:00:00",
+      "wind_power": 25.07,
+      "pv_power": 23.89,
+      "gen_total": 48.96,
+      "lower": 44.84,
+      "upper": 53.07,
+      "price_day_ahead": 425.5
+    },
+    {
+      "time": "2026-08-22 16:00:00",
+      "wind_power": 20.26,
+      "pv_power": 19.17,
+      "gen_total": 39.43,
+      "lower": 36.12,
+      "upper": 42.74,
+      "price_day_ahead": 446.8
+    },
+    {
+      "time": "2026-08-22 17:00:00",
+      "wind_power": 16.07,
+      "pv_power": 12.83,
+      "gen_total": 28.9,
+      "lower": 26.48,
+      "upper": 31.33,
+      "price_day_ahead": 503.9
+    },
+    {
+      "time": "2026-08-22 18:00:00",
+      "wind_power": 13.75,
+      "pv_power": 5.74,
+      "gen_total": 19.48,
+      "lower": 17.85,
+      "upper": 21.12,
+      "price_day_ahead": 545.8
+    },
+    {
+      "time": "2026-08-22 19:00:00",
+      "wind_power": 12.88,
+      "pv_power": 0.64,
+      "gen_total": 13.51,
+      "lower": 12.38,
+      "upper": 14.65,
+      "price_day_ahead": 570.3
+    },
+    {
+      "time": "2026-08-22 20:00:00",
+      "wind_power": 9.73,
+      "pv_power": 0,
+      "gen_total": 9.73,
+      "lower": 8.92,
+      "upper": 10.55,
+      "price_day_ahead": 498.6
+    },
+    {
+      "time": "2026-08-22 21:00:00",
+      "wind_power": 5.14,
+      "pv_power": 0,
+      "gen_total": 5.14,
+      "lower": 4.71,
+      "upper": 5.58,
+      "price_day_ahead": 396.0
+    },
+    {
+      "time": "2026-08-22 22:00:00",
+      "wind_power": 2.36,
+      "pv_power": 0,
+      "gen_total": 2.36,
+      "lower": 2.16,
+      "upper": 2.56,
+      "price_day_ahead": 302.4
+    },
+    {
+      "time": "2026-08-22 23:00:00",
+      "wind_power": 1.55,
+      "pv_power": 0,
+      "gen_total": 1.54,
+      "lower": 1.42,
+      "upper": 1.67,
+      "price_day_ahead": 254.9
+    }
+  ],
+  "actual": [
+    {
+      "time": "2026-08-15 00:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 01:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 02:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 03:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 04:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 05:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 06:00:00",
+      "gen_total": 2.46,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 07:00:00",
+      "gen_total": 8.8,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 08:00:00",
+      "gen_total": 16.19,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 09:00:00",
+      "gen_total": 23.25,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 10:00:00",
+      "gen_total": 28.73,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 11:00:00",
+      "gen_total": 32.0,
+      "soc": 0.675
+    },
+    {
+      "time": "2026-08-15 12:00:00",
+      "gen_total": 30.18,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-15 13:00:00",
+      "gen_total": 28.59,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-15 14:00:00",
+      "gen_total": 28.6,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-15 15:00:00",
+      "gen_total": 26.16,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-15 16:00:00",
+      "gen_total": 17.64,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-15 17:00:00",
+      "gen_total": 11.81,
+      "soc": 0.3681
+    },
+    {
+      "time": "2026-08-15 18:00:00",
+      "gen_total": 4.99,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 19:00:00",
+      "gen_total": 5.04,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 20:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 21:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 22:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-15 23:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 00:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 01:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 02:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 03:00:00",
+      "gen_total": 0.71,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 04:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 05:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 06:00:00",
+      "gen_total": 2.34,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 07:00:00",
+      "gen_total": 8.12,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 08:00:00",
+      "gen_total": 15.26,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 09:00:00",
+      "gen_total": 22.48,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 10:00:00",
+      "gen_total": 30.43,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 11:00:00",
+      "gen_total": 38.29,
+      "soc": 0.675
+    },
+    {
+      "time": "2026-08-16 12:00:00",
+      "gen_total": 37.91,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-16 13:00:00",
+      "gen_total": 40.73,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-16 14:00:00",
+      "gen_total": 30.07,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-16 15:00:00",
+      "gen_total": 33.78,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-16 16:00:00",
+      "gen_total": 30.62,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-16 17:00:00",
+      "gen_total": 17.59,
+      "soc": 0.3681
+    },
+    {
+      "time": "2026-08-16 18:00:00",
+      "gen_total": 6.6,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 19:00:00",
+      "gen_total": 1.86,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 20:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 21:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 22:00:00",
+      "gen_total": 0.71,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-16 23:00:00",
+      "gen_total": 0.97,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 00:00:00",
+      "gen_total": 38.25,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 01:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 02:00:00",
+      "gen_total": 7.37,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 03:00:00",
+      "gen_total": 13.53,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 04:00:00",
+      "gen_total": 16.93,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 05:00:00",
+      "gen_total": 17.46,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 06:00:00",
+      "gen_total": 21.14,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 07:00:00",
+      "gen_total": 21.3,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 08:00:00",
+      "gen_total": 37.34,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 09:00:00",
+      "gen_total": 39.24,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 10:00:00",
+      "gen_total": 47.29,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 11:00:00",
+      "gen_total": 45.15,
+      "soc": 0.675
+    },
+    {
+      "time": "2026-08-17 12:00:00",
+      "gen_total": 45.18,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-17 13:00:00",
+      "gen_total": 33.99,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-17 14:00:00",
+      "gen_total": 31.76,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-17 15:00:00",
+      "gen_total": 29.84,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-17 16:00:00",
+      "gen_total": 29.59,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-17 17:00:00",
+      "gen_total": 21.11,
+      "soc": 0.3681
+    },
+    {
+      "time": "2026-08-17 18:00:00",
+      "gen_total": 10.47,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 19:00:00",
+      "gen_total": 2.11,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 20:00:00",
+      "gen_total": 3.84,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 21:00:00",
+      "gen_total": 7.69,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 22:00:00",
+      "gen_total": 3.84,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-17 23:00:00",
+      "gen_total": 2.4,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 00:00:00",
+      "gen_total": 3.19,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 01:00:00",
+      "gen_total": 8.03,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 02:00:00",
+      "gen_total": 6.16,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 03:00:00",
+      "gen_total": 5.32,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 04:00:00",
+      "gen_total": 9.8,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 05:00:00",
+      "gen_total": 11.78,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 06:00:00",
+      "gen_total": 15.4,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 07:00:00",
+      "gen_total": 13.55,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 08:00:00",
+      "gen_total": 18.07,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 09:00:00",
+      "gen_total": 26.22,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 10:00:00",
+      "gen_total": 36.19,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 11:00:00",
+      "gen_total": 55.37,
+      "soc": 0.675
+    },
+    {
+      "time": "2026-08-18 12:00:00",
+      "gen_total": 50.23,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-18 13:00:00",
+      "gen_total": 42.75,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-18 14:00:00",
+      "gen_total": 29.72,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-18 15:00:00",
+      "gen_total": 28.82,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-18 16:00:00",
+      "gen_total": 25.32,
+      "soc": 0.9
+    },
+    {
+      "time": "2026-08-18 17:00:00",
+      "gen_total": 15.48,
+      "soc": 0.3681
+    },
+    {
+      "time": "2026-08-18 18:00:00",
+      "gen_total": 9.76,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 19:00:00",
+      "gen_total": 9.73,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 20:00:00",
+      "gen_total": 5.32,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 21:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 22:00:00",
+      "gen_total": 0,
+      "soc": 0.2
+    },
+    {
+      "time": "2026-08-18 23:00:00",
+      "gen_total": 5.87,
+      "soc": 0.2
+    }
+  ],
+  "model": {
+    "wind": {
+      "name": "WindForecast",
+      "version": "v1.4",
+      "mape_pct": 8.2
+    },
+    "pv": {
+      "name": "PVForecast",
+      "version": "v1.2",
+      "mape_pct": 9.5
+    }
+  }
+}

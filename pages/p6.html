@@ -14,10 +14,8 @@
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
-    // 本模板列出全部可用 import 作参考；复制后按需保留用到的，删掉不用的
-    import { Nav, Data, fetchData } from '../assets/js/common.js';
-    import { filterRows, groupBy, toChartData } from '../assets/js/filter.js';
-    import { formatNumber, formatMoney, formatPercent, formatDate } from '../assets/js/format.js';
+    import { Nav, Data } from '../assets/js/common.js';
+    import { formatNumber, formatPercent } from '../assets/js/format.js';
     import { createChart } from '../assets/js/chart-view.js';
 
     Nav();
@@ -26,36 +24,283 @@
       data() {
         return {
           title: "经营成效",
-          loading: false,
+          loading: true,
           error: "",
+          tab: "perf",
+          revenue: null,
+          cases: [],
+          provenance: null,
+          nearDays: [],
+          seriesColor: { baseline: "#64748B", ai: "#22C55E", actual: "#38BDF8" },
         };
       },
       template: `
         <main>
-          <h1 class="text-2xl mb-4">{{ title }}</h1>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h1 class="text-2xl">{{ title }}</h1>
+            <span v-if="revenue" class="text-sm text-gray-400">数据更新 {{ revenue.meta.updated }} · 模拟数据已标注</span>
+          </div>
+
+          <div class="flex gap-2 mb-4 border-b border-gray-700">
+            <button v-for="t in tabs" :key="t.key" @click="tab = t.key"
+              class="px-3 py-2 text-sm"
+              :class="tab === t.key ? 'text-accent border-b-2 border-accent font-semibold' : 'text-gray-400'">
+              {{ t.name }}
+            </button>
+          </div>
+
           <p v-if="loading" class="text-gray-400">加载中…</p>
           <p v-else-if="error" class="text-red-400">{{ error }}</p>
-          <div v-else>
-            <!-- 页面内容写在这里 -->
-            <!-- 数据加载：const data = await Data.load('demo/xxx')（A 的模拟数据） -->
-            <!-- 图表容器：需要图表的页面保留此 div，不需要可删。
-                 注意：此容器必须在页面首次渲染时就存在（勿置于 v-if 条件分支内），
-                 mounted 里 createChart($refs.chart) 依赖它已渲染；加载态用 loading/error 变量控制。 -->
-            <div ref="chart" class="w-full h-80"></div>
-          </div>
+
+          <template v-else>
+            <!-- ===== 板块一 · 经营成效 ===== -->
+            <section v-show="tab === 'perf'">
+              <h2 class="text-lg font-semibold mb-3">本月经营成绩</h2>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div v-for="k in perfKpis" :key="k.label" class="card">
+                  <div class="text-sm text-gray-400">{{ k.label }}</div>
+                  <div class="text-2xl tabular mt-1" :style="{ color: k.color }">{{ k.value }}</div>
+                  <div class="text-xs text-gray-400">{{ k.unit }}</div>
+                </div>
+              </div>
+
+              <div class="card mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <h2 class="text-lg font-semibold">AI 优化成效 · 近 7 天收益对比（万元）</h2>
+                  <div class="flex gap-3 text-xs text-gray-400">
+                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3" :style="{background: seriesColor.baseline}"></span>基准</span>
+                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3" :style="{background: seriesColor.ai}"></span>AI 方案</span>
+                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3" :style="{background: seriesColor.actual}"></span>实际</span>
+                  </div>
+                </div>
+                <div ref="revChart" class="w-full h-72"></div>
+              </div>
+
+              <div class="card mb-6">
+                <h2 class="text-lg font-semibold mb-3">三栏对比明细（近 7 天）</h2>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="text-left text-gray-400 border-b border-gray-700">
+                        <th class="py-2 pr-3">日期</th>
+                        <th class="py-2 pr-3">基准收益(万)</th>
+                        <th class="py-2 pr-3">AI 收益(万)</th>
+                        <th class="py-2 pr-3">实际收益(万)</th>
+                        <th class="py-2 pr-3">AI 发电(MWh)</th>
+                        <th class="py-2 pr-3">实际发电(MWh)</th>
+                        <th class="py-2 pr-3">AI 偏差成本(万)</th>
+                        <th class="py-2 pr-3">实际偏差成本(万)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="d in nearDays" :key="d.date" class="border-b border-gray-800 tabular">
+                        <td class="py-2 pr-3">{{ d.date }}</td>
+                        <td class="py-2 pr-3">{{ fmtNum(d.baseline_revenue, 2) }}</td>
+                        <td class="py-2 pr-3">{{ fmtNum(d.ai_revenue, 2) }}</td>
+                        <td class="py-2 pr-3" :style="{color: seriesColor.actual}">{{ fmtNum(d.actual_revenue, 2) }}</td>
+                        <td class="py-2 pr-3">{{ fmtNum(d.ai_gen, 1) }}</td>
+                        <td class="py-2 pr-3">{{ fmtNum(d.actual_gen, 1) }}</td>
+                        <td class="py-2 pr-3">{{ fmtNum(d.ai_cost, 2) }}</td>
+                        <td class="py-2 pr-3">{{ fmtNum(d.actual_cost, 2) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                <div v-for="k in cumKpis" :key="k.label" class="card">
+                  <div class="text-sm text-gray-400">{{ k.label }}</div>
+                  <div class="text-2xl tabular mt-1 text-accent">{{ k.value }}</div>
+                  <div class="text-xs text-gray-400">{{ k.unit }}</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2 class="text-lg font-semibold mb-3">模型效果</h2>
+                <table class="w-full text-sm">
+                  <tbody>
+                    <tr v-for="m in modelRows" :key="m.label" class="border-b border-gray-800">
+                      <td class="py-2">{{ m.label }}</td>
+                      <td class="py-2 tabular">{{ m.value }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- ===== 板块二 · 案例验证 ===== -->
+            <section v-show="tab === 'cases'">
+              <h2 class="text-lg font-semibold mb-3">案例验证（{{ cases.length }} 条）</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div v-for="c in cases" :key="c.id" class="card">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="font-semibold">{{ c.name }}</div>
+                    <span class="text-xs px-2 py-0.5 rounded" :style="levelStyle(c.level)">Level {{ c.level }}</span>
+                  </div>
+                  <div class="text-xs text-gray-400 mb-1">{{ c.category }} · {{ c.scale }}</div>
+                  <div class="text-xs mb-1"><span class="text-gray-400">问题：</span>{{ c.problem }}</div>
+                  <div class="text-xs mb-1"><span class="text-gray-400">模块：</span>{{ c.modules }}</div>
+                  <div class="text-xs mb-1"><span class="text-gray-400">方案：</span>{{ c.plan }}</div>
+                  <div class="text-xs mb-1"><span class="text-gray-400">结果：</span>{{ c.result }}</div>
+                  <div class="text-xs text-gray-500 mt-2">{{ c.note }}</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ===== 板块三 · 数据可信 ===== -->
+            <section v-show="tab === 'trust'">
+              <h2 class="text-lg font-semibold mb-3">数据血缘（{{ provenance.lineage.length }} 条）</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                <div v-for="l in provenance.lineage" :key="l.id" class="card">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-semibold text-sm">{{ l.id }}</span>
+                    <span class="text-xs text-gray-400">{{ l.time }}</span>
+                  </div>
+                  <div class="text-xs mb-1"><span class="text-gray-400">来源：</span>{{ l.source }}</div>
+                  <div class="text-xs mb-1"><span class="text-gray-400">处理：</span>{{ l.process }}</div>
+                  <div class="text-xs mb-1"><span class="text-gray-400">模型：</span>{{ l.model }}</div>
+                  <div class="text-xs"><span class="text-gray-400">输出：</span>{{ l.output }}</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2 class="text-lg font-semibold mb-3">模型档案（{{ provenance.models.length }} 个）</h2>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="text-left text-gray-400 border-b border-gray-700">
+                        <th class="py-2 pr-3">模型</th>
+                        <th class="py-2 pr-3">版本</th>
+                        <th class="py-2 pr-3">训练数据</th>
+                        <th class="py-2 pr-3">MAPE</th>
+                        <th class="py-2 pr-3">MAE</th>
+                        <th class="py-2 pr-3">RMSE</th>
+                        <th class="py-2 pr-3">状态</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="m in provenance.models" :key="m.id" class="border-b border-gray-800 tabular">
+                        <td class="py-2 pr-3">{{ m.name }}</td>
+                        <td class="py-2 pr-3">{{ m.version }}</td>
+                        <td class="py-2 pr-3">{{ m.dataset }}</td>
+                        <td class="py-2 pr-3">{{ m.mape_pct ?? '—' }}</td>
+                        <td class="py-2 pr-3">{{ m.mae ?? '—' }}</td>
+                        <td class="py-2 pr-3">{{ m.rmse ?? '—' }}</td>
+                        <td class="py-2 pr-3">{{ m.status }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </template>
         </main>
       `,
+      computed: {
+        tabs() {
+          return [
+            { key: "perf", name: "经营成效" },
+            { key: "cases", name: "案例验证" },
+            { key: "trust", name: "数据可信" },
+          ];
+        },
+        perfKpis() {
+          if (!this.revenue) return [];
+          const p = this.revenue.performance;
+          return [
+            { label: "本月发电", value: this.fmtNum(p.month_gen_mwh, 1), unit: "MWh", color: "#F8FAFC" },
+            { label: "市场收入", value: this.fmtNum(p.market_revenue_wan, 1), unit: "万元", color: "#22C55E" },
+            { label: "储能收益", value: this.fmtNum(p.storage_revenue_wan, 1), unit: "万元", color: "#22C55E" },
+            { label: "偏差成本", value: this.fmtNum(p.deviation_cost_wan, 1), unit: "万元", color: "#EF4444" },
+          ];
+        },
+        cumKpis() {
+          if (!this.revenue) return [];
+          const c = this.revenue.cumulative;
+          return [
+            { label: "累计优化决策", value: this.fmtNum(c.decisions, 0), unit: "次" },
+            { label: "减少偏差成本", value: this.fmtNum(c.saved_cost_wan, 1), unit: "万元" },
+            { label: "增加经营收益", value: this.fmtNum(c.added_revenue_wan, 1), unit: "万元" },
+            { label: "提高新能源消纳", value: this.fmtNum(c.added_energy_mwh, 1), unit: "MWh" },
+            { label: "预测平均误差", value: this.fmtPct(c.avg_mape_pct, 1), unit: "MAPE" },
+          ];
+        },
+        modelRows() {
+          if (!this.revenue) return [];
+          const e = this.revenue.model_effect;
+          return [
+            { label: "风电预测 MAPE", value: this.fmtPct(e.wind_mape_pct, 1) },
+            { label: "光伏预测 MAPE", value: this.fmtPct(e.pv_mape_pct, 1) },
+            { label: "储能策略收益提升", value: this.fmtPct(e.storage_income_pct, 1) },
+            { label: "交易推荐采用率", value: this.fmtPct(e.adoption_rate_pct, 1) },
+          ];
+        },
+      },
+      methods: {
+        fmtNum: formatNumber,
+        fmtPct: formatPercent,
+        levelStyle(l) {
+          const map = {
+            1: ["#1E293B", "#94A3B8"],
+            2: ["#0F2E1D", "#22C55E"],
+            3: ["#123049", "#38BDF8"],
+            4: ["#311B05", "#F59E0B"],
+            5: ["#3B1111", "#EF4444"],
+          };
+          const [bg, fg] = map[Math.round(l)] || map[1];
+          return { background: bg, color: fg };
+        },
+        async loadData() {
+          try {
+            // common.js 导出 Data = loadData 函数，直接调用（非 Data.load 对象方法）
+            const [revenue, cases, provenance] = await Promise.all([
+              Data("demo/revenue"),
+              Data("demo/cases"),
+              Data("demo/provenance"),
+            ]);
+            this.revenue = revenue;
+            this.cases = cases.cases || [];
+            this.provenance = provenance;
+            this.loading = false;
+          } catch (e) {
+            this.error = e.message || "数据加载失败";
+            this.loading = false;
+          }
+        },
+      },
       mounted() {
-        // 图表：用统一组件，数据形如 [{label, value}]
-        // 聚合结果用 toChartData() 适配后再喂图表
-        this.chart = createChart(this.$refs.chart);
-        this.chart.setData([{ label: '示例', value: 10 }]);
+        this.loadData();
+      },
+      watch: {
+        // 数据就绪、DOM 更新后再创建图表（图表容器在 v-else 分支，须先渲染）
+        revenue() {
+          this.$nextTick(() => {
+            if (this.revChart) { this.revChart.dispose(); this.revChart = null; }
+            const el = this.$refs.revChart;
+            if (!el) return;
+            this.revChart = createChart(el);
+            const days = this.revenue.comparison.slice(-7);
+            this.nearDays = days.slice().reverse();
+            const chartData = days.map((d) => ({
+              label: String(d.date).slice(5),
+              value: [d.baseline_revenue, d.ai_revenue, d.actual_revenue],
+            }));
+            const series = [
+              { name: "基准", type: "bar", data: days.map((d) => d.baseline_revenue), itemStyle: { color: this.seriesColor.baseline } },
+              { name: "AI 方案", type: "bar", data: days.map((d) => d.ai_revenue), itemStyle: { color: this.seriesColor.ai } },
+              { name: "实际", type: "bar", data: days.map((d) => d.actual_revenue), itemStyle: { color: this.seriesColor.actual } },
+            ];
+            this.revChart.setData(chartData, {
+              series,
+              legend: { data: ["基准", "AI 方案", "实际"], textStyle: { color: "#94A3B8" } },
+            });
+          });
+        },
       },
       beforeUnmount() {
-        // 统一组件负责 dispose，页面只需调用
-        if (this.chart) { this.chart.dispose(); this.chart = null; }
+        if (this.revChart) { this.revChart.dispose(); this.revChart = null; }
       },
-      computed: {},
     });
 
     app.mount('#app');

@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "name": "经营任务(待办流转)",
+    "source": "决策记录派生(模型模拟)",
+    "updated": "2026-08-19 15:40",
+    "level": "Level 1 模型模拟"
+  },
+  "tasks": [
+    {
+      "id": "T01",
+      "type": "发电预测",
+      "title": "确认明日发电预测",
+      "status": "已确认",
+      "owner": "王工",
+      "decision_id": "D20260720_003",
+      "model": "WindForecast v1.4",
+      "confidence": 0.92,
+      "risk": "14:00-17:00预测不确定性高(黄色预警)"
+    },
+    {
+      "id": "T02",
+      "type": "储能调度",
+      "title": "确认储能运行计划",
+      "status": "已确认",
+      "owner": "李工",
+      "decision_id": "D20260720_002",
+      "model": "StorageOptimize v1.3",
+      "confidence": 0.92,
+      "risk": "循环次数逼近上限,建议≤1次/日"
+    },
+    {
+      "id": "T03",
+      "type": "交易策略",
+      "title": "确认交易计划",
+      "status": "已确认",
+      "owner": "张经理",
+      "decision_id": "D20260720_001",
+      "model": "MarketDecision v1.2",
+      "confidence": 0.81,
+      "risk": "现货敞口若超30%偏差风险上升21%"
+    },
+    {
+      "id": "T04",
+      "type": "发电预测",
+      "title": "确认明日发电预测",
+      "status": "已确认",
+      "owner": "王工",
+      "decision_id": "D20260721_003",
+      "model": "WindForecast v1.4",
+      "confidence": 0.9,
+      "risk": "14:00-17:00预测不确定性高(黄色预警)"
+    },
+    {
+      "id": "T05",
+      "type": "储能调度",
+      "title": "确认储能运行计划",
+      "status": "已确认",
+      "owner": "李工",
+      "decision_id": "D20260721_002",
+      "model": "StorageOptimize v1.3",
+      "confidence": 0.86,
+      "risk": "循环次数逼近上限,建议≤1次/日"
+    },
+    {
+      "id": "T06",
+      "type": "交易策略",
+      "title": "确认交易计划",
+      "status": "已确认",
+      "owner": "张经理",
+      "decision_id": "D20260721_001",
+      "model": "MarketDecision v1.2",
+      "confidence": 0.87,
+      "risk": "现货敞口若超30%偏差风险上升21%"
+    },
+    {
+      "id": "T07",
+      "type": "发电预测",
+      "title": "确认明日发电预测",
+      "status": "已确认",
+      "owner": "王工",
+      "decision_id": "D20260722_003",
+      "model": "WindForecast v1.4",
+      "confidence": 0.91,
+      "risk": "14:00-17:00预测不确定性高(黄色预警)"
+    },
+    {
+      "id": "T08",
+      "type": "储能调度",
+      "title": "确认储能运行计划",
+      "status": "已确认",
+      "owner": "李工",
+      "decision_id": "D20260722_002",
+      "model": "StorageOptimize v1.3",
+      "confidence": 0.86,
+      "risk": "循环次数逼近上限,建议≤1次/日"
+    }
+  ]
+}
