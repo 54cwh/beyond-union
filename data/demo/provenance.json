@@ -1,0 +1,222 @@
+{
+  "meta": {
+    "name": "数据血缘与模型档案",
+    "source": "数据血缘+模型档案(生成/结构)",
+    "updated": "2026-08-19 15:40",
+    "level": "Level 2"
+  },
+  "lineage": [
+    {
+      "id": "L001",
+      "source": "Open-Meteo气象API(ERA5)",
+      "time": "2026-08-18 15:30",
+      "process": "逐小时风速/风向/温度/辐照提取+缺失值插补",
+      "model": "WindForecast-v1.4输入",
+      "output": "明日气象特征向量"
+    },
+    {
+      "id": "L002",
+      "source": "SDWPF/通榆龙源历史SCADA",
+      "time": "2026-08-18 15:40",
+      "process": "10min→1h重采样+异常值剔除",
+      "model": "WindForecast-v1.4输入",
+      "output": "历史风功率序列"
+    },
+    {
+      "id": "L003",
+      "source": "场站设备状态台账",
+      "time": "2026-08-18 15:20",
+      "process": "设备可用率计算",
+      "model": "WindForecast-v1.4输入",
+      "output": "设备可用率95%"
+    },
+    {
+      "id": "L004",
+      "source": "项目装机容量",
+      "time": "2026-08-18 15:00",
+      "process": "静态参数",
+      "model": "WindForecast-v1.4输入",
+      "output": "风电100MW/光伏50MW"
+    },
+    {
+      "id": "L005",
+      "source": "气象+SCADA+设备+装机",
+      "time": "2026-08-18 15:40",
+      "process": "特征融合→模型推理",
+      "model": "WindForecast-v1.4",
+      "output": "明日预测发电138.5MWh"
+    },
+    {
+      "id": "L006",
+      "source": "Open-Meteo辐照(GHI/DNI)",
+      "time": "2026-08-18 15:30",
+      "process": "云量/GHI/DNI分解",
+      "model": "PVForecast-v1.2输入",
+      "output": "辐照特征向量"
+    },
+    {
+      "id": "L007",
+      "source": "历史光伏出力",
+      "time": "2026-08-18 15:40",
+      "process": "1h重采样+清洗",
+      "model": "PVForecast-v1.2输入",
+      "output": "历史光伏序列"
+    },
+    {
+      "id": "L008",
+      "source": "辐照+历史出力",
+      "time": "2026-08-18 15:40",
+      "process": "特征融合→模型推理",
+      "model": "PVForecast-v1.2",
+      "output": "明日预测光伏出力50.6MWh"
+    },
+    {
+      "id": "L009",
+      "source": "储能SOC实时值",
+      "time": "2026-08-18 15:40",
+      "process": "SOC/SOH读取",
+      "model": "StorageOptimize-v1.3输入",
+      "output": "当前SOC 64%"
+    },
+    {
+      "id": "L010",
+      "source": "日前/实时电价",
+      "time": "2026-08-18 15:35",
+      "process": "4省电价时间序列加载",
+      "model": "StorageOptimize-v1.3输入",
+      "output": "峰谷电价曲线"
+    },
+    {
+      "id": "L011",
+      "source": "SOC+电价+光伏预测",
+      "time": "2026-08-18 15:45",
+      "process": "约束优化(SOC20-90%循环≤1次)",
+      "model": "StorageOptimize-v1.3",
+      "output": "午间充电14:00前+晚峰放电17:50后"
+    },
+    {
+      "id": "L012",
+      "source": "风电/光伏预测出力",
+      "time": "2026-08-18 15:45",
+      "process": "可交易电量计算",
+      "model": "MarketDecision-v1.2输入",
+      "output": "可交易资源128.7MWh"
+    },
+    {
+      "id": "L013",
+      "source": "中长期持仓+电价+储能余量",
+      "time": "2026-08-18 15:45",
+      "process": "收益-风险-偏差联合测算",
+      "model": "MarketDecision-v1.2",
+      "output": "中长期72%+现货28%"
+    },
+    {
+      "id": "L014",
+      "source": "政策全文语料库",
+      "time": "2026-08-18 15:30",
+      "process": "向量检索(RAG)",
+      "model": "PolicyRAG-v2.0",
+      "output": "吉林现货规则影响分析"
+    },
+    {
+      "id": "L015",
+      "source": "运行数据+预测误差",
+      "time": "2026-08-18 15:40",
+      "process": "波动率+误差统计",
+      "model": "RiskScore-v1.0",
+      "output": "风险评分:中低"
+    },
+    {
+      "id": "L016",
+      "source": "决策记录(D20260818)",
+      "time": "2026-08-18 15:50",
+      "process": "执行结果回填",
+      "model": "决策结果库",
+      "output": "基准vsAIvs实际对比"
+    },
+    {
+      "id": "L017",
+      "source": "风电场日汇总",
+      "time": "2026-08-18 15:50",
+      "process": "CF/等效小时计算",
+      "model": "经营成效报告",
+      "output": "日经营指标"
+    },
+    {
+      "id": "L018",
+      "source": "决策结果30日序列",
+      "time": "2026-08-18 15:55",
+      "process": "MAPE/偏差成本复盘",
+      "model": "模型优化闭环",
+      "output": "模型参数更新建议"
+    }
+  ],
+  "models": [
+    {
+      "id": "MOD_A",
+      "name": "WindForecast",
+      "version": "v1.4",
+      "trained": "2026-07-15",
+      "dataset": "SDWPF+ERA5气象+历史SCADA",
+      "mape_pct": 8.2,
+      "mae": 6.1,
+      "rmse": 12.4,
+      "status": "生产"
+    },
+    {
+      "id": "MOD_B",
+      "name": "PVForecast",
+      "version": "v1.2",
+      "trained": "2026-06-20",
+      "dataset": "ERA5辐照+历史光伏出力",
+      "mape_pct": 9.5,
+      "mae": 7.0,
+      "rmse": 14.8,
+      "status": "生产"
+    },
+    {
+      "id": "MOD_C",
+      "name": "StorageOptimize",
+      "version": "v1.3",
+      "trained": "2026-07-01",
+      "dataset": "储能运行+电价+光伏出力",
+      "mape_pct": null,
+      "mae": null,
+      "rmse": null,
+      "status": "生产"
+    },
+    {
+      "id": "MOD_D",
+      "name": "MarketDecision",
+      "version": "v1.2",
+      "trained": "2026-07-10",
+      "dataset": "电价+预测出力+储能余量",
+      "mape_pct": null,
+      "mae": null,
+      "rmse": null,
+      "status": "生产"
+    },
+    {
+      "id": "MOD_E",
+      "name": "RiskScore",
+      "version": "v1.0",
+      "trained": "2026-05-18",
+      "dataset": "预测误差+波动率+设备状态",
+      "mape_pct": null,
+      "mae": null,
+      "rmse": null,
+      "status": "测试"
+    },
+    {
+      "id": "MOD_F",
+      "name": "PolicyRAG",
+      "version": "v2.0",
+      "trained": "2026-07-28",
+      "dataset": "东北政策语料库",
+      "mape_pct": null,
+      "mae": null,
+      "rmse": null,
+      "status": "生产"
+    }
+  ]
+}
