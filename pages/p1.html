@@ -130,6 +130,8 @@
       },
       methods: {
         // 区域气泡取值（按当前维度，数据预置、无聚合计算）
+        trendClass(trend) { return trend.indexOf("-") === 0 ? "down" : "up"; },
+
         regionValue(region) {
           const keyMap = {
             "装机容量": "capacity",
@@ -174,11 +176,15 @@
         },
       },
       template: `
-        <main>
+        <main class="p1-page">
           <header class="p1-header">
-            <div>
+            <div class="p1-header__left">
               <h1 class="p1-title">{{ title }}</h1>
               <p class="p1-subtitle">北域绿联 · 一屏经营决策视图</p>
+            </div>
+            <div class="p1-header__meta">
+              <span class="p1-badge">今日 · 更新于 15:40</span>
+              <span class="p1-badge p1-badge--warn">预警 3 项</span>
             </div>
             <button type="button" class="p1-demo-btn" @click="startDemo">开始演示</button>
           </header>
@@ -191,119 +197,119 @@
             </div>
           </div>
 
-          <!-- 今日经营结果 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">今日经营结果</h2>
-              <span class="p1-section__hint">更新于 15:40</span>
-            </div>
-            <div class="p1-kpi-grid">
-              <div v-for="s in todayStats" :key="s.label" class="kpi-card">
-                <div class="kpi-card__label">{{ s.label }}</div>
-                <div class="kpi-card__value">{{ s.value }}</div>
-                <div v-if="s.trend" class="kpi-card__trend" :class="s.trend.indexOf('-') === 0 ? 'down' : 'up'">{{ s.trend }}</div>
-                <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
+          <!-- 主视觉行：经营链路 + 可信 AI 建议 -->
+          <div class="p1-main-row">
+            <section class="p1-section p1-section--hero">
+              <div class="p1-section__head">
+                <h2 class="p1-section__title">经营链路</h2>
+                <span class="p1-section__hint">天气 → 预测 → 储能 → 交易 → 收益</span>
               </div>
-            </div>
-          </section>
-
-          <!-- 明日经营预测 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">明日经营预测</h2>
-            </div>
-            <div class="p1-kpi-grid">
-              <div v-for="s in tomorrowStats" :key="s.label" class="kpi-card">
-                <div class="kpi-card__label">{{ s.label }}</div>
-                <div class="kpi-card__value">{{ s.value }}</div>
-                <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
+              <div class="link-flow">
+                <template v-for="(node, i) in linkFlow" :key="node.label">
+                  <div class="link-node">
+                    <div class="link-node__badge">{{ i + 1 }}</div>
+                    <div class="link-node__label">{{ node.label }}</div>
+                    <div class="link-node__status">{{ node.status }}</div>
+                  </div>
+                  <div v-if="i < linkFlow.length - 1" class="link-arrow">→</div>
+                </template>
               </div>
-            </div>
-            <div class="p1-strategy">AI 建议交易策略：{{ aiStrategy }}</div>
-          </section>
-          <!-- 经营链路图 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">经营链路</h2>
-              <span class="p1-section__hint">天气 → 预测 → 储能 → 交易 → 收益</span>
-            </div>
-            <div class="link-flow">
-              <template v-for="(node, i) in linkFlow" :key="node.label">
-                <div class="link-node">
-                  <div class="link-node__label">{{ node.label }}</div>
-                  <div class="link-node__status">{{ node.status }}</div>
-                </div>
-                <div v-if="i < linkFlow.length - 1" class="link-arrow">→</div>
-              </template>
-            </div>
-          </section>
+            </section>
 
-          <!-- 今日三项重点 + 经营待办 -->
-          <section class="p1-section">
-            <div class="p1-cols">
-              <div>
-                <div class="p1-section__head"><h2 class="p1-section__title">今日三项重点</h2></div>
-                <div v-for="f in focusItems" :key="f.title" class="focus-item">
-                  <div class="focus-item__title">{{ f.title }}</div>
-                  <p class="focus-item__detail">{{ f.detail }}</p>
+            <section class="p1-section p1-section--rail">
+              <div class="p1-section__head">
+                <h2 class="p1-section__title">可信 AI 决策建议</h2>
+                <span class="p1-section__hint">可解释 · 可追溯 · 可人工确认</span>
+              </div>
+              <p v-if="aiNotice" class="p1-ai-notice">{{ aiNotice }}</p>
+              <div ref="aiCard" class="p1-ai-card"></div>
+            </section>
+          </div>
+
+          <!-- 经营结果行：今日 + 明日 -->
+          <div class="p1-pair-row">
+            <section class="p1-section">
+              <div class="p1-section__head">
+                <h2 class="p1-section__title">今日经营结果</h2>
+                <span class="p1-section__hint">更新于 15:40</span>
+              </div>
+              <div class="p1-kpi-grid">
+                <div v-for="s in todayStats" :key="s.label" class="kpi-card">
+                  <div class="kpi-card__label">{{ s.label }}</div>
+                  <div class="kpi-card__value">{{ s.value }}</div>
+                  <div v-if="s.trend" class="kpi-card__trend" :class="trendClass(s.trend)">{{ s.trend }}</div>
+                  <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
                 </div>
               </div>
-              <div>
-                <div class="p1-section__head"><h2 class="p1-section__title">经营待办</h2></div>
-                <ul class="todo-list">
-                  <li v-for="(t, i) in todos" :key="i">
-                    <span class="todo-check">☐</span>{{ t }}
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </section>
+            </section>
 
-          <!-- 区域经营地图 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">区域经营地图</h2>
-              <span class="p1-section__hint">黑吉辽蒙 · 示意</span>
-            </div>
-            <div class="bubble-map">
-              <div class="bubble-map__toggle">
-                <button
-                  v-for="m in mapModes"
-                  :key="m"
-                  type="button"
-                  class="bubble-map__toggle-btn"
-                  :class="{ active: m === mapMode }"
-                  @click="mapMode = m"
-                >{{ m }}</button>
+            <section class="p1-section">
+              <div class="p1-section__head">
+                <h2 class="p1-section__title">明日经营预测</h2>
               </div>
-              <div class="bubble-map__canvas">
-                <div
-                  v-for="r in regions"
-                  :key="r.name"
-                  class="bubble"
-                  :style="{ left: r.x, top: r.y }"
-                  :data-risk="r.risk"
-                >
-                  <div class="bubble__name">{{ r.name }}</div>
-                  <div class="bubble__value">{{ regionValue(r) }}</div>
+              <div class="p1-kpi-grid">
+                <div v-for="s in tomorrowStats" :key="s.label" class="kpi-card">
+                  <div class="kpi-card__label">{{ s.label }}</div>
+                  <div class="kpi-card__value">{{ s.value }}</div>
+                  <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
                 </div>
               </div>
-            </div>
-          </section>
+              <div class="p1-strategy">AI 建议交易策略：{{ aiStrategy }}</div>
+            </section>
+          </div>
 
-          <!-- 可信 AI 决策建议 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">可信 AI 决策建议</h2>
-              <span class="p1-section__hint">可解释 · 可追溯 · 可人工确认</span>
-            </div>
-            <p v-if="aiNotice" class="p1-ai-notice">{{ aiNotice }}</p>
-            <div ref="aiCard" class="p1-ai-card"></div>
-          </section>
+          <!-- 地图行：区域经营地图 + 重点/待办 -->
+          <div class="p1-pair-row p1-pair-row--wide">
+            <section class="p1-section">
+              <div class="p1-section__head">
+                <h2 class="p1-section__title">区域经营地图</h2>
+                <span class="p1-section__hint">黑吉辽蒙 · 示意</span>
+              </div>
+              <div class="bubble-map">
+                <div class="bubble-map__toggle">
+                  <button
+                    v-for="m in mapModes"
+                    :key="m"
+                    type="button"
+                    class="bubble-map__toggle-btn"
+                    :class="{ active: m === mapMode }"
+                    @click="mapMode = m"
+                  >{{ m }}</button>
+                </div>
+                <div class="bubble-map__canvas">
+                  <div
+                    v-for="r in regions"
+                    :key="r.name"
+                    class="bubble"
+                    :style="{ left: r.x, top: r.y }"
+                    :data-risk="r.risk"
+                  >
+                    <div class="bubble__name">{{ r.name }}</div>
+                    <div class="bubble__value">{{ regionValue(r) }}</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="p1-section">
+              <div class="p1-section__head"><h2 class="p1-section__title">今日三项重点</h2></div>
+              <div v-for="f in focusItems" :key="f.title" class="focus-item">
+                <div class="focus-item__title">{{ f.title }}</div>
+                <p class="focus-item__detail">{{ f.detail }}</p>
+              </div>
+              <div class="p1-section__head p1-section__head--mt"><h2 class="p1-section__title">经营待办</h2></div>
+              <ul class="todo-list">
+                <li v-for="(t, i) in todos" :key="i">
+                  <span class="todo-check">☐</span>{{ t }}
+                </li>
+              </ul>
+            </section>
+          </div>
 
           <!-- 数据溯源弹层挂载点（position:fixed，内容由 provenance.js 渲染） -->
           <div ref="provenance"></div>
         </main>
+
       `,
       mounted() {
         // 可信 AI 卡片（ai-card.js，八要素）

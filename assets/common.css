@@ -552,3 +552,115 @@ button, [role="button"], .clickable, a {
 /* AI 建议卡片容器 + 演示反馈 */
 .p1-ai-card { margin-top: var(--space-md); }
 .p1-ai-notice { font-size: 12px; color: var(--color-accent); margin: 0 0 var(--space-sm); }
+
+/* ===== p1 一屏决策布局（浅色结构重排） ===== */
+.p1-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 0 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.p1-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.p1-header__left { margin-right: auto; }
+.p1-header__meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.p1-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #BBF7D0;
+}
+.p1-badge--warn { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+
+/* 顶部核心数字：白色紧凑卡 */
+.p1-top-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 0; }
+.p1-top-stat {
+  flex: 1 1 150px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 4px rgba(21,128,61,0.06);
+}
+.p1-top-stat__label { font-size: 12px; opacity: 0.6; }
+.p1-top-stat__value { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* 区块：网格内不再外挂 margin */
+.p1-section { margin-bottom: 0; }
+.p1-main-row, .p1-pair-row { display: grid; gap: 16px; }
+.p1-main-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: stretch; }
+.p1-pair-row { grid-template-columns: 1fr 1fr; }
+.p1-pair-row--wide { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+
+/* 主视觉区（经营链路）与右侧栏 */
+.p1-section--hero {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F0FDF4 100%);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(21,128,61,0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.p1-section--rail {
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(21,128,61,0.06);
+  display: flex;
+  flex-direction: column;
+}
+.p1-section--rail .p1-ai-card { flex: 1; margin-top: 8px; }
+
+/* 链路节点徽标 */
+.link-node { position: relative; }
+.link-node__badge {
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--gradient-accent);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(34,197,94,0.40);
+}
+.link-arrow { align-self: center; color: #22C55E; font-size: 20px; font-weight: 800; flex-shrink: 0; padding: 0 4px; }
+
+/* 待办区顶距 */
+.p1-section__head--mt { margin-top: 20px; }
+
+/* 气泡地图白底 */
+.bubble-map {
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-md);
+  box-shadow: 0 1px 4px rgba(21,128,61,0.07);
+}
+
+@media (max-width: 960px) {
+  .p1-main-row, .p1-pair-row, .p1-pair-row--wide { grid-template-columns: 1fr; }
+}
