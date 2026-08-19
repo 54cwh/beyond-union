@@ -17,6 +17,11 @@
 - 组件**无 DOM 依赖**，只封装逻辑；页面提供容器 `<div ref="chart">`。
 - 禁止本机绝对路径；资源用 `../assets/`，数据用 `/data/`。
 
+**配色与图例**:
+
+- 分类系列色固定 6 色(蓝/橙/青/黄/品红/紫),按系列出现顺序分配,不循环、不用绿/红(绿红保留给充放电状态色)。色值经 CVD 色盲安全校验,对应暗色底 `#020617`。
+- 多系列(≥2)图表自动带图例;单系列不带。
+
 ---
 
 ## 2. 快速上手
@@ -161,8 +166,16 @@ this.chart.setData({
 
 | 场景    | p3 优化时间轴（风 / 光 / 储 / 并网 / 价格多系列 + 充放电节点）|
 |---------|-----------------------------------------------------------|
-| data    | `{labels:[时间], series:[{name, data:[]}], marks:[{label, type}]}` |
+| data    | `{labels:[时间], series:[{name, data:[]}], marks:[{time, label, type}]}` |
 | options | `mark`（是否显示标记）                                    |
+
+`marks` 每项字段:
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `time` | string | 标记的**时间坐标**,必须命中 `labels` 里的某个值(如 `"11:20"`) |
+| `label` | string | 标记的**显示文字**(如 `"开始充电"`) |
+| `type` | `'charge'`\|`'discharge'` | 决定标记颜色(绿/红)与图标 |
 
 ```js
 this.chart.setData({
@@ -172,8 +185,8 @@ this.chart.setData({
     { name: '光伏', data: [40, 60, 70, 45, 20, 5] },
   ],
   marks: [
-    { label: '11:20 开始充电', type: 'charge' },
-    { label: '17:50 开始放电', type: 'discharge' },
+    { time: '11:20', label: '开始充电', type: 'charge' },
+    { time: '17:50', label: '开始放电', type: 'discharge' },
   ],
 }, { type: 'timeline' });
 ```
@@ -228,3 +241,4 @@ beforeUnmount() {
 
 - 页面只传数据 + `type`，不传原始 ECharts option。
 - 图表主题（配色 / 字体）由 `chart-view.js` 内置 theme 常量统一，取自 `design-system/MASTER.md` token，不在页面里硬编码颜色。
+- 分类系列色上限 6 个(超过 6 个系列建议合并为「其他」或分面);散点/饼图等「全对」形式建议 ≤3 个系列(颜色两两可相邻),超过则依赖直接标签兜底。

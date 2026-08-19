@@ -18,6 +18,10 @@ const THEME = {
   tooltipBorder: "#334155",
 };
 
+// 分类系列色（暗色底 #020617 上校验通过，CVD 色盲安全）：
+// 固定顺序、不循环；绿/红保留给充放电状态色，故系列色只取 6 个色相
+const SERIES_COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#9085e9"];
+
 function categoryAxis(labels) {
   return { type: "category", data: labels };
 }
@@ -58,6 +62,10 @@ function buildCartesian(data, options, type) {
     if (options.area) series.forEach((s) => { s.areaStyle = {}; });
   }
 
+  if (series.length >= 2) {
+    option.legend = { data: series.map((s) => s.name) };
+  }
+
   return option;
 }
 
@@ -78,6 +86,7 @@ function buildScatter(data, options) {
 function buildPie(data, options) {
   return {
     tooltip: { trigger: "item" },
+    legend: { data: data.map((d) => d.name) },
     series: [{
       type: "pie",
       radius: options.donut ? ["40%", "70%"] : "70%",
@@ -97,6 +106,7 @@ function buildConfidence(data) {
   const band = upper.map((v, i) => v - (lower[i] !== undefined ? lower[i] : v));
   return {
     tooltip: { trigger: "axis" },
+    legend: { data: ["预测", "实际"] },
     xAxis: { type: "category", boundaryGap: false, data: labels },
     yAxis: valueAxis(),
     series: [
@@ -119,19 +129,23 @@ function buildTimeline(data, options) {
       symbol: "none",
       data: marks.map((m) => ({
         name: m.label,
-        xAxis: m.label,
+        xAxis: m.time,
         lineStyle: { color: MARK_COLORS[m.type] || MARK_COLORS.charge },
         label: { formatter: MARK_LABELS[m.type] || m.type || "" },
       })),
     };
   }
 
-  return {
+  const option = {
     tooltip: { trigger: "axis" },
     xAxis: categoryAxis(labels),
     yAxis: valueAxis(),
     series,
   };
+  if (series.length >= 2) {
+    option.legend = { data: series.map((s) => s.name) };
+  }
+  return option;
 }
 
 // 给单轴套主题（轴线颜色 + 轴标签颜色 + value 轴分隔线颜色）
@@ -157,6 +171,7 @@ function styleAxis(axis) {
 
 // 统一套主题（setOption 前调用一次）
 function applyTheme(option) {
+  option.color = SERIES_COLORS;
   styleAxis(option.xAxis);
   styleAxis(option.yAxis);
   option.textStyle = { color: THEME.text };
