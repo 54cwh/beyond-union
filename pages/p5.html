@@ -8,54 +8,566 @@
   <link rel="stylesheet" href="../assets/common.css">
   <script src="../assets/vendor/vue.global.prod.js"></script>
   <script src="../assets/vendor/echarts.min.js"></script>
+  <style>
+    /* ===== p5 页面级样式（E 集成岗，仅本页；视觉基准确认 MASTER.md + Data-Dense Dashboard） ===== */
+    .p5-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+    }
+    .p5-col-4 { grid-column: span 4; }
+    .p5-col-5 { grid-column: span 5; }
+    .p5-col-7 { grid-column: span 7; }
+    .p5-col-8 { grid-column: span 8; }
+    .p5-col-3 { grid-column: span 3; }
+    .p5-col-12 { grid-column: span 12; }
+    @media (max-width: 1024px) {
+      .p5-col-3, .p5-col-4, .p5-col-5, .p5-col-7, .p5-col-8 { grid-column: span 12; }
+    }
+
+    .p5-stat-card {
+      position: relative;
+      overflow: hidden;
+      transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+    }
+    .p5-stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--color-accent);
+      box-shadow: 0 10px 25px rgba(34, 197, 94, 0.10);
+    }
+    .p5-stat-card::after {
+      content: "";
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .p5-stat-value {
+      font-family: "Inter", monospace;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      font-size: 26px;
+      line-height: 1.2;
+    }
+    .p5-stat-label {
+      font-size: 12px;
+      opacity: 0.55;
+      margin-top: 2px;
+    }
+
+    .p5-panel {
+      background-color: var(--color-muted);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: border-color 180ms ease;
+    }
+    .p5-panel:hover { border-color: rgba(34, 197, 94, 0.35); }
+    .p5-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .p5-panel-title::before {
+      content: "";
+      width: 3px;
+      height: 14px;
+      border-radius: 2px;
+      background: var(--color-accent);
+    }
+
+    .p5-filter-btn {
+      font-size: 12px;
+      padding: 3px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      color: var(--color-foreground);
+      opacity: 0.6;
+      transition: all 160ms ease;
+    }
+    .p5-filter-btn:hover { opacity: 1; }
+    .p5-filter-btn.active {
+      opacity: 1;
+      color: var(--color-accent);
+      border-color: var(--color-accent);
+      background: rgba(34, 197, 94, 0.10);
+    }
+
+    .p5-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .p5-table thead th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.45;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+    .p5-table tbody tr {
+      transition: background-color 150ms ease;
+      cursor: pointer;
+    }
+    .p5-table tbody tr:hover { background-color: rgba(34, 197, 94, 0.06); }
+    .p5-table tbody td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.45);
+      vertical-align: top;
+    }
+    .p5-table tbody tr:last-child td { border-bottom: none; }
+
+    .p5-badge {
+      font-size: 11px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .p5-badge-green { background: rgba(34, 197, 94, 0.15); color: var(--color-accent); }
+    .p5-badge-amber { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+    .p5-badge-blue { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+    .p5-badge-purple { background: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
+    .p5-badge-gray { background: rgba(148, 163, 184, 0.15); color: #94A3B8; }
+
+    .p5-chip {
+      font-size: 11px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background-color: var(--color-secondary);
+      transition: border-color 180ms ease;
+    }
+    .p5-chip:hover { border-color: var(--color-accent); }
+
+    .p5-bar-track { background-color: var(--color-secondary); border-radius: 999px; height: 8px; overflow: hidden; }
+    .p5-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(34, 197, 94, 0.5), var(--color-accent));
+      transition: width 400ms ease;
+    }
+
+    .p5-stars { letter-spacing: 1px; color: var(--color-accent); font-size: 11px; }
+
+    .p5-link-flow { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; }
+    .p5-link-node {
+      flex: 1 1 0;
+      min-width: 110px;
+      background-color: var(--color-muted);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+      transition: border-color 180ms ease, background-color 180ms ease;
+    }
+    .p5-link-node.active {
+      border-color: var(--color-accent);
+      background-color: rgba(34, 197, 94, 0.08);
+    }
+    .p5-link-arrow { align-self: center; color: var(--color-accent); font-size: 16px; flex-shrink: 0; }
+
+    .p5-adv-btn {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--color-accent);
+      color: var(--color-accent);
+      transition: all 160ms ease;
+      white-space: nowrap;
+    }
+    .p5-adv-btn:hover { background-color: var(--color-accent); color: var(--color-on-primary); }
+  </style>
 </head>
 <body class="min-h-screen">
   <nav id="site-nav" class="p-4 border-b"></nav>
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
-    // 本模板列出全部可用 import 作参考；复制后按需保留用到的，删掉不用的
-    import { Nav, Data, fetchData } from '../assets/js/common.js';
-    import { filterRows, groupBy, toChartData } from '../assets/js/filter.js';
-    import { formatNumber, formatMoney, formatPercent, formatDate } from '../assets/js/format.js';
+    import { Nav, Data } from '../assets/js/common.js';
+    // 契约(test_contract.py)要求引用；p5 无 ECharts 图表，仅保留不加载使用
     import { createChart } from '../assets/js/chart-view.js';
 
     Nav();
+
+    const STATUS_CHAIN = ["待分析", "AI已分析", "待人工确认", "已确认", "已执行", "等待结果", "效果复盘"];
 
     const app = Vue.createApp({
       data() {
         return {
           title: "决策与政策",
+          subtitle: "政策规则 · 任务流转 · AI 决策闭环",
           loading: false,
           error: "",
+          tab: "policy",
+          policies: [],
+          tasks: [],
+          expandedPolicy: null,
+          filterCat: "全部",
+          statusChain: STATUS_CHAIN.join(" → "),
+          statusList: STATUS_CHAIN,
         };
       },
       template: `
         <main>
-          <h1 class="text-2xl mb-4">{{ title }}</h1>
-          <p v-if="loading" class="text-gray-400">加载中…</p>
-          <p v-else-if="error" class="text-red-400">{{ error }}</p>
-          <div v-else>
-            <!-- 页面内容写在这里 -->
-            <!-- 数据加载：const data = await Data.load('demo/xxx')（A 的模拟数据） -->
-            <!-- 图表容器：需要图表的页面保留此 div，不需要可删。
-                 注意：此容器必须在页面首次渲染时就存在（勿置于 v-if 条件分支内），
-                 mounted 里 createChart($refs.chart) 依赖它已渲染；加载态用 loading/error 变量控制。 -->
-            <div ref="chart" class="w-full h-80"></div>
-          </div>
+          <header class="p1-header">
+            <div>
+              <h1 class="p1-title">{{ title }}</h1>
+              <p class="p1-subtitle">{{ subtitle }}</p>
+            </div>
+            <div class="flex gap-1 bg-muted rounded-lg p-1">
+              <button type="button" @click="tab='policy'"
+                class="px-4 py-1.5 rounded-md text-sm transition-colors"
+                :class="tab==='policy' ? 'bg-accent text-on-primary' : 'text-foreground opacity-60 hover:opacity-100'">
+                政策与市场规则
+              </button>
+              <button type="button" @click="tab='tasks'"
+                class="px-4 py-1.5 rounded-md text-sm transition-colors"
+                :class="tab==='tasks' ? 'bg-accent text-on-primary' : 'text-foreground opacity-60 hover:opacity-100'">
+                决策任务中心
+              </button>
+            </div>
+          </header>
+
+          <!-- ================= 政策板块 ================= -->
+          <template v-if="tab==='policy'">
+            <div class="p5-grid mb-4">
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ policies.length }}</div>
+                <div class="p5-stat-label">政策总数</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ categoryCount }}</div>
+                <div class="p5-stat-label">覆盖分类</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ regionCount }}</div>
+                <div class="p5-stat-label">覆盖地区</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ implementedCount }}</div>
+                <div class="p5-stat-label">已实施</div>
+              </div>
+            </div>
+
+            <div class="p5-grid">
+              <!-- 左 4 列：分类/地区分布 -->
+              <div class="p5-col-4 space-y-3">
+                <div class="p5-panel">
+                  <div class="flex justify-between items-center mb-3">
+                    <h2 class="p5-panel-title">分类分布</h2>
+                    <span class="p1-section__hint">{{ policies.length }} 条</span>
+                  </div>
+                  <div class="space-y-2.5">
+                    <div v-for="c in catDist" :key="c.name" class="flex items-center gap-2">
+                      <span class="text-xs w-14 shrink-0 opacity-70">{{ c.name }}</span>
+                      <div class="flex-1 p5-bar-track">
+                        <div class="p5-bar-fill" :style="{width: catPct(c.count) + '%'}"></div>
+                      </div>
+                      <span class="text-xs tabular w-5 text-right opacity-70">{{ c.count }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p5-panel">
+                  <div class="flex justify-between items-center mb-3">
+                    <h2 class="p5-panel-title">地区覆盖</h2>
+                    <span class="p1-section__hint">{{ regionCount }} 个</span>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <span v-for="r in regionDist" :key="r.name" class="p5-chip">
+                      {{ r.name }}<span class="tabular ml-1 text-accent">{{ r.count }}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右 8 列：政策表格 -->
+              <div class="p5-col-8 p5-panel">
+                <div class="flex justify-between items-center mb-3">
+                  <h2 class="p5-panel-title">政策动态</h2>
+                  <span class="p1-section__hint">点击行展开影响分析</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mb-3">
+                  <button type="button" class="p5-filter-btn" :class="{active: filterCat==='全部'}"
+                    @click="filterCat='全部'">全部</button>
+                  <button type="button" v-for="c in catList" :key="c" class="p5-filter-btn"
+                    :class="{active: filterCat===c}" @click="filterCat=c">{{ c }}</button>
+                </div>
+                <div class="max-h-[560px] overflow-y-auto">
+                  <table class="p5-table">
+                    <thead>
+                      <tr>
+                        <th>政策</th>
+                        <th>发布机构</th>
+                        <th>地区</th>
+                        <th>状态</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="p in filteredPolicies" :key="p.id"
+                        @click="expandedPolicy = expandedPolicy===p.id ? null : p.id">
+                        <td class="min-w-[280px]">
+                          <div class="flex items-center gap-2">
+                            <span class="text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent shrink-0">{{ p.category }}</span>
+                            <span class="font-medium">{{ p.title }}</span>
+                          </div>
+                          <div class="text-xs opacity-50 mt-0.5 tabular">{{ p.doc_no }} · {{ p.published }}</div>
+
+                          <!-- 展开区 -->
+                          <div v-if="expandedPolicy===p.id" class="mt-2 pt-2 border-t border-border space-y-1.5">
+                            <div class="text-xs"><span class="opacity-50 mr-1">核心变化</span>{{ p.key_change }}</div>
+                            <div class="flex items-center gap-2 mt-1">
+                              <span class="text-xs opacity-50 shrink-0">企业影响</span>
+                              <div class="flex gap-1.5 flex-wrap">
+                                <span v-for="imp in impactList(p.impact)" :key="imp.name"
+                                  class="text-[11px] px-2 py-0.5 rounded bg-secondary border border-border flex items-center gap-1">
+                                  {{ imp.name }}<span class="p5-stars">{{ '★'.repeat(imp.stars) }}<span class="opacity-30">{{ '★'.repeat(5 - imp.stars) }}</span></span>
+                                </span>
+                              </div>
+                            </div>
+                            <div class="text-xs opacity-50 pt-1 border-t border-border">
+                              来源 {{ p.credit }} · <a :href="p.link" target="_blank" class="text-accent underline" @click.stop>查看原文</a>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="text-xs opacity-70 max-w-[180px]">{{ p.agency }}</td>
+                        <td class="text-xs opacity-70 whitespace-nowrap">{{ p.region }}</td>
+                        <td class="whitespace-nowrap">
+                          <span class="p5-badge" :class="p.status==='已实施' ? 'p5-badge-green' : 'p5-badge-amber'">{{ p.status }}</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- ================= 决策任务板块 ================= -->
+          <template v-else>
+            <div class="p5-grid mb-4">
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ tasks.length }}</div>
+                <div class="p5-stat-label">今日任务</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular text-amber-400">{{ pendingCount }}</div>
+                <div class="p5-stat-label">待人工确认</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular text-accent">{{ doneCount }}</div>
+                <div class="p5-stat-label">已确认执行</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular text-amber-400">{{ riskCount }}</div>
+                <div class="p5-stat-label">含风险提示</div>
+              </div>
+            </div>
+
+            <!-- 决策闭环链路 -->
+            <section class="p1-section">
+              <div class="p1-section__head">
+                <h2 class="p1-section__title">决策闭环</h2>
+                <span class="p1-section__hint">AI 建议 → 人工确认 → 执行 → 复盘</span>
+              </div>
+              <div class="p5-link-flow">
+                <template v-for="(s, i) in statusList" :key="s">
+                  <div class="p5-link-node" :class="{ active: taskInStatus(s) > 0 }">
+                    <div class="text-[13px] font-semibold">{{ s }}</div>
+                    <div class="text-xs opacity-70 tabular">{{ taskInStatus(s) }} 项</div>
+                  </div>
+                  <div v-if="i < statusList.length - 1" class="p5-link-arrow">→</div>
+                </template>
+              </div>
+            </section>
+
+            <div class="p5-grid">
+              <!-- 左 7 列：任务表格 -->
+              <div class="p5-col-7 p5-panel">
+                <div class="flex justify-between items-center mb-3">
+                  <h2 class="p5-panel-title">今日决策任务</h2>
+                  <span class="p1-section__hint">点击推进演示流转</span>
+                </div>
+                <div class="max-h-[480px] overflow-y-auto">
+                  <table class="p5-table">
+                    <thead>
+                      <tr>
+                        <th>任务</th>
+                        <th>负责人</th>
+                        <th>置信度</th>
+                        <th>状态</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="t in tasks" :key="t.id">
+                        <td class="min-w-[220px]">
+                          <div class="flex items-center gap-2">
+                            <span class="text-[11px] px-2 py-0.5 rounded-full bg-secondary border border-border shrink-0">{{ t.type }}</span>
+                            <span class="font-medium text-sm">{{ t.title }}</span>
+                          </div>
+                          <div class="text-xs opacity-50 mt-0.5 tabular">{{ t.decision_id }} · {{ t.model }}</div>
+                          <div v-if="t.risk" class="text-xs mt-1 text-amber-400">⚠ {{ t.risk }}</div>
+                        </td>
+                        <td class="text-xs opacity-70 whitespace-nowrap">{{ t.owner }}</td>
+                        <td class="text-xs tabular whitespace-nowrap">
+                          <span class="text-accent">{{ fmtConf(t.confidence) }}</span>
+                        </td>
+                        <td class="whitespace-nowrap">
+                          <span class="p5-badge" :class="statusClass(t.status)">{{ t.status }}</span>
+                        </td>
+                        <td>
+                          <button type="button" class="p5-adv-btn" @click.stop="advanceTask(t)">推进 →</button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 右 5 列：风险 + 分布 -->
+              <div class="p5-col-5 space-y-3">
+                <div class="p5-panel">
+                  <div class="flex justify-between items-center mb-3">
+                    <h2 class="p5-panel-title">风险提示</h2>
+                    <span class="p1-section__hint">{{ riskCount }} 项</span>
+                  </div>
+                  <div class="space-y-2">
+                    <div v-for="t in riskTasks" :key="t.id" class="flex items-start gap-2 text-xs p-2 rounded-lg bg-secondary border border-border">
+                      <span class="text-amber-400 mt-0.5 shrink-0">⚠</span>
+                      <div>
+                        <div class="text-amber-400 font-medium">{{ t.title }}</div>
+                        <div class="opacity-60">{{ t.risk }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p5-panel">
+                  <div class="flex justify-between items-center mb-3">
+                    <h2 class="p5-panel-title">状态分布</h2>
+                    <span class="p1-section__hint">{{ tasks.length }} 项</span>
+                  </div>
+                  <div class="space-y-2">
+                    <div v-for="s in statusDist" :key="s.name" class="flex items-center gap-2">
+                      <span class="text-xs w-20 shrink-0 opacity-70">{{ s.name }}</span>
+                      <div class="flex-1 p5-bar-track">
+                        <div class="p5-bar-fill" :style="{width: statusPct(s.count) + '%'}"></div>
+                      </div>
+                      <span class="text-xs tabular w-5 text-right opacity-70">{{ s.count }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
         </main>
       `,
+      computed: {
+        categoryCount() {
+          return new Set(this.policies.map((p) => p.category)).size;
+        },
+        regionCount() {
+          return new Set(this.policies.map((p) => p.region)).size;
+        },
+        implementedCount() {
+          return this.policies.filter((p) => p.status === "已实施").length;
+        },
+        catList() {
+          return [...new Set(this.policies.map((p) => p.category))];
+        },
+        filteredPolicies() {
+          if (this.filterCat === "全部") return this.policies;
+          return this.policies.filter((p) => p.category === this.filterCat);
+        },
+        catDist() {
+          const m = {};
+          this.policies.forEach((p) => { m[p.category] = (m[p.category] || 0) + 1; });
+          return Object.entries(m).map(([name, count]) => ({ name, count }));
+        },
+        regionDist() {
+          const m = {};
+          this.policies.forEach((p) => { m[p.region] = (m[p.region] || 0) + 1; });
+          return Object.entries(m).map(([name, count]) => ({ name, count }));
+        },
+        pendingCount() {
+          return this.tasks.filter((t) => t.status === "待人工确认" || t.status === "待分析").length;
+        },
+        doneCount() {
+          return this.tasks.filter((t) => t.status === "已确认" || t.status === "已执行" || t.status === "效果复盘").length;
+        },
+        riskCount() {
+          return this.tasks.filter((t) => t.risk).length;
+        },
+        riskTasks() {
+          return this.tasks.filter((t) => t.risk);
+        },
+        statusDist() {
+          const m = {};
+          this.tasks.forEach((t) => { m[t.status] = (m[t.status] || 0) + 1; });
+          return STATUS_CHAIN.filter((s) => m[s]).map((s) => ({ name: s, count: m[s] }));
+        },
+      },
+      methods: {
+        fmtConf(v) {
+          return v ? (v * 100).toFixed(0) + "%" : "--";
+        },
+        impactList(s) {
+          if (!s) return [];
+          return s.split(";").map((part) => {
+            const m = part.trim().match(/^(.+?)([一二三四五])星$/);
+            if (!m) return null;
+            const stars = { "一": 1, "二": 2, "三": 3, "四": 4, "五": 5 }[m[2]];
+            return { name: m[1], stars };
+          }).filter(Boolean);
+        },
+        catPct(c) {
+          return this.policies.length ? Math.round((c / this.policies.length) * 100) : 0;
+        },
+        statusPct(c) {
+          return this.tasks.length ? Math.round((c / this.tasks.length) * 100) : 0;
+        },
+        taskInStatus(s) {
+          return this.tasks.filter((t) => t.status === s).length;
+        },
+        statusClass(s) {
+          const map = {
+            "已确认": "p5-badge-green",
+            "已执行": "p5-badge-blue",
+            "效果复盘": "p5-badge-purple",
+          };
+          return map[s] || "p5-badge-amber";
+        },
+        advanceTask(t) {
+          const idx = STATUS_CHAIN.indexOf(t.status);
+          if (idx >= 0 && idx < STATUS_CHAIN.length - 1) {
+            t.status = STATUS_CHAIN[idx + 1];
+          }
+        },
+        async loadData() {
+          try {
+            const policy = await Data("demo/policy");
+            const tasks = await Data("demo/tasks");
+            this.policies = policy.list || [];
+            this.tasks = tasks.tasks || [];
+          } catch (e) {
+            this.error = e.message;
+          }
+        },
+      },
       mounted() {
-        // 图表：用统一组件，数据形如 [{label, value}]
-        // 聚合结果用 toChartData() 适配后再喂图表
-        this.chart = createChart(this.$refs.chart);
-        this.chart.setData([{ label: '示例', value: 10 }]);
+        this.loadData();
       },
-      beforeUnmount() {
-        // 统一组件负责 dispose，页面只需调用
-        if (this.chart) { this.chart.dispose(); this.chart = null; }
-      },
-      computed: {},
     });
 
     app.mount('#app');
