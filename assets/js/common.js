@@ -1,6 +1,9 @@
 // common.js —— 基础设施（E 集成岗维护）
-// 职责：导航渲染 + 数据加载 + 通用工具
+// 职责：导航渲染 + 数据加载 + 通用工具 + 全局组件注入
 // 不创建 Vue app；接口变更（导出/导航结构）须通知消费方
+
+import './copilot.js';
+import './demo.js';
 
 // ===== 导航 =====
 // 路径统一用项目根绝对路径（/pages/...、/data/...）：
@@ -57,5 +60,9 @@ async function fetchData(url) {
   if (!resp.ok) throw new Error(`请求失败: ${url} (${resp.status})`);
   return resp.json();
 }
+
+// ===== 全局注入：AI 副驾驶壳 + 演示模式（E 集成岗，页面零改动）=====
+// copilot.js / demo.js 被 import 即自执行（DOMContentLoaded 后注入），
+// 页面无需任何改动即获得 AI 副驾驶壳与 window.__demo。
 
 export { NAV_ITEMS, renderNav as Nav, loadData as Data, fetchData };
