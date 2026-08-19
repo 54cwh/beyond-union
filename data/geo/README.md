@@ -30,6 +30,8 @@
 | wind / solar | number | 平均风速（m/s）/ 太阳能辐射（kWh/㎡） |
 | storage | number | 储能规模（MWh） |
 | stationCount | number | 场站数 |
+| history | number[] | 近 7 期每日发电序列（时间轴气泡图层取值，末位 == generation） |
+| periods（顶层） | string[] | 时间轴期标签（如 08-12 … 08-18），geo-db 经 `periods` 暴露 |
 
 ## stations.json（场站）
 
@@ -74,7 +76,7 @@ db.provinceByName("辽宁");           // 短名/全称 → 省份对象
 
 ## 渲染：assets/js/geo-map.js
 
-`createGeoMap(el, { geoJson, provinces, stations, flows })` 五图层 + 双主题 + 省份联动：
+`createGeoMap(el, { geoJson, provinces, stations, flows, periods })` 八图层 + 双主题 + 省份联动 + 时间轴：
 
 - **KPI 着色**：capacity / generation / revenue 连续色带（#DCFCE7→#16A34A），risk 分档色（低=绿 / 中低=琥珀 / 中=红）
 - **资源图层**：wind（风速）/ solar（辐照）连续着色
@@ -84,6 +86,9 @@ db.provinceByName("辽宁");           // 短名/全称 → 省份对象
 - **查询 API**：geo-db.js 提供 provinceByName / stationsByProvince / searchStations / stationTotals / resolveFlows（含单测）
 - **输电流向**：lines 轨迹 + 流动箭头（resolveFlows 解析坐标）
 - **发电热力**：scatter 热力（符号 = √发电量，发光光晕）
+- **场站关联**：lines 关联线（场站 → 本省汇聚，线宽 ∝ 容量，按类型着色 + 流动箭头）
+- **时间轴气泡**：省份质心气泡 ∝ 各期发电，随 `periods` 播放（playTime/setTime），工具栏「播放/暂停 + 日期按钮」
+- **3D 柱状**：ECharts GL `bar3D` 省份质心立体柱（高度 = KPI，需 `assets/vendor/echarts-gl.min.js`）
 
 ## 更新方式
 

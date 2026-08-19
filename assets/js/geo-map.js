@@ -1,18 +1,18 @@
 // geo-map.js —— 东北区域经营地图组件（ECharts，B 展示岗维护）
-// 职责：注册东北四省 GeoJSON，渲染五类图层（省份KPI着色 / 资源图层 / 场站分布 / 输电流向 / 发电热力），
+// 职责：注册东北四省 GeoJSON，渲染八类图层（省份KPI着色 / 资源图层 / 场站分布 / 输电流向 / 发电热力 / 场站关联 / 时间轴气泡 / 3D柱状），
 //       提供图层与指标切换、省份/场站点击回调。
 // 依赖：全局 echarts（页面 <script src> 引入）；数据与聚合来自 geo-db.js / filter.js。
 // 规则：只封装 echarts 生命周期与配置；页面提供容器 <div ref="geoMap">。
 // 用法：
 //   const gm = createGeoMap(el, { geoJson, provinces, stations, flows });
 //   gm.init();
-//   gm.setLayer("station");       // kpi | resource | station | flow | heat
+//   gm.setLayer("station");       // kpi | resource | station | flow | heat | assoc | bubble | bar3d
 //   gm.setKPI("revenue");         // capacity | generation | revenue | risk
 //   gm.setResource("solar");      // wind | solar
 //   gm.setTheme("dark");          // light | dark（夜间发光）
 //   gm.bindClick((e) => ...);     // { kind: "province"|"station", name, meta }
 
-import { kpiLabel, resourceLabel, stationTypeLabel, resolveFlows } from "./geo-db.js";
+import { kpiLabel, resourceLabel, stationTypeLabel, resolveFlows, provinceShort } from "./geo-db.js";
 
 // 主题：浅色（design-system/MASTER.md 绿色 ramp）+ 夜间发光（同色相深底）
 const THEMES = {
@@ -105,13 +105,16 @@ function fitCoord(bounds, coord, pad = 0.06) {
 }
 
 export function createGeoMap(el, options) {
-  const { geoJson, provinces, stations, flows } = options;
+  const { geoJson, provinces, stations, flows, periods } = options;
   let chart = null;
   let layer = "kpi";
   let kpi = "capacity";
   let resource = "wind";
   let themeName = "light";
   let clickHandler = null;
+// 时间轴（气泡图层）：当前期索引与播放定时器
+  let timeIdx = 0;
+  let timeTimer = null;
 
   const MAP_VIEW = { map: "ne", roam: true, zoom: 1.12, center: [123.5, 45.0] };
   const BOUNDS = geoBounds(geoJson);
@@ -139,6 +142,15 @@ export function createGeoMap(el, options) {
   function geoBase() { return { ...MAP_VIEW, ...mapSeries() }; }
 
   function visualMapText() { return { textStyle: { color: theme().ink, fontSize: 10 } }; }
+// 气泡/时间轴取值：优先 provinces.json 的 history 序列，缺失回退 generation
+  function bubbleValue(p) {
+    const h = p.history;
+    return Number((h && h.length ? h[Math.min(timeIdx, h.length - 1)] : p.generation)) || 0;
+  }
+  function periodLabel(i) {
+    if (periods && periods.length) return periods[Math.min(i, periods.length - 1)];
+    return "第" + (i + 1) + "期";
+  }
 
   // KPI / 资源 共用的连续色带着色
   function choroplethOption(field, labelFn, ramp) {
@@ -366,12 +378,162 @@ export function createGeoMap(el, options) {
     };
   }
 
+  // 场站关联线：场站 → 本省汇聚（省级电网），线宽 ∝ 容量，按类型着色
+  function assocOption() {
+    const t = theme();
+    const centerByShort = Object.create(null);
+    provinces.forEach((p) => { centerByShort[p.short] = p.center; });
+    const linesData = stations
+      .map((s) => ({ s: s, c: centerByShort[provinceShort(s.province)] }))
+      .filter((x) => x.c)
+      .map((x) => ({
+        coords: [[x.s.lng, x.s.lat], x.c],
+        lineStyle: { color: t.typeColor[x.s.type], width: Math.max(1.5, x.s.capacity * 0.9) },
+        meta: x.s,
+      }));
+    const types = ["wind", "solar", "storage"];
+    const scatterSeries = types.map((tp) => {
+      const list = stations.filter((s) => s.type === tp);
+      return {
+        type: tp === "storage" ? "effectScatter" : "scatter",
+        name: stationTypeLabel(tp),
+        coordinateSystem: "geo",
+        data: list.map((s) => ({ name: s.name, value: [s.lng, s.lat, s.capacity], meta: s })),
+        symbolSize: function (val) { return Math.max(8, Math.sqrt(Number(val[2]) || 0) * 1.0); },
+        itemStyle: { color: t.typeColor[tp], borderColor: "#FFFFFF", borderWidth: 1.2, shadowBlur: 8, shadowColor: t.shadowGlow },
+        emphasis: { itemStyle: { borderColor: t.ink, borderWidth: 2, shadowBlur: 16 } },
+        label: { show: false },
+        zlevel: 2,
+      };
+    });
+    return {
+      backgroundColor: t.background,
+      tooltip: {
+        trigger: "item",
+        formatter: function (params) {
+          return params.data && params.data.meta ? stationTip(params.data.meta) : params.name;
+        },
+      },
+      legend: {
+        data: types.map((tp) => stationTypeLabel(tp)),
+        orient: "horizontal", left: 12, bottom: 8,
+        textStyle: { color: t.ink, fontSize: 11 }, itemWidth: 10, itemHeight: 10,
+      },
+      geo: geoBase(),
+      series: [
+        {
+          type: "lines",
+          name: "场站关联",
+          coordinateSystem: "geo",
+          zlevel: 1,
+          data: linesData,
+          lineStyle: { opacity: 0.7, curveness: 0.18 },
+          effect: { show: true, period: 4, trailLength: 0.35, color: t.flowEffect, symbol: "arrow", symbolSize: 6 },
+          emphasis: { lineStyle: { opacity: 1 } },
+        },
+      ].concat(scatterSeries),
+    };
+  }
+
+  // 时间轴气泡：省份质心气泡 ∝ 该期发电，随 periods 播放
+  function bubbleOption() {
+    const t = theme();
+    const vals = provinces.map(bubbleValue);
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const data = provinces.map((p) => ({
+      name: p.name,
+      value: [p.center[0], p.center[1], bubbleValue(p)],
+      symbolSize: Math.sqrt(bubbleValue(p)) * 3.2,
+      meta: p,
+    }));
+    return {
+      backgroundColor: t.background,
+      tooltip: {
+        trigger: "item",
+        formatter: function (params) {
+          const meta = params.data && params.data.meta;
+          if (!meta) return params.name;
+          const lines = [tipTitle(meta.name)];
+          lines.push(periodLabel(timeIdx) + " 发电：" + params.data.value[2] + " MWh");
+          lines.push("装机：" + meta.capacity + " GW · 场站 " + meta.stationCount + " 座");
+          return lines.join("<br/>");
+        },
+      },
+      visualMap: {
+        type: "continuous", min: min, max: max,
+        left: 12, bottom: 12, text: [String(max), String(min)],
+        ...visualMapText(), inRange: { color: t.kpiRamp }, itemHeight: 110, calculable: true,
+      },
+      geo: geoBase(),
+      series: [
+        {
+          type: "scatter",
+          coordinateSystem: "geo",
+          data: data,
+          symbolSize: function (val, params) { return params.data.symbolSize; },
+          itemStyle: { shadowBlur: 18, shadowColor: t.shadowGlow, borderColor: "#FFFFFF", borderWidth: 1.2, opacity: 0.9 },
+          label: { show: true, position: "top", formatter: "{b}", color: t.ink, fontSize: 11, fontWeight: 700 },
+          emphasis: { itemStyle: { shadowBlur: 30, borderColor: t.ink } },
+          zlevel: 2,
+        },
+      ],
+    };
+  }
+
+  // 3D 柱状：省份质心立 3D 柱（ECharts GL，需 echarts-gl.min.js），高度 = KPI 值
+  function bar3dOption() {
+    const t = theme();
+    const vals = provinces.map((p) => Number(p[kpi]) || 0);
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const data = provinces.map((p) => ({
+      name: p.name,
+      value: [p.center[0], p.center[1], Number(p[kpi]) || 0],
+      meta: p,
+    }));
+    return {
+      backgroundColor: t.background,
+      tooltip: {
+        trigger: "item",
+        formatter: function (params) {
+          const meta = params.data && params.data.meta;
+          return meta ? tipTitle(meta.name) + "<br/>" + kpiLabel(kpi) + "：" + meta[kpi] : params.name;
+        },
+      },
+      visualMap: {
+        type: "continuous", dimension: 2, min: min, max: max,
+        left: 12, bottom: 12, text: [String(max), String(min)],
+        ...visualMapText(), inRange: { color: t.kpiRamp }, itemHeight: 110, calculable: true,
+      },
+      geo3D: {
+        map: "ne", roam: true, boxHeight: 12, regionHeight: 1.2,
+        itemStyle: { color: t.surface, borderColor: t.border, borderWidth: 1.2 },
+        label: { show: false },
+      },
+      series: [
+        {
+          type: "bar3D",
+          coordinateSystem: "geo3D",
+          data: data,
+          shading: "lambert",
+          bevelSize: 0.3,
+          label: { show: true, position: "top", formatter: "{b}", textStyle: { color: t.ink, fontSize: 10 } },
+          itemStyle: { opacity: 0.9 },
+          emphasis: { itemStyle: { opacity: 1 } },
+        },
+      ],
+    };
+  }
   // 按当前图层/指标选择配置
   function buildOption() {
     if (layer === "resource") return choroplethOption(resource, resourceLabel, theme().resourceRamp);
     if (layer === "station") return stationOption();
     if (layer === "flow") return flowOption();
     if (layer === "heat") return heatOption();
+    if (layer === "assoc") return assocOption();
+    if (layer === "bubble") return bubbleOption();
+    if (layer === "bar3d") return bar3dOption();
     return kpi === "risk" ? riskOption() : choroplethOption(kpi, kpiLabel, theme().kpiRamp);
   }
 
@@ -383,6 +545,8 @@ export function createGeoMap(el, options) {
     if (!clickHandler) return;
     const meta = params.data && params.data.meta;
     if (params.seriesType === "map") {
+      clickHandler({ kind: "province", name: params.name, meta: meta });
+    } else if (params.seriesType === "bar3D" && meta) {
       clickHandler({ kind: "province", name: params.name, meta: meta });
     } else if ((params.seriesType === "scatter" || params.seriesType === "effectScatter") && meta && meta.type) {
       clickHandler({ kind: "station", name: params.name, meta: meta });
@@ -416,9 +580,27 @@ export function createGeoMap(el, options) {
       }
       return api;
     },
+    setTime(i) {
+      const n = periods && periods.length ? periods.length : 7;
+      timeIdx = Math.max(0, Math.min(i || 0, n - 1));
+      if (layer === "bubble") render();
+      return api;
+    },
+    getTime() { return timeIdx; },
+    getPeriods() { return periods || []; },
+    playTime() {
+      if (timeTimer) { clearInterval(timeTimer); timeTimer = null; return api; }
+      const n = periods && periods.length ? periods.length : 7;
+      timeTimer = setInterval(function () {
+        timeIdx = (timeIdx + 1) % n;
+        render();
+      }, 900);
+      return api;
+    },
     resize() { if (chart) chart.resize(); },
     getChart() { return chart; },
     dispose() {
+      if (timeTimer) { clearInterval(timeTimer); timeTimer = null; }
       window.removeEventListener("resize", api.resize);
       if (chart) { chart.dispose(); chart = null; }
       clickHandler = null;

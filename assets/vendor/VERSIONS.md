@@ -5,6 +5,7 @@
 |------|------|----------|------|
 | vue.global.prod.js | 3.4.38 | https://unpkg.com/vue@3.4.38/dist/vue.global.prod.js | assets/vendor/vue.global.prod.js |
 | echarts.min.js | 5.5.1 | https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js | assets/vendor/echarts.min.js |
+| echarts-gl.min.js | 2.0.9 | https://unpkg.com/echarts-gl@2.0.9/dist/echarts-gl.min.js | assets/vendor/echarts-gl.min.js |
 
 ## 字体（Inter，本地化）
 | 资产 | 版本 | 下载 URL | 文件 |
