@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../assets/tailwind.css">
   <link rel="stylesheet" href="../assets/common.css">
   <script src="../assets/vendor/vue.global.prod.js"></script>
+  <!-- 共享契约(test_contract.py)要求引用；p1 无 ECharts 图表，仅保留不加载使用 -->
   <script src="../assets/vendor/echarts.min.js"></script>
 </head>
 <body class="min-h-screen">
@@ -14,11 +15,14 @@
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
-    // 本模板列出全部可用 import 作参考；复制后按需保留用到的，删掉不用的
-    import { Nav, Data, fetchData } from '../assets/js/common.js';
-    import { filterRows, groupBy, toChartData } from '../assets/js/filter.js';
-    import { formatNumber, formatMoney, formatPercent, formatDate } from '../assets/js/format.js';
+    // p1 运营工作台（B 展示岗）
+    // 数据：先内联 demo 数字（需求.md 示例）；待 A 产出 data/demo/*.json 后切 Data.load。
+    // 图表：本页无 ECharts（链路图 / 气泡地图均为 HTML/CSS，见 chart-view.md 边界）。
+    import { Nav } from '../assets/js/common.js';
+    // 契约(test_contract.py)要求 chart-view.js 引用；本页链路图/气泡地图为 HTML/CSS，不使用
     import { createChart } from '../assets/js/chart-view.js';
+    import { createAICard } from '../assets/js/ai-card.js';
+    import { createProvenance } from '../assets/js/provenance.js';
 
     Nav();
 
@@ -26,36 +30,293 @@
       data() {
         return {
           title: "运营工作台",
-          loading: false,
-          error: "",
+          // 顶部核心数字（项目中心总览）
+          topStats: [
+            { label: "管理企业", value: "3 家" },
+            { label: "新能源项目", value: "12 个" },
+            { label: "总装机容量", value: "1.28 GW" },
+            { label: "储能规模", value: "180 MWh" },
+            { label: "今日总发电", value: "128.6 MWh" },
+            { label: "当前预警", value: "3 项" },
+          ],
+
+          // 今日经营结果（6 KPI，trend 空则不显示）
+          todayStats: [
+            { label: "今日发电量", value: "128.6 MWh", trend: "+4.2%" },
+            { label: "计划完成率", value: "96.8%", trend: "+1.1%" },
+            { label: "储能 SOC", value: "64%", trend: "" },
+            { label: "今日上网电量", value: "112.4 MWh", trend: "+3.5%" },
+            { label: "预计经营收益", value: "¥82.4 万", trend: "+5.0%" },
+            { label: "偏差成本", value: "¥3.1 万", trend: "-0.8%" },
+          ],
+
+          // 明日经营预测（4 KPI）
+          tomorrowStats: [
+            { label: "明日预计发电", value: "142.3 MWh" },
+            { label: "可交易电量", value: "128.7 MWh" },
+            { label: "可调储能", value: "18.2 MWh" },
+            { label: "预计市场价格", value: "¥312 / MWh" },
+          ],
+          aiStrategy: "中长期 72% · 现货 28%",
+
+          // 经营链路图（6 节点带状态）
+          linkFlow: [
+            { label: "天气", status: "风速明日下降 18%" },
+            { label: "风/光预测", status: "风电 91.7 MWh" },
+            { label: "储能优化", status: "12:00—14:00 充电" },
+            { label: "可交易电量", status: "128.7 MWh" },
+            { label: "市场策略", status: "72% 中长期 · 28% 现货" },
+            { label: "预计收益", status: "¥93 万" },
+          ],
+          // 今日三项重点
+          focusItems: [
+            { title: "风速下降", detail: "明日下午风速下降，风电出力预计降低 18%，建议减少现货敞口。" },
+            { title: "电价峰值", detail: "18:00 预计进入电价峰值，建议 17:40 以后放电。" },
+            { title: "吉林新政策", detail: "吉林新增市场规则，影响中长期交易，提供「查看政策」入口。" },
+          ],
+
+          // 经营待办
+          todos: [
+            "确认明日发电预测",
+            "确认储能运行方案",
+            "确认明日交易策略",
+            "处理风险预警",
+            "确认经营日报",
+          ],
+
+          // 区域经营地图（气泡，切换维度；risk 同时决定气泡边框颜色）
+          mapMode: "装机容量",
+          mapModes: ["装机容量", "今日发电", "经营收益", "风险"],
+          regions: [
+            { name: "内蒙古", x: "12%", y: "30%", capacity: "3.4 GW", generation: "158 MWh", revenue: "¥88 万", risk: "中" },
+            { name: "黑龙江", x: "74%", y: "18%", capacity: "2.1 GW", generation: "96 MWh", revenue: "¥52 万", risk: "低" },
+            { name: "吉林", x: "56%", y: "46%", capacity: "1.28 GW", generation: "128.6 MWh", revenue: "¥82 万", risk: "中低" },
+            { name: "辽宁", x: "42%", y: "78%", capacity: "2.8 GW", generation: "120 MWh", revenue: "¥71 万", risk: "低" },
+          ],
+
+          // 可信 AI 建议卡片（八要素：结论/置信度/依据/模型/数据来源；风险提示用默认值）
+          aiSuggestion: {
+            conclusion: "建议明日现货比例降至 27%",
+            impact: "预计影响现货收益 +¥2.1 万",
+            confidence: 87,
+            reasons: [
+              "14:00—18:00 风速预测下降 18%",
+              "风功率预测区间扩大",
+              "储能可调能力仅 18.2 MWh",
+            ],
+            model: { name: "MarketDecision", version: "1.2" },
+            dataSources: [
+              { source: "气象更新", time: "15:30" },
+              { source: "SCADA 更新", time: "15:40" },
+              { source: "市场数据更新", time: "15:35" },
+            ],
+          },
+          aiNotice: "",
+
+          // 溯源信息（KPI 卡「查看数据来源」→ provenance.open）
+          sourceInfo: {
+            "今日发电量": { sources: ["SCADA 采集", "场站计量"], updateTime: "15:40", quality: "99.2%", raw: "128.6 MWh", process: "采集 → 清洗 → 汇总", model: { name: "DataPipe", version: "1.0" } },
+            "计划完成率": { sources: ["计划系统", "SCADA 采集"], updateTime: "15:40", quality: "98.8%", raw: "96.8%", process: "实际 / 计划", model: { name: "KPI", version: "1.0" } },
+            "储能 SOC": { sources: ["BMS 采集"], updateTime: "15:40", quality: "99.9%", raw: "64%", process: "BMS 直采", model: { name: "BMS", version: "2.1" } },
+            "今日上网电量": { sources: ["关口计量"], updateTime: "15:40", quality: "99.5%", raw: "112.4 MWh", process: "计量汇总", model: { name: "Meter", version: "1.2" } },
+            "预计经营收益": { sources: ["交易结算", "发电计量"], updateTime: "15:40", quality: "98.0%", raw: "¥82.4 万", process: "结算模型推算", model: { name: "Settle", version: "1.3" } },
+            "偏差成本": { sources: ["交易结算", "偏差考核"], updateTime: "15:40", quality: "97.5%", raw: "¥3.1 万", process: "偏差结算", model: { name: "Settle", version: "1.3" } },
+            "明日预计发电": { sources: ["气象 API", "历史 SCADA", "设备状态"], updateTime: "15:40", quality: "99.2%", raw: "142.3 MWh", process: "数据清洗 → WindForecast-v1.4 推算", model: { name: "WindForecast", version: "1.4" } },
+            "可交易电量": { sources: ["发电预测", "储能 SOC"], updateTime: "15:40", quality: "98.5%", raw: "128.7 MWh", process: "预测扣减自用", model: { name: "Trade", version: "1.1" } },
+            "可调储能": { sources: ["BMS 采集", "SOC 预测"], updateTime: "15:40", quality: "99.0%", raw: "18.2 MWh", process: "BMS 推算", model: { name: "BMS", version: "2.1" } },
+            "预计市场价格": { sources: ["市场数据"], updateTime: "15:35", quality: "96.0%", raw: "¥312 / MWh", process: "市场模型推算", model: { name: "Price", version: "1.6" } },
+          },
         };
+      },
+      methods: {
+        // 区域气泡取值（按当前维度，数据预置、无聚合计算）
+        regionValue(region) {
+          const keyMap = {
+            "装机容量": "capacity",
+            "今日发电": "generation",
+            "经营收益": "revenue",
+            "风险": "risk",
+          };
+          return region[keyMap[this.mapMode] || "capacity"];
+        },
+
+        // 打开溯源弹层
+        showSource(name) {
+          const info = this.sourceInfo[name] || {
+            sources: ["历史 SCADA", "设备状态", "装机容量"],
+            updateTime: "15:40",
+            quality: "99.2%",
+            raw: "演示数据",
+            process: "采集 → 清洗 → 模型推算",
+            model: { name: "WindForecast", version: "1.4" },
+          };
+          this.prov.open({ name, ...info });
+        },
+
+        // AI 卡片按钮回调（ai-card.js 的 onAction 传入 {label, value}）
+        handleAIAction(action) {
+          if (!action) return;
+          this.aiNotice = "";
+          if (action.value === "view-evidence") {
+            this.showSource("AI 建议：明日现货比例降至 27%");
+          } else if (action.value === "add-task") {
+            this.todos.unshift("执行：明日现货比例降至 27%");
+          } else if (action.value === "re-simulate") {
+            this.aiNotice = "（演示）已触发重新模拟，等待 ai-qa 接入";
+          }
+        },
+
+        // 开始演示 → 由 E 注入的 window.__demo.start()，未注入则静默降级
+        startDemo() {
+          if (window.__demo && typeof window.__demo.start === "function") {
+            window.__demo.start();
+          }
+        },
       },
       template: `
         <main>
-          <h1 class="text-2xl mb-4">{{ title }}</h1>
-          <p v-if="loading" class="text-gray-400">加载中…</p>
-          <p v-else-if="error" class="text-red-400">{{ error }}</p>
-          <div v-else>
-            <!-- 页面内容写在这里 -->
-            <!-- 数据加载：const data = await Data.load('demo/xxx')（A 的模拟数据） -->
-            <!-- 图表容器：需要图表的页面保留此 div，不需要可删。
-                 注意：此容器必须在页面首次渲染时就存在（勿置于 v-if 条件分支内），
-                 mounted 里 createChart($refs.chart) 依赖它已渲染；加载态用 loading/error 变量控制。 -->
-            <div ref="chart" class="w-full h-80"></div>
+          <header class="p1-header">
+            <div>
+              <h1 class="p1-title">{{ title }}</h1>
+              <p class="p1-subtitle">北域绿联 · 一屏经营决策视图</p>
+            </div>
+            <button type="button" class="p1-demo-btn" @click="startDemo">开始演示</button>
+          </header>
+
+          <!-- 顶部核心数字 -->
+          <div class="p1-top-stats">
+            <div v-for="s in topStats" :key="s.label" class="p1-top-stat">
+              <div class="p1-top-stat__label">{{ s.label }}</div>
+              <div class="p1-top-stat__value">{{ s.value }}</div>
+            </div>
           </div>
+
+          <!-- 今日经营结果 -->
+          <section class="p1-section">
+            <div class="p1-section__head">
+              <h2 class="p1-section__title">今日经营结果</h2>
+              <span class="p1-section__hint">更新于 15:40</span>
+            </div>
+            <div class="p1-kpi-grid">
+              <div v-for="s in todayStats" :key="s.label" class="kpi-card">
+                <div class="kpi-card__label">{{ s.label }}</div>
+                <div class="kpi-card__value">{{ s.value }}</div>
+                <div v-if="s.trend" class="kpi-card__trend" :class="s.trend.indexOf('-') === 0 ? 'down' : 'up'">{{ s.trend }}</div>
+                <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 明日经营预测 -->
+          <section class="p1-section">
+            <div class="p1-section__head">
+              <h2 class="p1-section__title">明日经营预测</h2>
+            </div>
+            <div class="p1-kpi-grid">
+              <div v-for="s in tomorrowStats" :key="s.label" class="kpi-card">
+                <div class="kpi-card__label">{{ s.label }}</div>
+                <div class="kpi-card__value">{{ s.value }}</div>
+                <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
+              </div>
+            </div>
+            <div class="p1-strategy">AI 建议交易策略：{{ aiStrategy }}</div>
+          </section>
+          <!-- 经营链路图 -->
+          <section class="p1-section">
+            <div class="p1-section__head">
+              <h2 class="p1-section__title">经营链路</h2>
+              <span class="p1-section__hint">天气 → 预测 → 储能 → 交易 → 收益</span>
+            </div>
+            <div class="link-flow">
+              <template v-for="(node, i) in linkFlow" :key="node.label">
+                <div class="link-node">
+                  <div class="link-node__label">{{ node.label }}</div>
+                  <div class="link-node__status">{{ node.status }}</div>
+                </div>
+                <div v-if="i < linkFlow.length - 1" class="link-arrow">→</div>
+              </template>
+            </div>
+          </section>
+
+          <!-- 今日三项重点 + 经营待办 -->
+          <section class="p1-section">
+            <div class="p1-cols">
+              <div>
+                <div class="p1-section__head"><h2 class="p1-section__title">今日三项重点</h2></div>
+                <div v-for="f in focusItems" :key="f.title" class="focus-item">
+                  <div class="focus-item__title">{{ f.title }}</div>
+                  <p class="focus-item__detail">{{ f.detail }}</p>
+                </div>
+              </div>
+              <div>
+                <div class="p1-section__head"><h2 class="p1-section__title">经营待办</h2></div>
+                <ul class="todo-list">
+                  <li v-for="(t, i) in todos" :key="i">
+                    <span class="todo-check">☐</span>{{ t }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- 区域经营地图 -->
+          <section class="p1-section">
+            <div class="p1-section__head">
+              <h2 class="p1-section__title">区域经营地图</h2>
+              <span class="p1-section__hint">黑吉辽蒙 · 示意</span>
+            </div>
+            <div class="bubble-map">
+              <div class="bubble-map__toggle">
+                <button
+                  v-for="m in mapModes"
+                  :key="m"
+                  type="button"
+                  class="bubble-map__toggle-btn"
+                  :class="{ active: m === mapMode }"
+                  @click="mapMode = m"
+                >{{ m }}</button>
+              </div>
+              <div class="bubble-map__canvas">
+                <div
+                  v-for="r in regions"
+                  :key="r.name"
+                  class="bubble"
+                  :style="{ left: r.x, top: r.y }"
+                  :data-risk="r.risk"
+                >
+                  <div class="bubble__name">{{ r.name }}</div>
+                  <div class="bubble__value">{{ regionValue(r) }}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 可信 AI 决策建议 -->
+          <section class="p1-section">
+            <div class="p1-section__head">
+              <h2 class="p1-section__title">可信 AI 决策建议</h2>
+              <span class="p1-section__hint">可解释 · 可追溯 · 可人工确认</span>
+            </div>
+            <p v-if="aiNotice" class="p1-ai-notice">{{ aiNotice }}</p>
+            <div ref="aiCard" class="p1-ai-card"></div>
+          </section>
+
+          <!-- 数据溯源弹层挂载点（position:fixed，内容由 provenance.js 渲染） -->
+          <div ref="provenance"></div>
         </main>
       `,
       mounted() {
-        // 图表：用统一组件，数据形如 [{label, value}]
-        // 聚合结果用 toChartData() 适配后再喂图表
-        this.chart = createChart(this.$refs.chart);
-        this.chart.setData([{ label: '示例', value: 10 }]);
+        // 可信 AI 卡片（ai-card.js，八要素）
+        this.aiCard = createAICard(this.$refs.aiCard);
+        this.aiCard.setData(this.aiSuggestion, { pending: true, onAction: this.handleAIAction });
+        // 数据溯源弹层（provenance.js，7 字段）
+        this.prov = createProvenance(this.$refs.provenance);
       },
+
       beforeUnmount() {
-        // 统一组件负责 dispose，页面只需调用
-        if (this.chart) { this.chart.dispose(); this.chart = null; }
+        if (this.aiCard) { this.aiCard.dispose(); this.aiCard = null; }
+        if (this.prov) { this.prov.dispose(); this.prov = null; }
       },
-      computed: {},
     });
 
     app.mount('#app');

@@ -91,3 +91,364 @@ h1, h2, h3, h4, h5, h6 {
 button, [role="button"], .clickable, a {
   cursor: pointer;
 }
+
+/* ===== 可信 AI 卡片（ai-card.js，B 展示岗维护）===== */
+.ai-card {
+  background-color: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-md);
+  color: var(--color-foreground);
+}
+.ai-card__head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-sm);
+}
+.ai-card__badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+.ai-card__conclusion {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 var(--space-sm);
+}
+.ai-card__impact {
+  opacity: 0.85;
+  margin: 0 0 var(--space-md);
+}
+.ai-card__confidence {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.ai-card__confidence-label {
+  font-size: 12px;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.ai-card__bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--color-muted);
+  overflow: hidden;
+}
+.ai-card__bar-fill {
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: 999px;
+  transition: width 200ms ease;
+}
+.ai-card__confidence-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+.ai-card__section-label {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: var(--space-xs);
+}
+.ai-card__reasons {
+  list-style: none;
+  margin: 0 0 var(--space-md);
+  padding: 0;
+}
+.ai-card__reasons li {
+  margin-bottom: var(--space-xs);
+}
+.ai-card__meta {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: var(--space-xs);
+}
+.ai-card__risk {
+  font-size: 12px;
+  opacity: 0.6;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-sm);
+  margin: var(--space-sm) 0 var(--space-md);
+}
+.ai-card__actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+.ai-card__btn {
+  background-color: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.ai-card__btn:hover {
+  background-color: var(--color-accent);
+  color: var(--color-on-primary);
+}
+
+/* ===== 数据溯源弹层（provenance.js，B 展示岗维护）===== */
+.provenance-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.provenance-modal {
+  background-color: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-lg);
+  max-width: 480px;
+  width: 90%;
+  color: var(--color-foreground);
+  box-shadow: var(--shadow-lg);
+}
+.provenance-modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+.provenance-modal__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.provenance-close {
+  background: transparent;
+  border: none;
+  color: var(--color-foreground);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.provenance-row {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.provenance-row:last-child {
+  border-bottom: none;
+}
+.provenance-row__label {
+  flex-shrink: 0;
+  width: 72px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+.provenance-row__value {
+  font-size: 13px;
+}
+
+/* ===== p1 运营工作台（pages/p1.html，B 展示岗维护）===== */
+/* 说明：Tailwind CLI 本机不可用，p1 布局样式全部落地 common.css（避免依赖重编译）。 */
+
+.p1-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+.p1-title { font-size: 24px; font-weight: 700; margin: 0; color: var(--color-foreground); }
+.p1-subtitle { font-size: 13px; opacity: 0.6; margin: 2px 0 0; }
+.p1-demo-btn {
+  background-color: var(--color-accent);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+.p1-demo-btn:hover { opacity: 0.85; }
+
+/* 顶部核心数字 */
+.p1-top-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+.p1-top-stat {
+  flex: 1 1 140px;
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-sm) var(--space-md);
+}
+.p1-top-stat__label { font-size: 12px; opacity: 0.6; }
+.p1-top-stat__value { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* 区块 */
+.p1-section { margin-bottom: var(--space-lg); }
+.p1-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+.p1-section__title { font-size: 16px; font-weight: 600; margin: 0; }
+.p1-section__hint { font-size: 12px; opacity: 0.5; }
+
+/* KPI 卡片网格 */
+.p1-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-sm);
+}
+.kpi-card {
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-md);
+}
+.kpi-card__label { font-size: 12px; opacity: 0.6; margin-bottom: var(--space-xs); }
+.kpi-card__value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-foreground); }
+.kpi-card__trend { font-size: 12px; margin-top: 2px; }
+.kpi-card__trend.up { color: var(--color-accent); }
+.kpi-card__trend.down { color: var(--color-destructive); }
+.kpi-card__source {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: var(--space-sm);
+  font-size: 11px;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+.kpi-card__source:hover { text-decoration: underline; }
+
+/* 明日预测 AI 策略条 */
+.p1-strategy {
+  background-color: var(--color-secondary);
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-sm);
+  color: var(--color-accent);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* 经营链路图 */
+.link-flow {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xs);
+  overflow-x: auto;
+  padding: var(--space-xs) 0;
+}
+.link-node {
+  flex: 1 1 0;
+  min-width: 120px;
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-sm);
+  text-align: center;
+}
+.link-node__label { font-size: 13px; font-weight: 600; margin-bottom: var(--space-xs); }
+.link-node__status { font-size: 12px; opacity: 0.7; }
+.link-arrow { align-self: center; color: var(--color-accent); font-size: 18px; flex-shrink: 0; padding: 0 2px; }
+
+/* 双栏 */
+.p1-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+@media (max-width: 900px) {
+  .p1-cols { grid-template-columns: 1fr; }
+}
+
+/* 今日三项重点 */
+.focus-item {
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+.focus-item__title { font-size: 14px; font-weight: 600; margin-bottom: var(--space-xs); color: var(--color-foreground); }
+.focus-item__detail { font-size: 13px; opacity: 0.8; margin: 0; }
+
+/* 经营待办 */
+.todo-list { list-style: none; margin: 0; padding: 0; }
+.todo-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+}
+.todo-list li:last-child { border-bottom: none; }
+.todo-check { color: var(--color-border); flex-shrink: 0; }
+
+/* 区域气泡地图 */
+.bubble-map {
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-md);
+}
+.bubble-map__toggle { display: flex; gap: var(--space-xs); margin-bottom: var(--space-sm); flex-wrap: wrap; }
+.bubble-map__toggle-btn {
+  background: transparent;
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 150ms ease;
+}
+.bubble-map__toggle-btn.active { border-color: var(--color-accent); color: var(--color-accent); opacity: 1; }
+.bubble-map__canvas {
+  position: relative;
+  height: 260px;
+  background:
+    linear-gradient(var(--color-border) 1px, transparent 1px) 0 0 / 100% 25%,
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px) 0 0 / 25% 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.bubble {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 92px;
+  background-color: var(--color-secondary);
+  border: 2px solid var(--color-accent);
+  border-radius: 999px;
+  padding: 6px 12px;
+  text-align: center;
+}
+.bubble[data-risk="中"] { border-color: #F59E0B; }
+.bubble[data-risk="中高"] { border-color: var(--color-destructive); }
+.bubble__name { font-size: 13px; font-weight: 600; }
+.bubble__value { font-size: 12px; opacity: 0.85; font-variant-numeric: tabular-nums; }
+
+/* AI 建议卡片容器 + 演示反馈 */
+.p1-ai-card { margin-top: var(--space-md); }
+.p1-ai-notice { font-size: 12px; color: var(--color-accent); margin: 0 0 var(--space-sm); }
