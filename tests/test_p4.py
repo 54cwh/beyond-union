@@ -17,13 +17,13 @@ def test_p4_nav_renders(page, base_url):
 
 
 def test_p4_modules_render(page, base_url):
-    """市场行情 Tab：折线图 + 价格卡；交易决策 Tab：方案生成器 + 三方案卡。"""
+    """市场行情 Tab：报价条 + 主图；交易决策 Tab：方案生成器 + 三方案卡。"""
     page.goto(f"{base_url}/pages/p4.html")
     body = page.inner_text("body")
     # Tab1 市场行情
-    for kw in ["市场雷达", "日前 vs 实时价格", "中长期月度均价", "绿色电力溢价"]:
+    for kw in ["中长期", "日前 vs 实时价格", "发电 vs 电价", "市场快讯", "交易规则速览", "锚点价格"]:
         assert kw in body, f"缺少模块: {kw}"
-    assert page.locator("canvas").count() >= 1, "市场折线图未渲染"
+    assert page.locator("canvas").count() >= 2, "市场图表未渲染"
     # Tab2 交易决策
     page.locator(".p1-header button", has_text="交易决策").click()
     page.wait_for_timeout(400)
