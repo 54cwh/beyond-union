@@ -19,10 +19,23 @@ function renderNav() {
   if (!el) return;
   const current = location.pathname.split("/").pop();
   const items = NAV_ITEMS.map((item) => {
-    const active = current === item.href.split("/").pop() ? ' class="active"' : "";
-    return `<a href="${item.href}"${active}>${item.label}</a>`;
-  }).join(" | ");
-  el.innerHTML = items;
+    const active = current === item.href.split("/").pop();
+    return `<a href="${item.href}" class="${active ? "active" : ""} px-3 py-1.5 rounded-md text-sm transition-colors" style="${
+      active
+        ? "color:var(--color-accent);background:rgba(34,197,94,0.12);font-weight:600"
+        : "color:var(--color-foreground);opacity:.65"
+    }" onmouseover="this.style.opacity=1;this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.opacity='.65';this.style.background='transparent'">${item.label}</a>`;
+  }).join("");
+  el.innerHTML = `
+    <div class="flex items-center justify-between w-full">
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="w-2 h-2 rounded-full inline-block" style="background:var(--color-accent)"></span>
+        <span class="font-bold text-sm tracking-wide" style="color:var(--color-foreground)">北域绿联</span>
+        <span class="text-xs" style="color:var(--color-foreground);opacity:.4">新能源入市决策平台</span>
+      </div>
+      <nav class="flex items-center gap-1">${items}</nav>
+    </div>
+  `;
 }
 
 // ===== 数据（契约内容待定，先提供通用接口）=====

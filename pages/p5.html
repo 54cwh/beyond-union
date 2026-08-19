@@ -189,7 +189,7 @@
   </style>
 </head>
 <body class="min-h-screen">
-  <nav id="site-nav" class="p-4 border-b"></nav>
+  <nav id="site-nav" class="sticky top-0 z-40 px-4 py-3 border-b border-border" style="background:var(--color-background)"></nav>
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
@@ -260,7 +260,7 @@
             </div>
 
             <div class="p5-grid">
-              <!-- 左 4 列：分类饼图 + 地区覆盖 -->
+              <!-- 左 4 列：分类饼图 + 地区覆盖 + 影响力TOP -->
               <div class="p5-col-4 space-y-3">
                 <div class="p5-panel">
                   <div class="flex justify-between items-center mb-2">
@@ -278,6 +278,26 @@
                     <span v-for="r in regionDist" :key="r.name" class="p5-chip">
                       {{ r.name }}<span class="tabular ml-1 text-accent">{{ r.count }}</span>
                     </span>
+                  </div>
+                </div>
+                <div class="p5-panel">
+                  <div class="flex justify-between items-center mb-3">
+                    <h2 class="p5-panel-title">政策影响力 TOP</h2>
+                    <span class="p1-section__hint">按影响星级排序</span>
+                  </div>
+                  <div class="space-y-2.5">
+                    <div v-for="p in topImpactPolicies" :key="p.id" class="flex items-start gap-2 p-2 rounded-lg bg-secondary border border-border">
+                      <span class="text-xs tabular text-accent font-semibold mt-0.5 shrink-0">{{ impactRank(p.id) }}</span>
+                      <div class="min-w-0 flex-1">
+                        <div class="text-xs font-medium leading-snug">{{ p.title }}</div>
+                        <div class="flex gap-1.5 flex-wrap mt-1">
+                          <span v-for="imp in impactList(p.impact).slice(0, 3)" :key="imp.name"
+                            class="text-[10px] px-1.5 py-0.5 rounded bg-muted border border-border flex items-center gap-0.5">
+                            {{ imp.name }}<span class="p5-stars">{{ '★'.repeat(imp.stars) }}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -477,6 +497,14 @@
         catList() {
           return [...new Set(this.policies.map((p) => p.category))];
         },
+        topImpactPolicies() {
+          const score = (p) =>
+            (p.impact || "").split(";").reduce((sum, part) => {
+              const m = part.trim().match(/([一二三四五])星/);
+              return sum + ({ "一": 1, "二": 2, "三": 3, "四": 4, "五": 5 }[m && m[1]] || 0);
+            }, 0);
+          return [...this.policies].sort((a, b) => score(b) - score(a)).slice(0, 3);
+        },
         filteredPolicies() {
           if (this.filterCat === "全部") return this.policies;
           return this.policies.filter((p) => p.category === this.filterCat);
@@ -512,6 +540,10 @@
       methods: {
         fmtConf(v) {
           return v ? (v * 100).toFixed(0) + "%" : "--";
+        },
+        impactRank(id) {
+          const idx = this.topImpactPolicies.findIndex((p) => p.id === id);
+          return idx >= 0 ? ["①", "②", "③"][idx] : "";
         },
         impactList(s) {
           if (!s) return [];

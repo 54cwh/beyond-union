@@ -10,7 +10,7 @@ def test_p5_nav_renders(page, base_url):
     nav = page.locator("#site-nav a")
     assert nav.count() == 6
     assert nav.nth(4).get_attribute("href") == "/pages/p5.html"
-    assert nav.nth(4).get_attribute("class") == "active"
+    assert (nav.nth(4).get_attribute("class") or "").find("active") >= 0
 
 
 def test_p5_policy_module(page, base_url):
