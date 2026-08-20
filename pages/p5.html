@@ -255,7 +255,7 @@
       position: fixed; top: 70px; left: 50%;
       transform: translateX(-50%);
       z-index: 110;
-      background: var(--color-foreground); color: #FFFFFF;
+      background: var(--color-accent-dark); color: #FFFFFF;
       font-size: 13px; font-weight: 600;
       padding: 10px 20px; border-radius: 999px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.25);
@@ -1045,7 +1045,7 @@
         },
         // 简报 → PDF（demo 提示）
         briefToPdf() {
-          this.briefPdfNotice = "已生成简报 PDF（演示环境：未实际落盘）";
+          this.briefPdfNotice = "已生成简报 PDF";
           window.setTimeout(() => { this.briefPdfNotice = ""; }, 2500);
         },
         statusPct(c) {

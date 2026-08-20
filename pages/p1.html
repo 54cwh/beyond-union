@@ -339,7 +339,7 @@
       position: fixed; top: 70px; left: 50%;
       transform: translateX(-50%);
       z-index: 90;
-      background: var(--color-foreground); color: #FFFFFF;
+      background: var(--color-accent-dark); color: #FFFFFF;
       font-size: 13px; font-weight: 600;
       padding: 10px 20px; border-radius: 999px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.25);
@@ -650,7 +650,7 @@
         // 工具栏：导出报表（demo 环境：提示导出选项）
         doExport(type) {
           this.exportOpen = false;
-          this.exportNotice = "已生成「" + type + "」（演示环境：文件未实际落盘）";
+          this.exportNotice = "已生成「" + type + "」";
           window.setTimeout(() => { this.exportNotice = ""; }, 2500);
         },
 
