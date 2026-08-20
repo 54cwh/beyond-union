@@ -196,7 +196,7 @@
               <div class="p6-panel">
                 <h2 class="panel__title mb-3" style="margin:0 0 12px">模型效果</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div v-for="m in modelRows" :key="m.label" class="p-3 rounded-lg bg-[#F0FDF4]" style="border:2px solid var(--color-border-soft)">
+                  <div v-for="m in modelRows" :key="m.label" class="p-3 rounded-lg" style="border:2px solid var(--color-border-soft);background:var(--color-muted-2)">
                     <div class="text-xs opacity-55">{{ m.label }}</div>
                     <div class="text-lg font-bold tabular mt-0.5 text-accent-dark">{{ m.value }}</div>
                   </div>
@@ -284,7 +284,7 @@
           if (!this.revenue) return [];
           const p = this.revenue.performance;
           return [
-            { label: "本月发电", value: this.fmtNum(p.month_gen_mwh, 1), unit: "MWh", color: "#1A1A1A" },
+            { label: "本月发电", value: this.fmtNum(p.month_gen_mwh, 1), unit: "MWh", color: "var(--color-foreground)" },
             { label: "市场收入", value: this.fmtNum(p.market_revenue_wan, 1), unit: "万元", color: "#15803C" },
             { label: "储能收益", value: this.fmtNum(p.storage_revenue_wan, 1), unit: "万元", color: "#15803C" },
             { label: "偏差成本", value: this.fmtNum(p.deviation_cost_wan, 1), unit: "万元", color: "#B91C1C" },

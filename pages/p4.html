@@ -28,6 +28,8 @@
       border-radius: 20px;
       padding: 14px 16px;
     }
+    .p4-news-item { transition: background 150ms ease; }
+    .p4-news-item:hover { background: var(--color-muted-2); }
 
     .p4-stat-card {
       position: relative;
@@ -555,7 +557,7 @@
                   <span class="panel__hint">{{ news.length }} 条 · 滚动查看</span>
                 </div>
                 <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1 p4-scroll">
-                  <div v-for="n in news" :key="n.id" class="flex items-start gap-3 p-2.5 rounded-lg hover:bg-[#F0FDF4] transition-colors cursor-pointer">
+                  <div v-for="n in news" :key="n.id" class="p4-news-item flex items-start gap-3 p-2.5 rounded-lg transition-colors cursor-pointer">
                     <span class="badge badge--accent shrink-0">{{ n.tag }}</span>
                     <div class="min-w-0 flex-1">
                       <div class="text-sm leading-snug">{{ n.title }}</div>
@@ -570,7 +572,7 @@
                   <span class="panel__hint">各省偏差/结算 · 滚动查看</span>
                 </div>
                 <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1 p4-scroll">
-                  <div v-for="r in marketRules" :key="r.region + r.category" class="p-2.5 rounded-lg bg-[#F0FDF4]" style="border:2px solid var(--color-border-soft)">
+                  <div v-for="r in marketRules" :key="r.region + r.category" class="p-2.5 rounded-lg" style="border:2px solid var(--color-border-soft);background:var(--color-muted-2)">
                     <span class="text-xs font-semibold text-accent-dark">{{ r.region }} · {{ r.category }}</span>
                     <div class="text-xs opacity-65 leading-snug mt-0.5">{{ r.rule }}</div>
                   </div>
