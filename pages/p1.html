@@ -655,18 +655,6 @@
           window.setTimeout(() => { this.exportNotice = ""; }, 2500);
         },
 
-        // 工具栏：全屏演示（隐藏导航与工具栏，仅展示核心仪表盘）
-        enterFullscreen() {
-          if (!this.fullscreen) {
-            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-            document.body.classList.add("p1-fullscreen");
-          } else {
-            document.exitFullscreen && document.exitFullscreen();
-            document.body.classList.remove("p1-fullscreen");
-          }
-          this.fullscreen = !this.fullscreen;
-        },
-
         // 格式化链路状态文本：将关键数值（数字+单位/时间/金额）加粗
         formatStatus(status) {
           if (!status) return '';
@@ -904,8 +892,6 @@
                   <button type="button" class="toolbar-export-btn" @click="doExport('PPT 演示文稿')">PPT 演示文稿</button>
                 </div>
               </div>
-              <!-- 全屏演示 -->
-              <button type="button" class="btn btn--accent" @click="enterFullscreen">{{ fullscreen ? "退出全屏" : "全屏演示" }}</button>
               <!-- 演示链路（保留 demo-stream 功能入口） -->
               <button type="button" class="btn btn--ghost" @click="startDemo" title="90 秒演示链路">演示</button>
             </div>          </header>
