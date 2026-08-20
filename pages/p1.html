@@ -50,6 +50,44 @@
     .p1-tomorrow { display: flex; flex-direction: column; }
     .p1-tomorrow .p1-kpi-grid { margin-bottom: 12px; }
     .p1-tomorrow .p1-strategy { margin-top: auto; }
+
+    /* 经营链路 + AI 建议布局（2:3 比例，缩小链路区，增大 AI 区） */
+    .p1-chain-row {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      gap: 20px;
+    }
+    @media (max-width: 900px) {
+      .p1-chain-row { grid-template-columns: 1fr; }
+    }
+
+    /* 经营链路：网格布局（2行×3列，统一高度，编号暗示递进） */
+    .link-flow {
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 12px;
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+    .link-node {
+      min-height: 108px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: visible;
+      padding-top: 10px;
+    }
+    .link-node__status { word-break: break-word; overflow-wrap: break-word; }
+    .link-arrow { display: none; }
+    .link-node__status strong {
+      font-weight: 700;
+      color: var(--color-text);
+      opacity: 1;
+    }
+    @media (max-width: 640px) {
+      .link-flow { grid-template-columns: 1fr; grid-template-rows: none; }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-background">
@@ -227,6 +265,15 @@
 
       methods: {
         trendClass(trend) { return trend.indexOf("-") === 0 ? "down" : "up"; },
+
+        // 格式化链路状态文本：将关键数值（数字+单位/时间/金额）加粗
+        formatStatus(status) {
+          if (!status) return '';
+          return status.replace(
+            /([\d:]+—[\d:]+|[¥]?\d+\.?\d*\s*[MWh%万]*)/g,
+            '<strong>$1</strong>'
+          );
+        },
 
         // KPI 目标 vs 实际：进度条 + 达成/超支判定
         kpiGoal(s) {
@@ -499,7 +546,7 @@
           </div>
 
           <!-- 主视觉行：经营链路 + 可信 AI 建议 -->
-          <div class="panel--row2">
+          <div class="p1-chain-row">
             <section class="card panel p1-section--hero">
               <div class="panel__head">
                 <h2 class="panel__title">经营链路</h2>
@@ -510,7 +557,7 @@
                   <div class="link-node">
                     <div class="link-node__badge">{{ i + 1 }}</div>
                     <div class="link-node__label">{{ node.label }}</div>
-                    <div class="link-node__status">{{ node.status }}</div>
+                    <div class="link-node__status" v-html="formatStatus(node.status)"></div>
                   </div>
                   <div v-if="i < linkFlow.length - 1" class="link-arrow">→</div>
                 </template>

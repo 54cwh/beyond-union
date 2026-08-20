@@ -76,6 +76,9 @@
       font-weight: 600;
     }
 
+    /* 预设问题区：与上方对话消息区保持间距 */
+    .p4-presets { margin-top: 8px; }
+
     .p4-bar-track { background-color: var(--color-accent-light); border-radius: 999px; height: 8px; overflow: hidden; }
     .p4-bar-fill {
       height: 100%;
@@ -690,7 +693,7 @@
                 </template>
               </div>
               <!-- 预设问题 -->
-              <div class="flex flex-wrap gap-2 mb-3 shrink-0">
+              <div class="p4-presets flex flex-wrap gap-2 mb-3 shrink-0">
                 <button class="p4-chip" @click="sendPreset('帮我生成明天的交易方案')">生成交易方案</button>
                 <button class="p4-chip" @click="sendPreset('如果风速降 30% 会怎样')">风速骤降推演</button>
                 <button class="p4-chip" @click="sendPreset('现在有哪些交易规则')">交易规则</button>
