@@ -29,6 +29,7 @@ function renderNav() {
   el.innerHTML = `
     <div class="nav-inner">
       <div class="nav-brand">
+        <img class="nav-brand__logo" src="../assets/images/logo.png" alt="北域绿联">
         <span class="nav-brand__dot"></span>
         <span class="nav-brand__name">北域绿联</span>
         <span class="nav-brand__tag">新能源入市决策平台</span>

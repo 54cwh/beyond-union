@@ -149,7 +149,7 @@ h1, h2, h3, h4, h5, h6 {
 .panel {
   background-color: var(--color-panel);
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: var(--space-md);
   position: relative;
 }
@@ -175,7 +175,7 @@ h1, h2, h3, h4, h5, h6 {
   content: "";
   width: 4px;
   height: 16px;
-  border-radius: 2px;
+  border-radius: 0;
   background: var(--color-accent);
   flex-shrink: 0;
 }
@@ -226,7 +226,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   gap: 6px;
   padding: 9px 18px;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -259,7 +259,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 4px;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 600;
   border: 1.5px solid var(--color-border);
@@ -275,7 +275,7 @@ h1, h2, h3, h4, h5, h6 {
 .card {
   background-color: var(--color-panel);
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: var(--space-md);
   box-shadow: none;
 }
@@ -299,7 +299,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 20px 24px;
   border: 3px solid var(--color-border);
   background: #FFFFFF;
-  border-radius: 10px;
+  border-radius: 0;
 }
 .stat-grid .stat-display { padding: 8px 0; }
 .stat-grid .stat-display__value { font-size: 38px; }
@@ -337,7 +337,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-foreground);
   text-decoration: none;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 14px;
   font-weight: 500;
   opacity: 0.72;
@@ -389,7 +389,7 @@ button, [role="button"], .clickable, a {
 .ai-card {
   background-color: #FFFFFF;
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: var(--space-lg);
   color: var(--color-foreground);
 }
@@ -401,7 +401,7 @@ button, [role="button"], .clickable, a {
 .ai-card__badge {
   font-size: 13px;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 0;
   color: var(--color-accent);
   border: 1px solid var(--color-accent);
 }
@@ -428,14 +428,14 @@ button, [role="button"], .clickable, a {
 .ai-card__bar {
   flex: 1;
   height: 8px;
-  border-radius: 999px;
+  border-radius: 0;
   background-color: var(--color-muted);
   overflow: hidden;
 }
 .ai-card__bar-fill {
   height: 100%;
   background: var(--gradient-accent);
-  border-radius: 999px;
+  border-radius: 0;
   transition: width 300ms ease;
 }
 .ai-card__confidence-value {
@@ -480,7 +480,7 @@ button, [role="button"], .clickable, a {
   background: var(--gradient-accent);
   color: #FFFFFF;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
@@ -507,7 +507,7 @@ button, [role="button"], .clickable, a {
 .provenance-modal {
   background-color: #FFFFFF;
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: var(--space-xl);
   max-width: 480px;
   width: 90%;
@@ -531,7 +531,7 @@ button, [role="button"], .clickable, a {
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 0;
   padding: 4px 12px;
   font-weight: 600;
 }
@@ -572,7 +572,7 @@ button, [role="button"], .clickable, a {
   background: var(--gradient-accent);
   color: #FFFFFF;
   border: none;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 10px 20px;
   font-size: 15px;
   font-weight: 700;
@@ -599,7 +599,7 @@ button, [role="button"], .clickable, a {
   flex: 1 1 140px;
   background-color: var(--color-muted);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 0;
   padding: var(--space-sm) var(--space-md);
 }
 .p1-top-stat__label { font-size: 13px; opacity: 0.6; }
@@ -626,7 +626,7 @@ button, [role="button"], .clickable, a {
 .kpi-card {
   background-color: #FFFFFF;
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: var(--space-md);
   transition: box-shadow 200ms, transform 200ms;
 }
@@ -671,13 +671,13 @@ button, [role="button"], .clickable, a {
 .kpi-card__goal { margin-top: var(--space-sm); }
 .kpi-card__goal-track {
   height: 6px;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--color-muted-2);
   overflow: hidden;
 }
 .kpi-card__goal-fill {
   height: 100%;
-  border-radius: 999px;
+  border-radius: 0;
   transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1), background 300ms ease;
 }
 .kpi-card__goal-text {
@@ -691,7 +691,7 @@ button, [role="button"], .clickable, a {
 .p1-demo-stream {
   background: #FFFFFF;
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: var(--space-md);
 }
 .p1-demo-stream__controls {
@@ -702,7 +702,7 @@ button, [role="button"], .clickable, a {
 .p1-demo-stream__btn {
   background: var(--gradient-accent);
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 600;
@@ -723,7 +723,7 @@ button, [role="button"], .clickable, a {
   font-weight: 600;
   color: var(--color-accent-dark);
   background: var(--color-muted-2);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 8px 12px;
   min-height: 20px;
 }
@@ -733,7 +733,7 @@ button, [role="button"], .clickable, a {
 .p1-strategy {
   background: var(--gradient-accent);
   border: none;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 10px 16px;
   margin-top: var(--space-sm);
   color: #FFFFFF;
@@ -755,7 +755,7 @@ button, [role="button"], .clickable, a {
   min-width: 120px;
   background-color: #FFFFFF;
   border: 3px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 0;
   padding: var(--space-sm);
   text-align: center;
 }
@@ -780,7 +780,7 @@ button, [role="button"], .clickable, a {
 .focus-item {
   background-color: #FFFFFF;
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: var(--space-md);
   margin-bottom: var(--space-sm);
 }
@@ -911,7 +911,7 @@ button, [role="button"], .clickable, a {
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 13px;
   font-weight: 600;
   background: #DCFCE7;
@@ -926,7 +926,7 @@ button, [role="button"], .clickable, a {
   flex: 1 1 150px;
   background-color: #FFFFFF;
   border: 3px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 10px 14px;
 }
 .p1-top-stat__label { font-size: 13px; opacity: 0.6; }
@@ -943,7 +943,7 @@ button, [role="button"], .clickable, a {
 .p1-section--hero {
   background: linear-gradient(135deg, #FFFFFF 0%, #F0FDF4 100%);
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -952,7 +952,7 @@ button, [role="button"], .clickable, a {
 .p1-section--rail {
   background-color: #FFFFFF;
   border: 3px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -967,7 +967,7 @@ button, [role="button"], .clickable, a {
   left: 10px;
   width: 20px;
   height: 20px;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--gradient-accent);
   color: #FFFFFF;
   font-size: 12px;
@@ -999,7 +999,7 @@ button, [role="button"], .clickable, a {
 .geo-map__toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .geo-map__group { display: flex; gap: 6px; flex-wrap: wrap; }
 .geo-map__btn {
-  padding: 5px 12px; border-radius: 999px; border: 1px solid var(--color-border);
+  padding: 5px 12px; border-radius: 0; border: 1px solid var(--color-border);
   background: var(--color-muted); color: var(--color-foreground);
   font-size: 13px; cursor: pointer; transition: all 0.15s;
 }
@@ -1012,7 +1012,7 @@ button, [role="button"], .clickable, a {
 .geo-map__zoom-btn:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
 .geo-map__chart {
   position: relative; height: 340px; width: 100%; background: #FFFFFF;
-  border: 3px solid var(--color-border); border-radius: 8px; overflow: hidden;
+  border: 3px solid var(--color-border); border-radius: 0; overflow: hidden;
 }
 /* 地图 hero（p1 第一页置顶大图，居中）：图表加高 */
 .p1-map-hero { max-width: 100%; }
@@ -1022,7 +1022,7 @@ button, [role="button"], .clickable, a {
 }
 .geo-map__detail {
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
-  padding: 8px 12px; border-radius: 8px; background: var(--color-muted);
+  padding: 8px 12px; border-radius: 0; background: var(--color-muted);
   border: 1px solid var(--color-border); font-size: 13px; color: var(--color-foreground);
 }
 .geo-map__detail--empty { color: #6B7280; }
@@ -1035,7 +1035,7 @@ button, [role="button"], .clickable, a {
 /* ---- 地图联动：视角切换（点击省份 → 顶部 KPI 切到该省） ---- */
 .p1-scope-row { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 12px; }
 .p1-scope {
-  padding: 6px 14px; border-radius: 999px; font-size: 13px; cursor: pointer;
+  padding: 6px 14px; border-radius: 0; font-size: 13px; cursor: pointer;
   border: 1px solid var(--color-border); background: var(--color-muted); color: var(--color-foreground);
   transition: all 0.15s;
 }
@@ -1063,3 +1063,28 @@ button, [role="button"], .clickable, a {
 .text-sm   { font-size: 0.9375rem; }  /* 14 -> 15px */
 .text-base { font-size: 1.0625rem; }  /* 16 -> 17px */
 .text-lg   { font-size: 1.1875rem; }  /* 18 -> 19px */
+
+/* ============================================================
+   v3.1 直角化（用户要求：仪表盘/卡片/按钮一律直角，不使用圆角）
+   common.css 在 tailwind.css 之后加载，同优先级覆盖生效（不用 !important）
+   ============================================================ */
+.rounded, .rounded-sm, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl,
+.rounded-t, .rounded-b, .rounded-l, .rounded-r,
+.rounded-t-lg, .rounded-b-lg, .rounded-l-lg, .rounded-r-lg {
+  border-radius: 0;
+}
+/* 纯圆形指示点/状态点保留圆形（图例色点等，非"圆角边框"） */
+.rounded-full { border-radius: 9999px; }
+
+/* ===== 站点 Logo（common.js renderNav 注入，位于品牌名左侧） ===== */
+.nav-brand__logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+@media (max-width: 640px) {
+  .nav-brand__logo { width: 22px; height: 22px; }
+}
