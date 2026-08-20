@@ -392,7 +392,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 0 3px var(--color-accent-light);
   flex-shrink: 0;
 }
-.nav-brand__name { font-weight: 800; font-size: 15px; letter-spacing: 0.02em; white-space: nowrap; }
+.nav-brand__name { font-weight: 800; font-size: 28px; letter-spacing: 0.02em; white-space: nowrap; }
 .nav-brand__tag { font-size: 12px; color: #6B7280; white-space: nowrap; }
 .nav-links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
 @media (max-width: 640px) {
@@ -1131,13 +1131,13 @@ button, [role="button"], .clickable, a {
 
 /* ===== 站点 Logo（common.js renderNav 注入，位于品牌名左侧） ===== */
 .nav-brand__logo {
-  width: 26px;
-  height: 26px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   flex-shrink: 0;
   display: inline-block;
   vertical-align: middle;
 }
 @media (max-width: 640px) {
-  .nav-brand__logo { width: 22px; height: 22px; }
+  .nav-brand__logo { width: 32px; height: 32px; }
 }
