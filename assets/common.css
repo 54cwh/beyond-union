@@ -50,6 +50,10 @@
 
   --gradient-accent: linear-gradient(135deg, #22C55E 0%, #15803C 100%);
   --gradient-text: linear-gradient(135deg, #16A34A 0%, #15803C 100%);
+
+  /* 固定数据艺术字 label/sub 色（深色模式由 html.theme-dark 覆盖） */
+  --stat-label: #6B7280;
+  --stat-sub: #6B7280;
 }
 
 /* ============================================================
@@ -85,6 +89,10 @@ html.theme-dark {
 
   --gradient-accent: linear-gradient(135deg, #34D399 0%, #0D9B66 100%);
   --gradient-text: linear-gradient(135deg, #34D399 0%, #0D9B66 100%);
+
+  /* 固定数据艺术字：label/sub 提亮，与 value 协调（硬编码 #6B7280 在深色下过暗） */
+  --stat-label: #9CA3AF;
+  --stat-sub: #9CA3AF;
 }
 
 /* 本地字体（离线打包可用） */
@@ -242,7 +250,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6B7280;
+  color: var(--stat-label);
   margin-bottom: 4px;
 }
 .stat-display__value {
@@ -257,12 +265,12 @@ h1, h2, h3, h4, h5, h6 {
 .stat-display__value .unit {
   font-size: 20px;
   font-weight: 600;
-  color: var(--color-accent-dark);
+  color: inherit;
   margin-left: 6px;
 }
 .stat-display__sub {
   font-size: 14px;
-  color: #6B7280;
+  color: var(--stat-sub);
   margin-top: 6px;
 }
 .stat-display--accent .stat-display__value { color: var(--color-accent-dark); }
@@ -427,7 +435,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 0 3px var(--color-accent-light);
   flex-shrink: 0;
 }
-.nav-brand__name { font-weight: 800; font-size: 15px; letter-spacing: 0.02em; white-space: nowrap; }
+.nav-brand__name { font-weight: 800; font-size: 28px; letter-spacing: 0.02em; white-space: nowrap; }
 .nav-brand__tag { font-size: 12px; color: #6B7280; white-space: nowrap; }
 .nav-links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
 .nav-theme {
@@ -1180,13 +1188,13 @@ button, [role="button"], .clickable, a {
 
 /* ===== 站点 Logo（common.js renderNav 注入，位于品牌名左侧） ===== */
 .nav-brand__logo {
-  width: 26px;
-  height: 26px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   flex-shrink: 0;
   display: inline-block;
   vertical-align: middle;
 }
 @media (max-width: 640px) {
-  .nav-brand__logo { width: 22px; height: 22px; }
+  .nav-brand__logo { width: 32px; height: 32px; }
 }
