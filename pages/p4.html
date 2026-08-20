@@ -23,7 +23,7 @@
     }
 
     .p4-panel {
-      background-color: #FFFFFF;
+      background-color: var(--color-panel);
       border: 3px solid var(--color-border);
       border-radius: 20px;
       padding: 14px 16px;
@@ -32,7 +32,7 @@
     .p4-stat-card {
       position: relative;
       overflow: hidden;
-      background-color: #FFFFFF;
+      background-color: var(--color-panel);
       border: 3px solid var(--color-border);
       border-radius: 20px;
       padding: 14px 16px;
@@ -63,7 +63,7 @@
       padding: 4px 12px;
       border-radius: 12px;
       border: 2px solid var(--color-border);
-      background-color: #FFFFFF;
+      background-color: var(--color-panel);
       color: var(--color-foreground);
       cursor: pointer;
       transition: all 160ms ease;
@@ -92,7 +92,7 @@
       height: 320px;
       overflow-y: auto;
       padding: 12px;
-      background: #FFFFFF;
+      background: var(--color-panel);
       border: 2px solid var(--color-border);
       border-radius: 20px;
       display: flex;
@@ -115,7 +115,7 @@
     }
     .p4-msg--ai {
       align-self: flex-start;
-      background: #FFFFFF;
+      background: var(--color-panel);
       border: 2px solid var(--color-border);
       color: var(--color-foreground);
     }
@@ -150,7 +150,7 @@
       font-size: 13px;
       color: var(--color-foreground);
       outline: none;
-      background: #FFFFFF;
+      background: var(--color-panel);
       font-family: var(--font-body);
     }
     #p4-lab-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12); }
@@ -187,7 +187,7 @@
       position: absolute;
       left: 0; right: 0; bottom: 0;
       height: 24px;
-      background: linear-gradient(transparent, #FFFFFF);
+      background: linear-gradient(transparent, var(--color-panel));
       pointer-events: none;
     }
   </style>
@@ -582,7 +582,7 @@
                   <span class="panel__hint">官方</span>
                 </div>
                 <div class="p4-anchors">
-                  <div v-for="a in anchors.slice(0, 3)" :key="a.name" class="p-2 rounded-lg bg-white" style="border:2px solid var(--color-border)">
+                  <div v-for="a in anchors.slice(0, 3)" :key="a.name" class="p-2 rounded-lg" style="border:2px solid var(--color-border);background:var(--color-panel)">
                     <div class="text-[11px] opacity-60 leading-tight">{{ a.name }}</div>
                     <div class="text-sm font-bold tabular mt-0.5 text-accent-dark">{{ a.value }}<span class="text-[10px] opacity-50 ml-0.5">{{ a.unit }}</span></div>
                   </div>
@@ -635,15 +635,15 @@
                       </div>
                       <div class="text-xs opacity-60 mb-2">{{ m.desc }}</div>
                       <div class="grid grid-cols-3 gap-2 mb-3">
-                        <div class="p-2 rounded-lg bg-white" style="border:2px solid var(--color-border)">
+                        <div class="p-2 rounded-lg" style="border:2px solid var(--color-border);background:var(--color-panel)">
                           <div class="text-[11px] opacity-55">预计收益</div>
                           <div class="font-extrabold tabular text-accent-dark">{{ fmtRev(m.revenue) }}</div>
                         </div>
-                        <div class="p-2 rounded-lg bg-white" style="border:2px solid var(--color-border)">
+                        <div class="p-2 rounded-lg" style="border:2px solid var(--color-border);background:var(--color-panel)">
                           <div class="text-[11px] opacity-55">基准收益</div>
                           <div class="font-bold tabular">{{ fmtRev(m.baselineRevenue) }}</div>
                         </div>
-                        <div class="p-2 rounded-lg bg-white" style="border:2px solid var(--color-border)">
+                        <div class="p-2 rounded-lg" style="border:2px solid var(--color-border);background:var(--color-panel)">
                           <div class="text-[11px] opacity-55">提升</div>
                           <div class="font-bold tabular text-accent-dark">{{ fmtRev(m.revenue - m.baselineRevenue) }}</div>
                         </div>
@@ -681,7 +681,7 @@
                     <template v-else-if="m.type === 'rule'">
                       <div class="font-semibold mb-2">{{ m.conclusion }}</div>
                       <div class="space-y-1.5">
-                        <div v-for="r in marketRules" :key="r.region + r.category" class="text-xs p-2 rounded-lg bg-white" style="border:2px solid var(--color-border-soft)">
+                        <div v-for="r in marketRules" :key="r.region + r.category" class="text-xs p-2 rounded-lg" style="border:2px solid var(--color-border-soft);background:var(--color-panel)">
                           <span class="font-semibold text-accent-dark">{{ r.region }} · {{ r.category }}</span>
                           <div class="opacity-70 mt-0.5">{{ r.rule }}</div>
                         </div>

@@ -23,7 +23,7 @@
     .asset-card {
       display: block;
       min-height: 120px;
-      background: #FFFFFF;
+      background: var(--color-panel);
       border: 2px solid var(--color-border-soft);
       border-radius: 12px;
       padding: 12px 14px;
@@ -86,7 +86,7 @@
     }
     .asset-donut__inner {
       width: 48px; height: 48px; border-radius: 50%;
-      background: #FFFFFF;
+      background: var(--color-panel);
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 700; text-align: center;
     }
@@ -119,7 +119,7 @@
       margin: 20px 0 24px;
       padding: 18px 24px;
       border: 3px solid var(--color-border);
-      background: #FFFFFF;
+      background: var(--color-panel);
       border-radius: 20px;
     }
     .p1-stat-grid .stat-display { padding: 6px 0; }
@@ -158,7 +158,7 @@
       padding: 5px 10px;
       border-radius: 8px;
       border: 2px solid var(--color-border-soft);
-      background: #FFFFFF;
+      background: var(--color-panel);
       text-decoration: none;
       color: var(--color-foreground);
       transition: border-color 160ms ease, box-shadow 160ms ease;
@@ -256,7 +256,7 @@
       padding: 6px 12px;
       border: 2px solid var(--color-border);
       border-radius: 12px;
-      background: #FFFFFF;
+      background: var(--color-panel);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
@@ -283,7 +283,7 @@
       right: 0;
       z-index: 70;
       min-width: 240px;
-      background: #FFFFFF;
+      background: var(--color-panel);
       border: 2px solid var(--color-border);
       border-radius: 12px;
       box-shadow: 0 12px 32px rgba(0,0,0,0.12);
@@ -325,7 +325,7 @@
       flex-shrink: 0; font-size: 11px;
       padding: 3px 8px; border-radius: 6px;
       border: 1px solid var(--color-border);
-      background: #FFFFFF; cursor: pointer;
+      background: var(--color-panel); cursor: pointer;
     }
     .toolbar-mini-btn:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
     .toolbar-export-btn {
@@ -362,7 +362,7 @@
     // p1 运营工作台（B 展示岗）
     // 数据：先内联 demo 数字（需求.md 示例）；待 A 产出 data/demo/*.json 后切 Data.load。
     // 图表：链路图/气泡为 HTML/CSS；区域经营地图用 ECharts 矢量地图（geo-map.js，见 data/geo/README.md）。
-    import { Nav } from '../assets/js/common.js';
+    import { Nav, getTheme, toggleTheme as toggleGlobalTheme } from '../assets/js/common.js';
     // 契约(test_contract.py)要求 chart-view.js 引用；本页区域地图经 geo-map.js 调用 echarts
     import { createChart } from '../assets/js/chart-view.js';
     import { createAICard } from '../assets/js/ai-card.js';
@@ -528,7 +528,7 @@
           ],
           geoSelected: null,
           geoSummary: "",
-          geoTheme: "light",
+          geoTheme: getTheme(),
           geoScope: null,
           geoDrill: null,
           geoTime: 0,
@@ -722,7 +722,7 @@
           if (this.gm) { this.gm.resetView(); this.geoDrill = this.gm.getDrill(); }
         },
         toggleGeoTheme() {
-          this.geoTheme = this.geoTheme === "dark" ? "light" : "dark";
+          this.geoTheme = toggleGlobalTheme();
           if (this.gm) this.gm.setTheme(this.geoTheme);
         },
         setGeoLayer(layer) {
@@ -1174,6 +1174,7 @@
             periods: db.periods,
           });
           this.gm.init();
+          this.gm.setTheme(this.geoTheme);
           this.gm.setKPI(this.activeKPI);
           this.gm.setLayer(this.geoLayer);
           this.gm.bindClick(this.onGeoClick);

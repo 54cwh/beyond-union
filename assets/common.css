@@ -4,7 +4,7 @@
    ============================================================ */
 :root {
   /* —— 核心色板 —— */
-  --color-background: #FFFFFF;        /* 页面底色：白 */
+  --color-background: var(--color-panel);        /* 页面底色：白 */
   --color-panel: #FAFAFA;             /* 仪表盘面板内部 */
   --color-panel-alt: #F4F4F5;         /* 面板内次级底 */
   --color-border: #1A1A1A;            /* 粗黑边框（数据面板） */
@@ -50,6 +50,41 @@
 
   --gradient-accent: linear-gradient(135deg, #22C55E 0%, #15803C 100%);
   --gradient-text: linear-gradient(135deg, #16A34A 0%, #15803C 100%);
+}
+
+/* ============================================================
+   全站夜间模式（html.theme-dark）
+   覆盖核心色板为深色；页面内使用 var(--color-*) 处自动生效。
+   由 common.js 的全局主题切换统一控制，跨页持久化（localStorage）。
+   ============================================================ */
+html.theme-dark {
+  --color-background: #0B1220;        /* 页面底色：深蓝黑 */
+  --color-panel: #101D33;             /* 仪表盘面板内部 */
+  --color-panel-alt: #16263F;         /* 面板内次级底 */
+  --color-border: #1F3A5F;            /* 粗边框（深色下用亮蓝边框） */
+  --color-border-soft: #243A5E;       /* 细线/分隔 */
+  --color-foreground: #E5E7EB;        /* 主文字：浅灰 */
+  --color-muted: #101D33;             /* 弱化底 */
+  --color-muted-2: #0E2A21;           /* 浅绿底（深色适配） */
+
+  --color-accent: #34D399;            /* 主强调：亮绿 */
+  --color-accent-dark: #34D399;       /* 深绿文字（深色下提亮） */
+  --color-accent-light: #0E3A2E;      /* 浅绿背景 */
+  --color-primary: #E5E7EB;
+  --color-on-primary: #0B1220;
+  --color-secondary: #101D33;
+  --color-ring: #34D399;
+
+  --color-status-good: #34D399;
+  --color-status-warn: #FBBF24;
+  --color-status-serious: #F97316;
+  --color-status-critical: #F87171;
+
+  --color-trend-up: #F87171;    /* 上涨 / 增加 */
+  --color-trend-down: #34D399;  /* 下跌 / 减少 */
+
+  --gradient-accent: linear-gradient(135deg, #34D399 0%, #0D9B66 100%);
+  --gradient-text: linear-gradient(135deg, #34D399 0%, #0D9B66 100%);
 }
 
 /* 本地字体（离线打包可用） */
@@ -170,7 +205,7 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
 }
 .panel--tight { padding: 12px; }
-.panel--white { background-color: #FFFFFF; }
+.panel--white { background-color: var(--color-panel); }
 .panel__head {
   display: flex;
   align-items: center;
@@ -247,7 +282,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   cursor: pointer;
   border: 2px solid var(--color-border);
-  background: #FFFFFF;
+  background: var(--color-panel);
   color: var(--color-foreground);
   transition: all 160ms ease;
   text-decoration: none;
@@ -279,7 +314,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 12px;
   font-weight: 600;
   border: 1.5px solid var(--color-border);
-  background: #FFFFFF;
+  background: var(--color-panel);
   color: var(--color-foreground);
   white-space: nowrap;
 }
@@ -318,7 +353,7 @@ h1, h2, h3, h4, h5, h6 {
   margin: 20px 0 28px;
   padding: 20px 24px;
   border: 3px solid var(--color-border);
-  background: #FFFFFF;
+  background: var(--color-panel);
   border-radius: 20px;
 }
 .stat-grid .stat-display { padding: 8px 0; }
@@ -346,7 +381,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ===== 站点导航（v3：白底 + 粗黑下边框 + 绿色强调） ===== */
 #site-nav {
-  background: #FFFFFF;
+  background: var(--color-panel);
   border-bottom: 3px solid var(--color-border);
   padding: 10px 20px;
   position: sticky;
@@ -395,6 +430,20 @@ h1, h2, h3, h4, h5, h6 {
 .nav-brand__name { font-weight: 800; font-size: 15px; letter-spacing: 0.02em; white-space: nowrap; }
 .nav-brand__tag { font-size: 12px; color: #6B7280; white-space: nowrap; }
 .nav-links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.nav-theme {
+  margin-left: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+.nav-theme:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
 @media (max-width: 640px) {
   .nav-brand__tag { display: none; }
   .nav-inner { justify-content: center; }
@@ -407,7 +456,7 @@ button, [role="button"], .clickable, a {
 
 /* ===== 可信 AI 卡片（ai-card.js，B 展示岗维护）===== */
 .ai-card {
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 20px;
   padding: var(--space-lg);
@@ -556,7 +605,7 @@ button, [role="button"], .clickable, a {
   z-index: 50;
 }
 .provenance-modal {
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 20px;
   padding: var(--space-xl);
@@ -675,7 +724,7 @@ button, [role="button"], .clickable, a {
   gap: var(--space-sm);
 }
 .kpi-card {
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 20px;
   padding: var(--space-md);
@@ -740,7 +789,7 @@ button, [role="button"], .clickable, a {
 
 /* 演示实时推演曲线面板 */
 .p1-demo-stream {
-  background: #FFFFFF;
+  background: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 20px;
   padding: var(--space-md);
@@ -804,7 +853,7 @@ button, [role="button"], .clickable, a {
 .link-node {
   flex: 1 1 0;
   min-width: 120px;
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 8px;
   padding: var(--space-sm);
@@ -829,7 +878,7 @@ button, [role="button"], .clickable, a {
 
 /* 今日三项重点 */
 .focus-item {
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 20px;
   padding: var(--space-md);
@@ -879,7 +928,7 @@ button, [role="button"], .clickable, a {
 .bubble-map__canvas {
   position: relative;
   height: 260px;
-  background: #FFFFFF;
+  background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   overflow: hidden;
@@ -889,7 +938,7 @@ button, [role="button"], .clickable, a {
   position: absolute;
   transform: translate(-50%, -50%);
   min-width: 92px;
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 2px solid #22C55E;
   border-radius: 999px;
   padding: 6px 12px;
@@ -975,7 +1024,7 @@ button, [role="button"], .clickable, a {
 .p1-top-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 0; }
 .p1-top-stat {
   flex: 1 1 150px;
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 20px;
   padding: 10px 14px;
@@ -992,7 +1041,7 @@ button, [role="button"], .clickable, a {
 
 /* 主视觉区（经营链路）与右侧栏 */
 .p1-section--hero {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F0FDF4 100%);
+  background: linear-gradient(135deg, var(--color-panel) 0%, var(--color-panel-alt) 100%);
   border: 3px solid var(--color-border);
   border-radius: 20px;
   padding: 20px;
@@ -1001,7 +1050,7 @@ button, [role="button"], .clickable, a {
   justify-content: center;
 }
 .p1-section--rail {
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 20px;
   padding: 20px;
@@ -1035,7 +1084,7 @@ button, [role="button"], .clickable, a {
 
 /* 气泡地图白底 */
 .bubble-map {
-  background-color: #FFFFFF;
+  background-color: var(--color-panel);
   border: 3px solid var(--color-border);
   border-radius: 10px;
   padding: var(--space-md);
@@ -1061,10 +1110,10 @@ button, [role="button"], .clickable, a {
 .geo-map__btn--mini { padding: 4px 10px; font-size: 12px; }
 .geo-map__canvas-wrap { position: relative; }
 .geo-map__zoom { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
-.geo-map__zoom-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-border); background: #FFFFFF; color: var(--color-foreground); font-size: 16px; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.10); transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.geo-map__zoom-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-panel); color: var(--color-foreground); font-size: 16px; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.10); transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
 .geo-map__zoom-btn:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
 .geo-map__chart {
-  position: relative; height: 340px; width: 100%; background: #FFFFFF;
+  position: relative; height: 340px; width: 100%; background: var(--color-panel);
   border: 3px solid var(--color-border); border-radius: 20px; overflow: hidden;
 }
 /* 地图 hero（p1 第一页置顶大图，居中）：图表加高 */

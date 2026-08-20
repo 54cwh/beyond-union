@@ -35,8 +35,20 @@ function renderNav() {
         <span class="nav-brand__tag">新能源入市决策平台</span>
       </div>
       <nav class="nav-links">${items}</nav>
+      <button type="button" class="nav-theme" id="nav-theme" title="切换日间/夜间模式" aria-label="切换主题">
+        ${getTheme() === "dark" ? "☾ 夜间" : "☀ 日间"}
+      </button>
     </div>
   `;
+  const themeBtn = document.getElementById("nav-theme");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const next = toggleTheme();
+      themeBtn.textContent = next === "dark" ? "☾ 夜间" : "☀ 日间";
+      // 若页面有地图等需要实时同步的主题组件，广播给消费方
+      document.dispatchEvent(new CustomEvent("byu:themechange", { detail: { theme: next } }));
+    });
+  }
 }
 
 // ===== 数据（契约内容待定，先提供通用接口）=====
@@ -57,6 +69,42 @@ async function fetchData(url) {
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`请求失败: ${url} (${resp.status})`);
   return resp.json();
+}
+
+// ===== 全局主题（全站日间/夜间模式） =====
+// 规则：统一在 <html class="theme-dark"> 上挂 class，CSS 变量在 html.theme-dark 下覆盖，
+//       所有使用 var(--color-*) 的组件（含各页面内联样式）自动跟随。
+// 持久化：localStorage 键 'byu-theme'，跨页保持。
+const THEME_KEY = "byu-theme";
+
+function applyTheme(theme) {
+  document.documentElement.classList.toggle("theme-dark", theme === "dark");
+  document.documentElement.classList.toggle("theme-light", theme === "light");
+}
+
+export function getTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  return saved === "dark" ? "dark" : "light";
+}
+
+export function setTheme(theme) {
+  applyTheme(theme);
+  try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* 忽略存储异常 */ }
+}
+
+export function toggleTheme() {
+  const next = getTheme() === "dark" ? "light" : "dark";
+  setTheme(next);
+  return next;
+}
+
+// 模块加载即应用持久化主题（页面零改动自动生效）
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => applyTheme(getTheme()));
+  } else {
+    applyTheme(getTheme());
+  }
 }
 
 // ===== 全局注入：AI 副驾驶壳 + 演示模式（E 集成岗，页面零改动）=====

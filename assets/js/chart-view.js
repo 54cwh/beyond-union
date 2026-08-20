@@ -9,13 +9,27 @@ const MARK_COLORS = { charge: "#22C55E", discharge: "#EF4444" };
 const MARK_LABELS = { charge: "充电", discharge: "放电" };
 
 // 图表浅色主题（v3 设计语言：白底面板上黑字可读，对比度 ≥ 4.5:1）
-const THEME = {
+// 主题取色：跟随全站夜间/日间模式（html.theme-dark，由 common.js 统一控制）
+function isDarkTheme() {
+  return typeof document !== "undefined" &&
+    document.documentElement.classList.contains("theme-dark");
+}
+
+const LIGHT_THEME = {
   text: "#1A1A1A",        // 主文字/轴标签（近黑）
   axisLine: "#9CA3AF",    // 坐标轴线（灰）
   splitLine: "#E5E5E5",   // 网格分隔线（浅灰）
   tooltipBg: "#FFFFFF",   // 提示框底（白）
   tooltipBorder: "#1A1A1A",
 };
+const DARK_THEME = {
+  text: "#E5E7EB",        // 主文字/轴标签（浅灰）
+  axisLine: "#475569",    // 坐标轴线（灰蓝）
+  splitLine: "#243A5E",   // 网格分隔线（深蓝）
+  tooltipBg: "#101D33",   // 提示框底（深蓝）
+  tooltipBorder: "#1F3A5F",
+};
+const THEME = () => (isDarkTheme() ? DARK_THEME : LIGHT_THEME);
 
 // 分类系列色（白底 #FFFFFF 上校验：饱和、对比足够、CVD 色盲安全）：
 // 固定顺序、不循环；绿/红保留给充放电状态色，故系列色只取 6 个色相
@@ -220,17 +234,17 @@ function styleAxis(axis) {
   }
   axis.axisLine = axis.axisLine || {};
   axis.axisLine.lineStyle = axis.axisLine.lineStyle || {};
-  axis.axisLine.lineStyle.color = THEME.axisLine;
+  axis.axisLine.lineStyle.color = THEME().axisLine;
 
   axis.axisLabel = axis.axisLabel || {};
-  axis.axisLabel.color = THEME.text;
+  axis.axisLabel.color = THEME().text;
   axis.axisLabel.fontSize = 12;
   axis.axisLabel.margin = 6;
 
   if (axis.type === "value") {
     axis.splitLine = axis.splitLine || {};
     axis.splitLine.lineStyle = axis.splitLine.lineStyle || {};
-    axis.splitLine.lineStyle.color = THEME.splitLine;
+    axis.splitLine.lineStyle.color = THEME().splitLine;
   }
 }
 
@@ -239,11 +253,11 @@ function applyTheme(option, options = {}) {
   option.color = options.colors || SERIES_COLORS;
   styleAxis(option.xAxis);
   styleAxis(option.yAxis);
-  option.textStyle = { color: THEME.text };
+  option.textStyle = { color: THEME().text };
   option.tooltip = option.tooltip || {};
-  option.tooltip.backgroundColor = THEME.tooltipBg;
-  option.tooltip.borderColor = THEME.tooltipBorder;
-  option.tooltip.textStyle = { color: THEME.text };
+  option.tooltip.backgroundColor = THEME().tooltipBg;
+  option.tooltip.borderColor = THEME().tooltipBorder;
+  option.tooltip.textStyle = { color: THEME().text };
   return option;
 }
 

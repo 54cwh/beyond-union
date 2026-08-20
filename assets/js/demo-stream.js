@@ -9,7 +9,13 @@ const HOURS = 24;
 const LABELS = Array.from({ length: HOURS }, (_, h) => String(h).padStart(2, "0") + ":00");
 
 // 浅色底可读配色（取自 common.css :root token）
-const C = {
+// 主题取色：跟随全站夜间/日间模式（html.theme-dark）
+function isDarkTheme() {
+  return typeof document !== "undefined" &&
+    document.documentElement.classList.contains("theme-dark");
+}
+
+const C_LIGHT = {
   text: "#14532D",          // --color-foreground
   axisLine: "#BBF7D0",      // --color-border
   splitLine: "#DCFCE7",     // --color-muted-2
@@ -21,6 +27,19 @@ const C = {
   discharge: "#EF4444",
   confirm: "#16A34A",
 };
+const C_DARK = {
+  text: "#A7F3D0",
+  axisLine: "#1F3A5F",
+  splitLine: "#243A5E",
+  forecast: "#34D399",
+  actual: "#34D399",
+  band: "rgba(52,211,153,0.16)",
+  area: "rgba(52,211,153,0.10)",
+  charge: "#34D399",
+  discharge: "#F87171",
+  confirm: "#34D399",
+};
+const C = () => (isDarkTheme() ? C_DARK : C_LIGHT);
 
 // 基准预测（风速下降前，日间型日曲线，单位 MW）
 const BASE_FORECAST = [2.2, 1.8, 1.6, 1.7, 2.1, 2.6, 3.4, 4.8, 6.2, 7.5, 8.6, 9.4, 9.8, 9.6, 9.0, 8.2, 7.4, 6.5, 5.4, 4.2, 3.2, 2.6, 2.4, 2.2];
@@ -56,8 +75,8 @@ export function createDemoStream(el) {
       smooth: true,
       symbol: "circle",
       symbolSize: 5,
-      lineStyle: { color: C.forecast, type: "dashed", width: 2 },
-      itemStyle: { color: C.forecast },
+      lineStyle: { color: C().forecast, type: "dashed", width: 2 },
+      itemStyle: { color: C().forecast },
     };
     if (marks.length) {
       forecastSeries.markLine = {
@@ -65,8 +84,8 @@ export function createDemoStream(el) {
         data: marks.map((m) => ({
           name: m.label,
           xAxis: m.hour,
-          lineStyle: { color: C[m.type] || C.confirm },
-          label: { formatter: m.label, color: C[m.type] || C.confirm, fontSize: 11 },
+          lineStyle: { color: C[m.type] || C().confirm },
+          label: { formatter: m.label, color: C[m.type] || C().confirm, fontSize: 11 },
         })),
       };
     }
@@ -74,15 +93,15 @@ export function createDemoStream(el) {
     return [
       // 置信区间：stack 面积技巧（下界透明线 + 带宽面积），复用 chart-view buildConfidence 思路
       { name: "区间下界", type: "line", data: lower, stack: "band", lineStyle: { opacity: 0 }, symbol: "none", silent: true },
-      { name: "置信区间", type: "line", data: bandWidth, stack: "band", lineStyle: { opacity: 0 }, symbol: "none", areaStyle: { color: C.band }, silent: true },
+      { name: "置信区间", type: "line", data: bandWidth, stack: "band", lineStyle: { opacity: 0 }, symbol: "none", areaStyle: { color: C().band }, silent: true },
       forecastSeries,
-      { name: "实际", type: "line", data: actual, smooth: true, symbol: "circle", symbolSize: 4, lineStyle: { color: C.actual, width: 2.5 }, itemStyle: { color: C.actual }, areaStyle: { color: C.area } },
+      { name: "实际", type: "line", data: actual, smooth: true, symbol: "circle", symbolSize: 4, lineStyle: { color: C().actual, width: 2.5 }, itemStyle: { color: C().actual }, areaStyle: { color: C().area } },
     ];
   }
 
   function buildOption() {
     return {
-      color: [C.actual, C.forecast],
+      color: [C().actual, C().forecast],
       tooltip: { trigger: "axis" },
       legend: { data: ["预测", "实际"], top: 0 },
       grid: { left: 44, right: 16, top: 36, bottom: 58 },
@@ -90,15 +109,15 @@ export function createDemoStream(el) {
         type: "category",
         boundaryGap: false,
         data: LABELS,
-        axisLine: { lineStyle: { color: C.axisLine } },
-        axisLabel: { color: C.text, fontSize: 11 },
+        axisLine: { lineStyle: { color: C().axisLine } },
+        axisLabel: { color: C().text, fontSize: 11 },
       },
       yAxis: {
         type: "value",
         name: "MW",
-        nameTextStyle: { color: C.text },
-        axisLabel: { color: C.text },
-        splitLine: { lineStyle: { color: C.splitLine } },
+        nameTextStyle: { color: C().text },
+        axisLabel: { color: C().text },
+        splitLine: { lineStyle: { color: C().splitLine } },
       },
       dataZoom: [
         { type: "inside", start: 0, end: 100 },

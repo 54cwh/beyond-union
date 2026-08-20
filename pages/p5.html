@@ -25,7 +25,7 @@
     .p5-stat-card {
       position: relative;
       overflow: hidden;
-      background-color: #FFFFFF;
+      background-color: var(--color-panel);
       border: 3px solid var(--color-border);
       border-radius: 20px;
       padding: 10px 14px;
@@ -52,7 +52,7 @@
     .p5-stat-label { font-size: 12px; opacity: 0.55; margin-top: 1px; }
 
     .p5-panel {
-      background-color: #FFFFFF;
+      background-color: var(--color-panel);
       border: 3px solid var(--color-border);
       border-radius: 20px;
       padding: 14px 16px;
@@ -63,7 +63,7 @@
       padding: 3px 12px;
       border-radius: 12px;
       border: 2px solid var(--color-border);
-      background: #FFFFFF;
+      background: var(--color-panel);
       color: var(--color-foreground);
       opacity: 0.7;
       cursor: pointer;
@@ -94,7 +94,7 @@
       padding: 8px 10px;
       border-bottom: 2px solid var(--color-border);
       white-space: nowrap;
-      background-color: #FFFFFF;
+      background-color: var(--color-panel);
       position: sticky;
       top: 0;
       z-index: 1;
@@ -147,7 +147,7 @@
       padding: 2px 10px;
       border-radius: 12px;
       border: 2px solid var(--color-border);
-      background-color: #FFFFFF;
+      background-color: var(--color-panel);
       color: var(--color-foreground);
       transition: border-color 180ms ease;
     }
@@ -176,8 +176,8 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background-color: #D1D5DB;
-      border: 2px solid #FFFFFF;
+      background-color: var(--color-border-soft);
+      border: 2px solid var(--color-panel);
       box-shadow: 0 0 0 2px var(--color-border);
       transition: all 180ms ease;
     }
@@ -229,7 +229,7 @@
     .p5-modal {
       width: 480px; max-width: 100%;
       max-height: 90vh; overflow-y: auto;
-      background: #FFFFFF;
+      background: var(--color-panel);
       border: 3px solid var(--color-border);
       border-radius: 16px;
       padding: 20px;
