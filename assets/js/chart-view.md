@@ -162,7 +162,7 @@ this.chart.setData([
 | 场景    | p2 影响因子贡献、p5 分类分布                               |
 |---------|-----------------------------------------------------------|
 | data    | `[{name, value}]`                                         |
-| options | `donut`（环形）、`showLabel`（直接标签）、`legend: false`（关图例） |
+| options | `donut`（环形）、`showLabel`（直接标签）、`legend: false`（关图例）、`legendRight: true`（图例右侧竖排 + 每项带数量） |
 
 ```js
 this.chart.setData([

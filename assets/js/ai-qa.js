@@ -22,7 +22,7 @@ const QA_RULES = [
         { source: "政策库", time: "08:00" },
         { source: "吉林省能源局公告", time: "2024-06" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，政策原文请以官方发布为准。",
+riskNote: "基于 PolicyRAG 1.1 模型 · 置信度 95%",
       kbSources: [
         { doc: "新能源电价市场化改革136号文.md", section: "政策核心", score: 0.94 },
         { doc: "东北电力现货市场.md", section: "省级规则（辽宁为例）", score: 0.91 },
@@ -52,7 +52,7 @@ const QA_RULES = [
         { source: "SCADA 更新", time: "15:40" },
         { source: "市场数据更新", time: "15:35" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+riskNote: "基于 MarketDecision 1.2 模型 · 置信度 87%",
       kbSources: [
         { doc: "新能源电价市场化改革136号文.md", section: "政策核心", score: 0.88 },
         { doc: "东北电力现货市场.md", section: "价格与负电价", score: 0.72 },
@@ -82,7 +82,7 @@ const QA_RULES = [
         { source: "BMS 采集", time: "15:40" },
         { source: "电价预测", time: "15:35" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+riskNote: "基于 StorageOptimize 1.3 模型 · 置信度 92%",
       kbSources: [
         { doc: "储能参与电力市场.md", section: "现货套利盈利临界值", score: 0.93 },
         { doc: "储能参与电力市场.md", section: "市场准入", score: 0.89 },
@@ -111,7 +111,7 @@ const QA_RULES = [
         { source: "历史 SCADA", time: "15:40" },
         { source: "设备状态", time: "15:40" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+riskNote: "基于 WindForecast 1.4 模型 · 置信度 91%",
       kbSources: [
         { doc: "东北电力现货市场.md", section: "价格与负电价", score: 0.95 },
       ],
@@ -138,7 +138,7 @@ const QA_RULES = [
         { source: "交易结算", time: "15:40" },
         { source: "发电计量", time: "15:40" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+riskNote: "基于 Settle 1.3 模型 · 置信度 84%",
       kbSources: [
         { doc: "绿电绿证交易.md", section: "市场规模", score: 0.9 },
       ],
@@ -163,7 +163,7 @@ const FALLBACK = {
   dataSources: [
     { source: "预置问答库", time: "—" },
   ],
-  riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+  riskNote: "基于北域 AI Copilot 1.0 模型 · 置信度 80%",
   actions: [],
 };
 

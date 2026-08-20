@@ -18,13 +18,14 @@ function injectStyle() {
       right: 20px;
       bottom: 24px;
       z-index: 60;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
+      padding: 0 16px;
+      height: 40px;
+      min-width: 88px;
+      border-radius: 999px;
       border: none;
       background: linear-gradient(135deg, #22C55E 0%, #15803C 100%);
       color: #fff;
-      font-size: 22px;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 4px 16px rgba(34,197,94,0.35);
@@ -298,8 +299,8 @@ export function initCopilot() {
   // 悬浮按钮
   const btn = document.createElement("button");
   btn.id = "copilot-btn";
-  btn.textContent = "AI";
-  btn.title = "北域AI副驾驶";
+  btn.textContent = "Copilot";
+  btn.title = "智能分析中心";
   document.body.appendChild(btn);
 
   // 面板
@@ -307,13 +308,13 @@ export function initCopilot() {
   panel.id = "copilot-panel";
   panel.innerHTML = `
     <div class="copilot-head">
-      <span class="copilot-head__title">北域 AI 副驾驶</span>
+<span class="copilot-head__title">北域 AI 副驾驶</span>
       <span class="copilot-kb-badge">知识库 ${KB_INDEX.length} 文档</span>
       <button class="copilot-close" id="copilot-close">✕</button>
     </div>
     <div class="copilot-body" id="copilot-body">
       <div class="copilot-answer">
-        <div class="copilot-answer__conclusion">您好，我是北域 AI 副驾驶</div>
+        <div class="copilot-answer__conclusion">您好，我是智能分析中心</div>
         <div class="copilot-answer__section">您可以这样问我</div>
         <div style="margin-top:8px">
           ${SUGGESTIONS.map((s) => `<button class="copilot-sugg">${s}</button>`).join("")}

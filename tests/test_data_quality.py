@@ -24,7 +24,7 @@ EXPECTED_COUNTS = {
     "storage": {"schedule": 48},
     "market": {"day_ahead": 72, "real_time": 72, "midterm_monthly": 12, "anchors": 12, "rules": 7},
     "revenue": {"comparison": 30},
-    "policy": {"list": 8},
+    "policy": {"list": 13},
     "tasks": {"tasks": 8},
     "cases": {"cases": 12},
     "provenance": {"lineage": 18, "models": 6},
