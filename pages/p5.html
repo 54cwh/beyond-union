@@ -13,12 +13,13 @@
     .p5-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
     .p5-col-4 { grid-column: span 4; }
     .p5-col-5 { grid-column: span 5; }
+    .p5-col-6 { grid-column: span 6; }
     .p5-col-7 { grid-column: span 7; }
     .p5-col-8 { grid-column: span 8; }
     .p5-col-3 { grid-column: span 3; }
     .p5-col-12 { grid-column: span 12; }
     @media (max-width: 1024px) {
-      .p5-col-3, .p5-col-4, .p5-col-5, .p5-col-7, .p5-col-8 { grid-column: span 12; }
+      .p5-col-3, .p5-col-4, .p5-col-5, .p5-col-6, .p5-col-7, .p5-col-8 { grid-column: span 12; }
     }
 
     .p5-stat-card {
@@ -229,6 +230,18 @@
           filterRegion: "全部",
           statusChain: STATUS_CHAIN.join(" → "),
           statusList: STATUS_CHAIN,
+          kbDocs: [],
+          kbQuery: "",
+          kbActive: "",
+          kbShowModal: false,
+          kbMode: "file",
+          kbFileName: "",
+          kbNewDoc: { title: "", content: "" },
+          kbFolders: [],
+          kbActiveFolder: "",
+          kbExpanded: {},
+          kbShowNewFolder: false,
+          kbNewFolder: "",
         };
       },
       template: `
@@ -248,6 +261,11 @@
                 class="px-4 py-1.5 rounded-md text-sm transition-colors"
                 :class="tab==='tasks' ? 'btn btn--sm btn--accent' : 'text-foreground opacity-60 hover:opacity-100'">
                 决策任务中心
+              </button>
+              <button type="button" @click="tab='kb'"
+                class="px-4 py-1.5 rounded-md text-sm transition-colors"
+                :class="tab==='kb' ? 'btn btn--sm btn--accent' : 'text-foreground opacity-60 hover:opacity-100'">
+                知识库
               </button>
             </div>
           </header>
@@ -502,9 +520,164 @@
               </div>
             </div>
           </div>
+          <!-- ================= 知识库板块 ================= -->
+          <div v-show="tab==='kb'" class="kb-tab">
+            <!-- 顶部统计条 -->
+            <div class="p5-grid mb-4">
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ kbStats.docs }}</div>
+                <div class="p5-stat-label">知识文档</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ kbStats.sections }}</div>
+                <div class="p5-stat-label">章节条目</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ kbStats.categories }}</div>
+                <div class="p5-stat-label">覆盖分类</div>
+              </div>
+              <div class="p5-col-3 p5-stat-card card">
+                <div class="p5-stat-value tabular">{{ (kbStats.chars / 1000).toFixed(1) }}k</div>
+                <div class="p5-stat-label">总字符量</div>
+              </div>
+            </div>
+            <div class="p5-grid">
+              <!-- 左栏：文件夹 -->
+              <div class="p5-col-3 p5-panel" style="max-height: calc(100vh - 300px); display: flex; flex-direction: column;">
+                <div class="flex justify-between items-center mb-3">
+                  <h2 class="p5-panel-title">文件夹</h2>
+                  <span class="p1-section__hint">{{ kbFolders.length }}</span>
+                </div>
+                <div class="flex-1 overflow-y-auto pr-1">
+                  <div v-for="folder in kbFolders" :key="folder"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors mb-0.5"
+                    :class="kbActiveFolder === folder ? 'bg-accent/10 text-accent-dark font-semibold' : 'hover:bg-muted'"
+                    @click="kbActiveFolder = folder">
+                    <span class="text-sm">📁</span>
+                    <span class="flex-1 text-sm">{{ folder }}</span>
+                    <span class="text-xs opacity-40">{{ kbDocs.filter(d => (d.folder || '未分类') === folder).length }}</span>
+                  </div>
+                  <button @click="kbShowNewFolder = !kbShowNewFolder" class="w-full mt-2 text-xs px-3 py-2 rounded-lg border border-dashed border-border hover:border-accent hover:text-accent">
+                    ＋ 新建文件夹
+                  </button>
+                  <div v-if="kbShowNewFolder" class="flex gap-2 mt-2">
+                    <input v-model="kbNewFolder" placeholder="名称" class="flex-1 px-2 py-1.5 rounded border border-border text-sm" @keydown.enter="addKbFolder" />
+                    <button @click="addKbFolder" class="p5-adv-btn">✓</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 中栏：文档列表 -->
+              <div class="p5-col-3 p5-panel" style="max-height: calc(100vh - 300px); display: flex; flex-direction: column;">
+                <div class="flex justify-between items-center mb-3">
+                  <h2 class="p5-panel-title">{{ kbActiveFolder || '文档' }}</h2>
+                  <button @click="openKbModal" class="p5-adv-btn !py-1 !px-2 text-xs">＋ 新建</button>
+                </div>
+                <input v-model="kbQuery" placeholder="搜索…" class="w-full px-2.5 py-1.5 rounded-lg border border-border mb-2 text-sm" />
+                <div class="flex-1 overflow-y-auto pr-1">
+                  <div v-for="doc in kbActiveFiles" :key="doc.file"
+                    class="flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer hover:bg-muted transition-colors mb-0.5"
+                    :class="kbActive === doc.file ? 'bg-accent/10 text-accent-dark font-semibold' : ''"
+                    @click="selectKbDoc(doc.file)">
+                    <span class="text-sm">📄</span>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium truncate">{{ doc.title }}</div>
+                      <div class="text-xs opacity-40">{{ doc.sections.length }} 章节 · {{ doc.updated }}</div>
+                    </div>
+                  </div>
+                  <div v-if="kbActiveFiles.length === 0" class="text-xs opacity-40 text-center py-6">该文件夹暂无文档</div>
+                </div>
+              </div>
+
+              <!-- 右栏：文档内容 -->
+              <div class="p5-col-6 p5-panel" style="max-height: calc(100vh - 300px); overflow-y: auto;">
+                <template v-if="kbActiveDoc">
+                  <div class="flex justify-between items-center mb-1">
+                    <h2 class="p5-panel-title">{{ kbActiveDoc.title }}</h2>
+                    <div class="flex items-center gap-2">
+                      <span v-if="kbActiveDoc.status === '待审核'" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 font-semibold">待审核</span>
+                      <span v-else class="text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent-dark font-semibold">已收录</span>
+                      <button @click="renameKbDoc(kbActiveDoc.file)" class="text-xs opacity-50 hover:text-accent" title="重命名">✎</button>
+                      <button @click="downloadKbDoc(kbActiveDoc.file)" class="text-xs opacity-50 hover:text-accent" title="下载">⬇</button>
+                      <button @click="deleteKbDoc(kbActiveDoc.file)" class="text-xs opacity-50 hover:text-red-500" title="删除">🗑</button>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 text-xs opacity-50 mb-3">
+                    <span>📂 {{ kbActiveDoc.category }}</span>
+                    <span>📑 {{ kbActiveDoc.sections.length }} 章节</span>
+                    <span>🕐 {{ kbActiveDoc.updated }}</span>
+                  </div>
+                  <div v-if="kbActiveDoc.status === '待审核'" class="flex gap-2 mb-3">
+                    <button @click="approveKbDoc(kbActiveDoc.file)" class="p5-adv-btn">✓ 确认收录</button>
+                    <button @click="rejectKbDoc(kbActiveDoc.file)" class="text-xs px-3 py-1.5 rounded-md border border-red-400 text-red-500 hover:bg-red-50">驳回</button>
+                  </div>
+                  <div v-if="kbActiveSection" class="mb-4">
+                    <h3 class="text-sm font-bold mb-2" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent">{{ kbActiveSection.title }}</h3>
+                    <p class="text-sm leading-relaxed opacity-80" v-html="highlightKb(kbActiveSection.content)"></p>
+                  </div>
+                  <div v-else class="space-y-4">
+                    <div v-for="sec in kbActiveDoc.sections" :key="sec.title">
+                      <h3 class="text-sm font-bold mb-2" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent">{{ sec.title }}</h3>
+                      <p class="text-sm leading-relaxed opacity-80" v-html="highlightKb(sec.content)"></p>
+                    </div>
+                  </div>
+                </template>
+                <p v-else class="text-sm opacity-60">从左侧选择文档查看内容。</p>
+              </div>
+            </div>
+
         </main>
       `,
       computed: {
+        kbFiltered() {
+          if (!this.kbQuery) return this.kbDocs;
+          const q = this.kbQuery.toLowerCase();
+          return this.kbDocs.map((doc) => ({
+            ...doc,
+            sections: doc.sections.filter((s) => s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q)),
+          })).filter((doc) => doc.sections.length > 0);
+        },
+        kbActiveDoc() {
+          return this.kbDocs.find((d) => d.file === this.kbActive.split("::")[0]) || null;
+        },
+        kbActiveSection() {
+          const parts = this.kbActive.split("::");
+          if (parts.length < 2) return null;
+          const doc = this.kbActiveDoc;
+          return doc ? (doc.sections.find((s) => s.title === parts[1]) || null) : null;
+        },
+        kbStats() {
+          const totalSections = this.kbDocs.reduce((s, d) => s + (d.sections ? d.sections.length : 0), 0);
+          const categories = new Set(this.kbDocs.map((d) => d.category)).size;
+          const totalChars = this.kbDocs.reduce((s, d) => s + (d.sections ? d.sections.reduce((ss, sec) => ss + sec.content.length, 0) : 0), 0);
+          return { docs: this.kbDocs.length, sections: totalSections, categories, chars: totalChars };
+        },
+        kbCategories() {
+          const map = {};
+          this.kbDocs.forEach((d) => {
+            const c = d.category || "其他";
+            if (!map[c]) map[c] = [];
+            map[c].push(d);
+          });
+          return Object.entries(map).map(([name, docs]) => ({ name, docs }));
+        },
+        kbFolderDocs() {
+          const map = {};
+          this.kbDocs.forEach((d) => {
+            const f = d.folder || "未分类";
+            if (!map[f]) map[f] = [];
+            map[f].push(d);
+          });
+          return Object.entries(map).map(([name, docs]) => ({ name, docs }));
+        },
+        kbActiveFiles() {
+          let files = this.kbDocs.filter((d) => (d.folder || "未分类") === this.kbActiveFolder);
+          if (this.kbQuery) {
+            const q = this.kbQuery.toLowerCase();
+            files = files.filter((d) => d.title.toLowerCase().includes(q) || d.sections.some((s) => s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q)));
+          }
+          return files;
+        },
         categoryCount() {
           return new Set(this.policies.map((p) => p.category)).size;
         },
@@ -560,6 +733,141 @@
         },
       },
       methods: {
+        selectKbDoc(file) {
+          this.kbActive = file;
+        },
+        selectKbSection(file, section) {
+          this.kbActive = file + "::" + section;
+        },
+        highlightKb(text) {
+          if (!this.kbQuery) return text;
+          const q = this.kbQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          return text.replace(new RegExp(q, "gi"), (m) => `<mark style="background:#FDE68A;padding:0 2px;border-radius:2px">${m}</mark>`);
+        },
+        // 解析粘贴内容为章节（## 分隔）
+        parseKbContent(title, content) {
+          const lines = content.split("\n");
+          const sections = [];
+          let cur = null;
+          lines.forEach((line) => {
+            line = line.trim();
+            if (line.startsWith("## ")) {
+              if (cur) sections.push(cur);
+              cur = { title: line.slice(3), content: [] };
+            } else if (line.startsWith("# ")) {
+              // 忽略总标题
+            } else if (cur && line) {
+              cur.content.push(line);
+            }
+          });
+          if (cur) sections.push(cur);
+          if (sections.length === 0) sections.push({ title: title, content: [content] });
+          sections.forEach((s) => { s.content = s.content.join(" "); });
+          return sections;
+        },
+        // 打开/关闭提交弹层
+        openKbModal() {
+          this.kbShowModal = true;
+          this.kbMode = "file";
+          this.kbFileName = "";
+        },
+        closeKbModal() {
+          this.kbShowModal = false;
+        },
+        // 选择文件（模拟）
+        onKbFileChange(e) {
+          const f = e.target.files && e.target.files[0];
+          if (f) this.kbFileName = f.name;
+        },
+        // 提交文档 → 待审核
+        doKbSubmit() {
+          if (this.kbMode === "text") {
+            const title = (this.kbNewDoc.title || "").trim();
+            const content = (this.kbNewDoc.content || "").trim();
+            if (!title || !content) return;
+            this.submitKbDoc(title, content, title + ".md");
+          } else if (this.kbFileName) {
+            const title = this.kbFileName.replace(/\.[^.]+$/, "");
+            const content = "（来自上传文件）\n## 章节摘要\n该文档来自上传文件 " + this.kbFileName;
+            this.submitKbDoc(title, content, this.kbFileName);
+          }
+        },
+        // 提交文档 → 待审核
+        submitKbDoc(title, content, file) {
+          title = (title || "").trim();
+          content = (content || "").trim();
+          if (!title || !content) return;
+          const f = file || "自定义-" + title + ".md";
+          this.kbDocs.push({
+            file: f,
+            title,
+            status: "待审核",
+            sections: this.parseKbContent(title, content),
+          });
+          this.kbNewDoc = { title: "", content: "" };
+          this.kbFileName = "";
+          this.kbShowModal = false;
+          this.kbActive = f;
+        },
+        // 审核：确认收录
+        approveKbDoc(file) {
+          const doc = this.kbDocs.find((d) => d.file === file);
+          if (doc) doc.status = "已收录";
+        },
+        // 审核：驳回删除
+        rejectKbDoc(file) {
+          this.deleteKbDoc(file);
+        },
+        // 删除文档
+        deleteKbDoc(file) {
+          this.kbDocs = this.kbDocs.filter((d) => d.file !== file);
+          if (this.kbActive === file || this.kbActive.startsWith(file)) this.kbActive = "";
+        },
+        // 重命名文档
+        renameKbDoc(file) {
+          const doc = this.kbDocs.find((d) => d.file === file);
+          if (!doc) return;
+          const name = prompt("重命名文档标题：", doc.title);
+          if (name && name.trim()) {
+            doc.title = name.trim();
+            if (this.kbActive === file || this.kbActive.startsWith(file)) this.kbActive = file;
+          }
+        },
+        // 下载文档（模拟，生成 .md 文本）
+        downloadKbDoc(file) {
+          const doc = this.kbDocs.find((d) => d.file === file);
+          if (!doc) return;
+          let md = "# " + doc.title + "\n\n";
+          (doc.sections || []).forEach((s) => { md += "## " + s.title + "\n" + s.content + "\n\n"; });
+          const blob = new Blob([md], { type: "text/markdown" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = file;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        },
+        // 新建文件夹
+        addKbFolder() {
+          const name = (this.kbNewFolder || "").trim();
+          if (!name || this.kbFolders.includes(name)) return;
+          this.kbFolders.push(name);
+          this.kbNewFolder = "";
+          this.kbShowNewFolder = false;
+        },
+        // 删除文件夹（文档移到"未分类"）
+        deleteKbFolder(folder) {
+          this.kbFolders = this.kbFolders.filter((f) => f !== folder);
+          this.kbDocs.forEach((d) => { if (d.folder === folder) d.folder = "未分类"; });
+        },
+        // 展开/折叠文档章节
+        toggleKbDoc(file) {
+          this.kbExpanded[file] = !this.kbExpanded[file];
+        },
+        // 移动文档到文件夹
+        moveKbDoc(file, folder) {
+          const doc = this.kbDocs.find((d) => d.file === file);
+          if (doc) doc.folder = folder;
+        },
         fmtConf(v) {
           return v ? (v * 100).toFixed(0) + "%" : "--";
         },
@@ -606,6 +914,19 @@
             this.policies = policy.list || [];
             this.tasks = tasks.tasks || [];
             this.renderCatChart();
+            try {
+              const kb = await Data("kb/index");
+              this.kbDocs = (kb.docs || []).map((d) => ({ ...d, status: "已收录", folder: d.category }));
+              if (this.kbDocs.length) this.kbActive = this.kbDocs[0].file;
+              this.kbDocs.forEach((d) => {
+                if (!this.kbFolders.includes(d.folder)) this.kbFolders.push(d.folder);
+              });
+              if (!this.kbActiveFolder || !this.kbFolders.includes(this.kbActiveFolder)) {
+                this.kbActiveFolder = this.kbFolders[0] || "市场交易";
+              }
+            } catch (e) {
+              // kb/index.json 缺失不阻断
+            }
           } catch (e) {
             this.error = e.message;
           }

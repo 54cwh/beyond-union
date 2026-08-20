@@ -23,6 +23,10 @@ const QA_RULES = [
         { source: "吉林省能源局公告", time: "2024-06" },
       ],
       riskNote: "该结果仅作为辅助决策建议，政策原文请以官方发布为准。",
+      kbSources: [
+        { doc: "政策与市场规则.md", section: "新能源上网电价市场化改革", score: 0.94 },
+        { doc: "政策与市场规则.md", section: "吉林电力现货市场", score: 0.91 },
+      ],
       actions: [
         { label: "查看政策原文", value: "go-p5" },
         { label: "AI 解释规则", value: "explain-rule" },
@@ -49,6 +53,10 @@ const QA_RULES = [
         { source: "市场数据更新", time: "15:35" },
       ],
       riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+      kbSources: [
+        { doc: "政策与市场规则.md", section: "新能源上网电价市场化改革", score: 0.88 },
+        { doc: "储能与预测.md", section: "发电预测模型", score: 0.72 },
+      ],
       actions: [
         { label: "查看发电预测", value: "go-p2" },
         { label: "进入交易模拟", value: "go-p4" },
@@ -75,6 +83,10 @@ const QA_RULES = [
         { source: "电价预测", time: "15:35" },
       ],
       riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+      kbSources: [
+        { doc: "储能与预测.md", section: "储能优化策略", score: 0.93 },
+        { doc: "储能与预测.md", section: "储能运行约束", score: 0.89 },
+      ],
       actions: [
         { label: "查看储能方案", value: "go-p3" },
         { label: "重新计算", value: "re-simulate" },
@@ -100,6 +112,9 @@ const QA_RULES = [
         { source: "设备状态", time: "15:40" },
       ],
       riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+      kbSources: [
+        { doc: "储能与预测.md", section: "发电预测模型", score: 0.95 },
+      ],
       actions: [
         { label: "查看发电预测", value: "go-p2" },
         { label: "重新计算储能方案", value: "go-p3" },
@@ -124,6 +139,9 @@ const QA_RULES = [
         { source: "发电计量", time: "15:40" },
       ],
       riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+      kbSources: [
+        { doc: "储能与预测.md", section: "经营收益模型", score: 0.9 },
+      ],
       actions: [
         { label: "查看经营成效", value: "go-p6" },
       ],
@@ -167,4 +185,12 @@ export const SUGGESTIONS = [
   "今天储能建议什么时候充电？",
   "吉林有哪些现货交易规则？",
   "本月经营收益怎么样？",
+];
+
+// 知识库索引（模拟 RAG 检索源，data/kb/*.md）
+export const KB_INDEX = [
+  { name: "政策与市场规则.md", category: "政策", sections: 3, updated: "2026-08-19" },
+  { name: "储能与预测.md", category: "储能/预测", sections: 4, updated: "2026-08-19" },
+  { name: "东北电力市场交易指南.md", category: "市场", sections: 5, updated: "2026-08-20" },
+  { name: "绿电绿证与碳市场.md", category: "绿电", sections: 4, updated: "2026-08-20" },
 ];

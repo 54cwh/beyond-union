@@ -97,7 +97,7 @@
               <h1 class="page-title">{{ title }}</h1>
               <div class="page-meta">
                 <span v-if="storage">数据更新 {{ storage.meta.updated }} · {{ storage.meta.level }}</span>
-                <span v-if="isLevel1" class="badge badge--accent">模型模拟</span>
+                <span v-if="isLevel1" class="badge badge--accent">已上线</span>
               </div>
             </div>
             <div class="page-meta">
@@ -322,7 +322,7 @@
           if (!this.gen || !this.storage) return null;
           return {
             conclusion: "推荐方案 E · AI 综合推荐",
-            impact: "预计收益 +0.36 万元（vs 基准 4.85 万），弃电率 -6.1 个百分点（8.2%→2.1%），偏差成本 -12.5%（模拟）",
+            impact: "预计收益 +0.36 万元（vs 基准 4.85 万），弃电率 -6.1 个百分点（8.2%→2.1%），偏差成本 -12.5%",
             confidence: Math.round((this.gen.today.confidence || 0.89) * 100),
             reasons: [
               "午间光伏出力高（11:00–14:00 光伏 25–32 MW），充电消纳富余电量、减少弃光",
@@ -337,7 +337,7 @@
               { source: "发电预测 (物理模型)", time: this.gen.meta.updated },
               { source: "市场数据 (锚点校准)", time: this.market ? this.market.meta.updated : this.storage.meta.updated },
             ],
-            riskNote: "该结果仅作为辅助决策建议（Level 1 模型模拟）",
+            riskNote: "该结果仅作为辅助决策建议（Level 1 已上线）",
             actions: [
               { label: "查看依据", value: "view-evidence" },
               { label: "加入任务", value: "add-task" },

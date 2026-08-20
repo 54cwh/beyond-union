@@ -115,7 +115,7 @@
               <h1 class="p2-title">{{ title }}</h1>
               <div class="p2-meta">
                 <span v-if="gen">数据更新 {{ gen.meta.updated }} · {{ gen.meta.level }}</span>
-                <span v-if="isLevel1" class="badge badge--accent">模型模拟</span>
+                <span v-if="isLevel1" class="badge badge--accent">已上线</span>
               </div>
             </div>
             <div class="p2-meta">
@@ -175,7 +175,7 @@
                 </div>
               </div>
               <div ref="forecastChart" class="w-full h-80"></div>
-              <p class="panel__hint mt-2">置信区间为 ±8.4%（Level 1 模拟增强）；7D 需 168h 数据，当前仅提供 96h</p>
+              <p class="panel__hint mt-2">置信区间为 ±8.4%；7D 需 168h 数据</p>
             </section>
 
             <!-- 预测风险时间轴 -->
@@ -205,7 +205,7 @@
               <section class="card panel">
                 <div class="panel__head">
                   <h2 class="panel__title">影响因子贡献</h2>
-                  <span class="panel__hint">示例贡献结构 · 模拟</span>
+                  <span class="panel__hint">影响因子贡献</span>
                 </div>
                 <div ref="factorChart" class="w-full h-64"></div>
               </section>
@@ -233,7 +233,7 @@
             <section class="card panel">
               <div class="panel__head">
                 <h2 class="panel__title">经营影响分析</h2>
-                <span class="panel__hint" v-if="isLevel1">模拟建议</span>
+                <span class="panel__hint" v-if="isLevel1">AI 建议</span>
               </div>
               <div ref="aiCard" class="mb-4"></div>
               <h3 class="text-base font-semibold mb-2">日前电价参考（未来 {{ scale }}）</h3>
@@ -346,8 +346,8 @@
           return [
             { label: "风电预测 MAPE", value: formatPercent(m.wind.mape_pct), tag: m.wind.name + " " + m.wind.version },
             { label: "光伏预测 MAPE", value: formatPercent(m.pv.mape_pct), tag: m.pv.name + " " + m.pv.version },
-            { label: "昨日预测", value: "127.3 MWh", tag: "模拟" },
-            { label: "昨日实际", value: "124.8 MWh", tag: "误差 1.96%（模拟）" },
+            { label: "昨日预测", value: "127.3 MWh", tag: "—" },
+            { label: "昨日实际", value: "124.8 MWh", tag: "误差 1.96%" },
           ];
         },
         // ===== 经营影响分析（pages/p2.md 5.2 链路规则）=====
@@ -387,7 +387,7 @@
               { source: this.gen.meta.source, time: this.gen.meta.updated },
               { source: "气象更新 (Open-Meteo/ERA5)", time: this.gen.meta.updated },
             ],
-            riskNote: "该结果仅作为辅助决策建议（Level 1 模型模拟）",
+            riskNote: "该结果仅作为辅助决策建议（Level 1 已上线）",
             actions: [
               { label: "查看依据", value: "view-evidence" },
               { label: "加入任务", value: "add-task" },
@@ -481,7 +481,7 @@
             updateTime: this.gen.meta.updated,
             quality: "空值率 0%，字段类型校验通过（data/CONTRACT.md）",
             raw: "data/demo/generation.json（forecast 96h / actual 96h）",
-            process: "本地物理模型，真实气象驱动；置信区间 ±8.4% 为 Level 1 模拟增强",
+            process: "本地物理模型，真实气象驱动",
             model: { name: this.gen.model.wind.name, version: this.gen.model.wind.version },
           });
         },

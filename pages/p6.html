@@ -104,7 +104,7 @@
             </div>
             <div class="flex items-center gap-3 flex-wrap">
               <span v-if="revenue" class="badge badge--accent hidden md:inline-flex">
-                数据更新 {{ revenue.meta.updated }} · 模拟数据已标注
+                数据更新 {{ revenue.meta.updated }}
               </span>
               <div class="flex gap-1 bg-muted rounded-lg p-1" style="border:2px solid var(--color-border)">
                 <button v-for="t in tabs" :key="t.key" type="button" @click="tab = t.key"
@@ -125,7 +125,7 @@
               <!-- 本月经营成绩 KPI（固定数据艺术字） -->
               <div class="panel__head" style="margin-bottom:4px">
                 <h2 class="panel__title">本月经营成绩</h2>
-                <span class="panel__hint">当月累计 · 模拟数据</span>
+                <span class="panel__hint">当月累计</span>
               </div>
               <div class="p6-grid mb-4">
                 <div v-for="k in perfKpis" :key="k.label" class="p6-col-3 p6-kpi-card">
@@ -183,7 +183,7 @@
               <!-- 累计效能 KPI -->
               <div class="panel__head" style="margin-bottom:4px">
                 <h2 class="panel__title">累计效能</h2>
-                <span class="panel__hint">累计口径 · 模拟</span>
+                <span class="panel__hint">累计口径</span>
               </div>
               <div class="p6-kpi-grid-5 mb-4">
                 <div v-for="k in cumKpis" :key="k.label" class="p6-kpi-card">

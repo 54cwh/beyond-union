@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>提交文档 · 知识库</title>
+  <link rel="stylesheet" href="../assets/tailwind.css">
+  <link rel="stylesheet" href="../assets/common.css">
+  <style>
+    body { background: #F8FAFC; font-family: Inter, "Microsoft YaHei", sans-serif; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: #14532D; margin-bottom: 5px; }
+    .field input, .field textarea {
+      width: 100%;
+      border: 1px solid #BBF7D0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #14532D;
+      background: #fff;
+      outline: none;
+    }
+    .field input:focus, .field textarea:focus { border-color: #22C55E; box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
+    .btn-primary {
+      background: linear-gradient(135deg, #22C55E 0%, #15803C 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .tab-btn {
+      flex: 1;
+      padding: 7px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #BBF7D0;
+      background: #fff;
+      color: #14532D;
+      cursor: pointer;
+    }
+    .tab-btn.active { background: #F0FDF4; border-color: #22C55E; color: #15803C; }
+    .drop-zone {
+      border: 2px dashed #BBF7D0;
+      border-radius: 10px;
+      padding: 22px 16px;
+      text-align: center;
+      color: #15803C;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 200ms ease;
+      background: #fff;
+    }
+    .drop-zone:hover, .drop-zone.drag { border-color: #22C55E; background: #F0FDF4; }
+  </style>
+</head>
+<body>
+  <div class="p-4">
+    <h2 class="text-base font-bold mb-1" style="color:#14532D">提交文档到知识库</h2>
+    <p class="text-xs mb-4" style="color:#6B7280">上传文件或手动输入，提交后进入待审核。</p>
+
+    <!-- 方式切换 -->
+    <div class="flex gap-2 mb-4">
+      <button class="tab-btn" id="tab-file" onclick="switchTab('file')">上传文件</button>
+      <button class="tab-btn" id="tab-text" onclick="switchTab('text')">手动输入</button>
+    </div>
+
+    <!-- 上传文件 -->
+    <div id="panel-file">
+      <div class="drop-zone" id="dropZone">
+        <div class="text-2xl mb-1">📄</div>
+        点击选择或拖拽文件到此处<br>
+        <span class="text-xs" style="color:#9CA3AF">支持 .md / .txt / .pdf（演示模拟）</span>
+      </div>
+      <input type="file" id="fileInput" class="hidden" accept=".md,.txt,.pdf" />
+      <div id="fileInfo" class="text-xs mt-2 hidden" style="color:#15803C"></div>
+    </div>
+
+    <!-- 手动输入 -->
+    <div id="panel-text" class="hidden">
+      <div class="field">
+        <label>文档标题</label>
+        <input id="txtTitle" placeholder="如：市场交易规则" />
+      </div>
+      <div class="field">
+        <label>文档内容（## 表示章节标题）</label>
+        <textarea id="txtContent" rows="6" placeholder="## 中长期交易&#10;中长期合同量占比不低于 60%"></textarea>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="submitBtn" onclick="doSubmit()">提交（进入待审核）</button>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    let selectedFile = null;
+
+    function switchTab(mode) {
+      document.getElementById('tab-file').className = 'tab-btn' + (mode === 'file' ? ' active' : '');
+      document.getElementById('tab-text').className = 'tab-btn' + (mode === 'text' ? ' active' : '');
+      document.getElementById('panel-file').classList.toggle('hidden', mode !== 'file');
+      document.getElementById('panel-text').classList.toggle('hidden', mode !== 'text');
+    }
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag');
+      if (e.dataTransfer.files.length) pickFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', () => { if (fileInput.files.length) pickFile(fileInput.files[0]); });
+
+    function pickFile(file) {
+      selectedFile = file;
+      const info = document.getElementById('fileInfo');
+      info.textContent = `已选择：${file.name}（${(file.size / 1024).toFixed(1)} KB）`;
+      info.classList.remove('hidden');
+    }
+
+    function doSubmit() {
+      const result = { type: 'kb-submit' };
+      const textPanel = !document.getElementById('panel-text').classList.contains('hidden');
+      if (textPanel) {
+        const title = document.getElementById('txtTitle').value.trim();
+        const content = document.getElementById('txtContent').value.trim();
+        if (!title || !content) { alert('请填写标题和内容'); return; }
+        result.file = title + '.md';
+        result.title = title;
+        result.content = content;
+      } else if (selectedFile) {
+        result.file = selectedFile.name;
+        result.title = selectedFile.name.replace(/\.[^.]+$/, '');
+        result.content = '（文件 ' + selectedFile.name + '，演示：以文件名作为文档，内容为模拟解析章节）\n## 章节摘要\n该文档来自上传文件 ' + selectedFile.name;
+      } else {
+        alert('请选择文件或填写内容'); return;
+      }
+      // 通知父页面
+      window.parent.postMessage(result, '*');
+    }
+  </script>
+</body>
+</html>

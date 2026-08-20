@@ -3,7 +3,7 @@
 // 由 common.js 统一注入，页面零改动；不依赖 Vue（纯 DOM）
 // AI 为模拟：预置问答库（ai-qa.js），非真模型
 
-import { askAI, SUGGESTIONS } from './ai-qa.js';
+import { askAI, SUGGESTIONS, KB_INDEX } from './ai-qa.js';
 
 let _open = false;
 let _panelEl = null;
@@ -175,6 +175,33 @@ function injectStyle() {
       transition: opacity 160ms ease;
     }
     .copilot-act:hover { opacity: 0.88; }
+
+    /* 知识库检索来源 */
+    .copilot-kb { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 8px; }
+    .copilot-kb-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      color: #14532D;
+    }
+    .copilot-kb-file { font-weight: 600; }
+    .copilot-kb-section { opacity: 0.6; flex: 1; }
+    .copilot-kb-score { font-size: 10px; color: #15803C; font-weight: 600; white-space: nowrap; }
+    .copilot-kb-badge {
+      font-size: 10px;
+      color: #15803C;
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: 999px;
+      padding: 1px 8px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
     .copilot-foot {
       display: flex;
       gap: 8px;
@@ -215,6 +242,12 @@ function injectStyle() {
 function renderAnswer(answer) {
   const reasons = (answer.reasons || []).map((r) => `<li>${r}</li>`).join("");
   const sources = (answer.dataSources || []).map((s) => `${s.source}(${s.time})`).join(" · ");
+  const kb = (answer.kbSources || []).map((k) => `
+    <span class="copilot-kb-chip">
+      <span class="copilot-kb-file">${k.doc}</span>
+      <span class="copilot-kb-section">${k.section}</span>
+      <span class="copilot-kb-score">相关 ${(k.score * 100).toFixed(0)}%</span>
+    </span>`).join("");
   const actions = (answer.actions || []).map(
     (a) => `<button class="copilot-act" data-act="${a.value}">${a.label}</button>`
   ).join("");
@@ -225,6 +258,7 @@ function renderAnswer(answer) {
       ${reasons ? `<div class="copilot-answer__section">推荐原因</div><ul>${reasons}</ul>` : ""}
       ${answer.impact ? `<div class="copilot-answer__section">预计影响</div><div>${answer.impact}</div>` : ""}
       <div class="copilot-conf">置信度 ${answer.confidence}%</div>
+      ${kb ? `<div class="copilot-answer__section">知识库检索</div><div class="copilot-kb">${kb}</div>` : ""}
       ${sources ? `<div class="copilot-meta">依据：${sources} · 模型 ${answer.model.name} v${answer.model.version}</div>` : ""}
       ${actions ? `<div class="copilot-actions">${actions}</div>` : ""}
     </div>
@@ -274,6 +308,7 @@ export function initCopilot() {
   panel.innerHTML = `
     <div class="copilot-head">
       <span class="copilot-head__title">北域 AI 副驾驶</span>
+      <span class="copilot-kb-badge">知识库 ${KB_INDEX.length} 文档</span>
       <button class="copilot-close" id="copilot-close">✕</button>
     </div>
     <div class="copilot-body" id="copilot-body">
