@@ -81,10 +81,55 @@ h1, h2, h3, h4, h5, h6 {
   padding: var(--space-md);
 }
 
-/* 导航高亮 */
-#site-nav a.active {
-  color: var(--color-accent);
-  border-bottom: 2px solid var(--color-accent);
+/* ===== 胶囊型导航（capsule pill switcher）===== */
+/* 结构：#site-nav > .nav-capsule > .nav-capsule__pill */
+#site-nav {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.nav-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 3px;
+  position: relative;
+  /* 无 JS 时也保持基本视觉 */
+}
+
+.nav-capsule__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(248, 250, 252, 0.6);
+  text-decoration: none;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+  transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.nav-capsule__pill:hover {
+  color: var(--color-foreground);
+}
+
+/* 活跃项：文字变亮 + 背景胶囊滑入 */
+.nav-capsule__pill.is-active {
+  color: var(--color-background);
+  font-weight: 600;
+  background-color: var(--color-accent);
+  transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 可点击元素 */

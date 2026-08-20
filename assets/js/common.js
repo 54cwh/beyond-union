@@ -18,11 +18,12 @@ function renderNav() {
   const el = document.getElementById("site-nav");
   if (!el) return;
   const current = location.pathname.split("/").pop();
-  const items = NAV_ITEMS.map((item) => {
-    const active = current === item.href.split("/").pop() ? ' class="active"' : "";
-    return `<a href="${item.href}"${active}>${item.label}</a>`;
-  }).join(" | ");
-  el.innerHTML = items;
+  // 胶囊型导航：外层 .nav-capsule 包裹所有 pill，active 项由 CSS transition 平滑滑动
+  const pills = NAV_ITEMS.map((item) => {
+    const active = current === item.href.split("/").pop();
+    return `<a class="nav-capsule__pill${active ? ' is-active' : ''}" href="${item.href}">${item.label}</a>`;
+  }).join("");
+  el.innerHTML = `<div class="nav-capsule">${pills}</div>`;
 }
 
 // ===== 数据（契约内容待定，先提供通用接口）=====
