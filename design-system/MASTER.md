@@ -208,3 +208,33 @@ Before delivering any UI code, verify:
 - [ ] Responsive: 375px, 768px, 1024px, 1440px
 - [ ] No content hidden behind fixed navbars
 - [ ] No horizontal scroll on mobile
+
+## 数据可视化色板（dataviz skill，2026-08-19）
+
+> 方法：design-system-agnostic，按 choosing-a-form → color-formula → validate → marks → interaction → accessibility → render 流程。
+> 验证脚本：`node skills/validate_palette.js`，硬门：Lightness band OKLCH L 0.48–0.67（暗面）/ 0.43–0.77（亮面），Chroma C ≥ 0.10，CVD ΔE ≥ 8（adjacent）/ ≥ 6（floor），Normal-vision ΔE ≥ 15。
+
+### 暗表面状态色（ordinal sequential ramp）
+
+气泡地图 risk 编码：4 级（低/中低/中/中高），sequential green ramp + 省名标签二次编码。
+
+| 级别 | 色值 | OKLCH L | 机制 |
+|---|---|---|---|
+| 低 / 中低 | `#16a34a` | 0.627 | ordinal step 1；中低加 `opacity: 0.65` |
+| 中 / 中高 | `#047857` | 0.508 | ordinal step 2；中高加 `border-width: 3px` + box-shadow |
+| 趋势上 | `#22C55E` | 0.723 | 超出 OKLCH L band，仅用于文字 trend 标签 |
+| 趋势下 | `#EF4444` | 0.617 | contrast 4.39:1，CVD 7.4（warn），需直接标签二次编码 |
+
+> 注：#F59E0B 及其附近黄色候选因 L 值超出 0.67 band，无法在暗面 #1A1E2F 上通过验证。
+> 黄色仅限文字/标签，不作数据 mark 色。
+
+### CSS 变量
+
+```css
+--color-status-good:     #16a34a;  /* 低风险，气泡默认 */
+--color-status-warn:     #eab308;  /* 预留（文字标签用，不作数据 mark） */
+--color-status-serious:  #ea580c;  /* 预留（文字标签用） */
+--color-status-critical: #dc2626;  /* 中高风险文字用 */
+```
+
+> 气泡 risk 色通过 `.bubble[data-risk]` 在 common.css 里按序阶赋值，不引用 token（避免 opacity 叠加复杂性）。

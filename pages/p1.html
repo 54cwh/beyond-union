@@ -7,22 +7,63 @@
   <link rel="stylesheet" href="../assets/tailwind.css">
   <link rel="stylesheet" href="../assets/common.css">
   <script src="../assets/vendor/vue.global.prod.js"></script>
-  <!-- 共享契约(test_contract.py)要求引用；p1 无 ECharts 图表，仅保留不加载使用 -->
+  <!-- 共享契约(test_contract.py)要求引用；p1 地图经 geo-map.js 调用 echarts；3D 柱状需 echarts-gl -->
   <script src="../assets/vendor/echarts.min.js"></script>
+  <!-- 3D 柱状图层依赖 echarts-gl（在 echarts 之后加载，扩展全局 echarts） -->
+  <script src="../assets/vendor/echarts-gl.min.js"></script>
+  <style>
+    /* ===== p1 页面级样式（v3 设计语言） ===== */
+    /* 顶部核心数字：艺术字区（6 项） */
+    .p1-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px 20px;
+      margin: 20px 0 24px;
+      padding: 18px 24px;
+      border: 3px solid var(--color-border);
+      background: #FFFFFF;
+      border-radius: 10px;
+    }
+    .p1-stat-grid .stat-display { padding: 6px 0; }
+    .p1-stat-grid .stat-display__value { font-size: 32px; }
+    @media (max-width: 1024px) { .p1-stat-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 640px) {
+      .p1-stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .p1-stat-grid .stat-display__value { font-size: 26px; }
+    }
+
+    /* 演示推演条 */
+    .p1-demo-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* 视角切换行 */
+    .p1-scope-row { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 12px; }
+
+    /* 经营链路节点徽标（数字艺术字） */
+    .link-node__badge {
+      background: var(--color-accent);
+      color: #FFFFFF;
+      font-weight: 800;
+      border: 2px solid var(--color-border);
+    }
+  </style>
 </head>
-<body class="min-h-screen">
-  <nav id="site-nav"></nav>
+<body class="min-h-screen bg-background">
+  <nav id="site-nav" class="sticky top-0 z-40"></nav>
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
     // p1 运营工作台（B 展示岗）
     // 数据：先内联 demo 数字（需求.md 示例）；待 A 产出 data/demo/*.json 后切 Data.load。
-    // 图表：本页无 ECharts（链路图 / 气泡地图均为 HTML/CSS，见 chart-view.md 边界）。
+    // 图表：链路图/气泡为 HTML/CSS；区域经营地图用 ECharts 矢量地图（geo-map.js，见 data/geo/README.md）。
     import { Nav } from '../assets/js/common.js';
-    // 契约(test_contract.py)要求 chart-view.js 引用；本页链路图/气泡地图为 HTML/CSS，不使用
+    // 契约(test_contract.py)要求 chart-view.js 引用；本页区域地图经 geo-map.js 调用 echarts
     import { createChart } from '../assets/js/chart-view.js';
     import { createAICard } from '../assets/js/ai-card.js';
     import { createProvenance } from '../assets/js/provenance.js';
+    import { loadGeoDB, stationTypeLabel } from '../assets/js/geo-db.js';
+    import { createGeoMap } from '../assets/js/geo-map.js';
+    import { createDemoStream } from '../assets/js/demo-stream.js';
+    import { CountUp } from '../assets/js/count-up.js';
 
     Nav();
 
@@ -31,7 +72,7 @@
         return {
           title: "运营工作台",
           // 顶部核心数字（项目中心总览）
-          topStats: [
+          baseTopStats: [
             { label: "管理企业", value: "3 家" },
             { label: "新能源项目", value: "12 个" },
             { label: "总装机容量", value: "1.28 GW" },
@@ -42,20 +83,20 @@
 
           // 今日经营结果（6 KPI，trend 空则不显示）
           todayStats: [
-            { label: "今日发电量", value: "128.6 MWh", trend: "+4.2%" },
-            { label: "计划完成率", value: "96.8%", trend: "+1.1%" },
-            { label: "储能 SOC", value: "64%", trend: "" },
-            { label: "今日上网电量", value: "112.4 MWh", trend: "+3.5%" },
-            { label: "预计经营收益", value: "¥82.4 万", trend: "+5.0%" },
-            { label: "偏差成本", value: "¥3.1 万", trend: "-0.8%" },
+            { label: "今日发电量", value: 128.6, unit: " MWh", decimals: 1, target: 130, targetText: "130 MWh", trend: "+4.2%" },
+            { label: "计划完成率", value: 96.8, unit: "%", decimals: 1, target: 100, targetText: "100%", trend: "+1.1%" },
+            { label: "储能 SOC", value: 64, unit: "%", decimals: 0, target: 80, targetText: "80%", trend: "" },
+            { label: "今日上网电量", value: 112.4, unit: " MWh", decimals: 1, target: 118, targetText: "118 MWh", trend: "+3.5%" },
+            { label: "预计经营收益", value: 82.4, unit: " 万", decimals: 1, prefix: "¥", target: 80, targetText: "¥80 万", trend: "+5.0%" },
+            { label: "偏差成本", value: 3.1, unit: " 万", decimals: 1, prefix: "¥", target: 2.0, targetText: "¥2.0 万", lowerIsBetter: true, trend: "-0.8%" },
           ],
 
           // 明日经营预测（4 KPI）
           tomorrowStats: [
-            { label: "明日预计发电", value: "142.3 MWh" },
-            { label: "可交易电量", value: "128.7 MWh" },
-            { label: "可调储能", value: "18.2 MWh" },
-            { label: "预计市场价格", value: "¥312 / MWh" },
+            { label: "明日预计发电", value: 142.3, unit: " MWh", decimals: 1, target: 150, targetText: "150 MWh" },
+            { label: "可交易电量", value: 128.7, unit: " MWh", decimals: 1, target: 132, targetText: "132 MWh" },
+            { label: "可调储能", value: 18.2, unit: " MWh", decimals: 1, target: 20, targetText: "20 MWh" },
+            { label: "预计市场价格", value: 312, unit: " / MWh", decimals: 0, prefix: "¥", target: 300, targetText: "¥300 / MWh" },
           ],
           aiStrategy: "中长期 72% · 现货 28%",
 
@@ -84,15 +125,39 @@
             "确认经营日报",
           ],
 
-          // 区域经营地图（气泡，切换维度；risk 同时决定气泡边框颜色）
-          mapMode: "装机容量",
-          mapModes: ["装机容量", "今日发电", "经营收益", "风险"],
-          regions: [
-            { name: "内蒙古", x: "12%", y: "30%", capacity: "3.4 GW", generation: "158 MWh", revenue: "¥88 万", risk: "中" },
-            { name: "黑龙江", x: "74%", y: "18%", capacity: "2.1 GW", generation: "96 MWh", revenue: "¥52 万", risk: "低" },
-            { name: "吉林", x: "56%", y: "46%", capacity: "1.28 GW", generation: "128.6 MWh", revenue: "¥82 万", risk: "中低" },
-            { name: "辽宁", x: "42%", y: "78%", capacity: "2.8 GW", generation: "120 MWh", revenue: "¥71 万", risk: "低" },
+          // 区域经营地图（ECharts 矢量地图 + 地理信息数据库，见 data/geo/README.md）
+          geoLayer: "kpi",
+          geoLayers: [
+            { key: "kpi", label: "KPI 着色" },
+            { key: "resource", label: "资源图层" },
+            { key: "station", label: "场站分布" },
+            { key: "flow", label: "输电流向" },
+            { key: "heat", label: "发电热力" },
+            { key: "assoc", label: "场站关联" },
+            { key: "bubble", label: "时间轴气泡" },
+            { key: "bar3d", label: "3D 柱状" },
           ],
+          activeKPI: "capacity",
+          geoKPIs: [
+            { key: "capacity", label: "装机容量" },
+            { key: "generation", label: "今日发电" },
+            { key: "revenue", label: "经营收益" },
+            { key: "risk", label: "风险" },
+          ],
+          activeResource: "wind",
+          geoResources: [
+            { key: "wind", label: "平均风速" },
+            { key: "solar", label: "太阳能辐射" },
+          ],
+          geoSelected: null,
+          geoSummary: "",
+          geoTheme: "light",
+          geoScope: null,
+          geoDrill: null,
+          geoTime: 0,
+          geoPlaying: false,
+          geoPeriods: [],
+          playTimer: null,
 
           // 可信 AI 建议卡片（八要素：结论/置信度/依据/模型/数据来源；风险提示用默认值）
           aiSuggestion: {
@@ -113,6 +178,11 @@
           },
           aiNotice: "",
 
+          // 演示实时推演（demo-stream.js 驱动）
+          demoActive: false,
+          demoPaused: false,
+          demoStepLabel: "",
+
           // 溯源信息（KPI 卡「查看数据来源」→ provenance.open）
           sourceInfo: {
             "今日发电量": { sources: ["SCADA 采集", "场站计量"], updateTime: "15:40", quality: "99.2%", raw: "128.6 MWh", process: "采集 → 清洗 → 汇总", model: { name: "DataPipe", version: "1.0" } },
@@ -128,16 +198,129 @@
           },
         };
       },
+      computed: {
+        // 地图联动：省份视角 → 顶部核心数字切换；null 为全景
+        topStats() {
+          if (this.geoScope) return this.provinceTopStats(this.geoScope);
+          return this.baseTopStats;
+        },
+        scopeLabel() {
+          return this.geoScope ? this.geoScope.short + "（点击返回全景）" : "东北区域全景";
+        },
+        drillPath() {
+          const d = this.geoDrill;
+          if (!d || d.level === 0) return "";
+          const parts = ["东北"];
+          if (d.province) parts.push(d.province);
+          if (d.city) parts.push(d.city);
+          return parts.join("  ›  ");
+        },
+        geoMapClass() {
+          return { "geo-map--dark": this.geoTheme === "dark" };
+        },
+      },
+
       methods: {
-        // 区域气泡取值（按当前维度，数据预置、无聚合计算）
-        regionValue(region) {
-          const keyMap = {
-            "装机容量": "capacity",
-            "今日发电": "generation",
-            "经营收益": "revenue",
-            "风险": "risk",
-          };
-          return region[keyMap[this.mapMode] || "capacity"];
+        trendClass(trend) { return trend.indexOf("-") === 0 ? "down" : "up"; },
+
+        // KPI 目标 vs 实际：进度条 + 达成/超支判定
+        kpiGoal(s) {
+          const target = Number(s.target);
+          if (!target) return { pct: 0, color: "var(--gradient-accent)", text: "目标 --" };
+          const ratio = Number(s.value) / target;
+          const pct = Math.min(100, Math.round(ratio * 100));
+          const lowerIsBetter = s.lowerIsBetter === true;
+          let color = "var(--gradient-accent)";
+          if (lowerIsBetter && ratio > 1) {
+            color = "linear-gradient(90deg, #F97316 0%, #EF4444 100%)";
+          } else if (!lowerIsBetter && ratio < 0.95) {
+            color = "linear-gradient(90deg, #EAB308 0%, #F97316 100%)";
+          }
+          const status = (lowerIsBetter && ratio > 1) ? ("超支 " + pct + "%") : ("达成 " + pct + "%");
+          return { pct, color, text: "目标 " + s.targetText + " · " + status };
+        },
+
+        // 区域经营地图：图层 / KPI / 资源切换（转发给 geo-map.js）
+        isKpiLayer() { return this.geoLayer === "kpi"; },
+        isResourceLayer() { return this.geoLayer === "resource"; },
+
+        // 地图联动：省份 KPI → 顶部数字；重置回全景
+        provinceTopStats(p) {
+          return [
+            { label: "场站数量", value: p.stationCount + " 个" },
+            { label: "装机容量", value: p.capacity + " GW" },
+            { label: "储能规模", value: p.storage + " MWh" },
+            { label: "今日发电", value: p.generation + " MWh" },
+            { label: "经营收益", value: "¥" + p.revenue + " 万" },
+            { label: "风险等级", value: p.risk },
+          ];
+        },
+        resetScope() {
+          this.geoScope = null;
+          if (this.gm) { this.gm.resetView(); this.geoDrill = this.gm.getDrill(); }
+        },
+        toggleGeoTheme() {
+          this.geoTheme = this.geoTheme === "dark" ? "light" : "dark";
+          if (this.gm) this.gm.setTheme(this.geoTheme);
+        },
+        setGeoLayer(layer) {
+          this.geoLayer = layer;
+          if (this.gm) this.gm.setLayer(layer);
+        },
+        setGeoKPI(key) {
+          this.activeKPI = key;
+          if (this.gm) this.gm.setKPI(key);
+        },
+        setGeoResource(key) {
+          this.activeResource = key;
+          if (this.gm) this.gm.setResource(key);
+        },
+        isBubbleLayer() { return this.geoLayer === "bubble"; },
+        setGeoTime(i) {
+          this.geoTime = i;
+          if (this.gm) this.gm.setTime(i);
+        },
+        playGeoTime() {
+          if (this.geoPlaying) {
+            if (this.playTimer) { clearInterval(this.playTimer); this.playTimer = null; }
+            this.geoPlaying = false;
+            return;
+          }
+          this.geoPlaying = true;
+          const n = this.geoPeriods.length || 7;
+          this.playTimer = setInterval(() => {
+            this.geoTime = (this.geoTime + 1) % n;
+            if (this.gm) this.gm.setTime(this.geoTime);
+          }, 900);
+        },
+        zoomInMap() { if (this.gm) this.gm.zoomIn(); },
+        zoomOutMap() { if (this.gm) this.gm.zoomOut(); },
+        resetGeoView() {
+          if (this.gm) { this.gm.resetView(); this.geoDrill = this.gm.getDrill(); }
+        },
+        drillUpMap() {
+          if (this.gm) { this.gm.drillUp(); this.geoDrill = this.gm.getDrill(); }
+        },
+        syncDrill() {
+          if (this.gm) this.geoDrill = this.gm.getDrill();
+        },
+
+        // 地图点击 → 底部详情条（省份 / 场站）
+        onGeoClick(e) {
+          if (!e || !e.meta) { this.geoSelected = null; return; }
+          if (e.kind === "province") {
+            this.geoScope = e.meta;
+            this.geoSelected = {
+              title: e.meta.name,
+              text: "装机 " + e.meta.capacity + " GW · 今日发电 " + e.meta.generation + " MWh · 收益 " + e.meta.revenue + " 万 · 风险 " + e.meta.risk,
+            };
+          } else {
+            this.geoSelected = {
+              title: e.meta.name,
+              text: stationTypeLabel(e.meta.type) + " · " + e.meta.city + " · " + e.meta.capacity + " MW · " + e.meta.status,
+            };
+          }
+          this.syncDrill();
         },
 
         // 打开溯源弹层
@@ -168,157 +351,301 @@
 
         // 开始演示 → 由 E 注入的 window.__demo.start()，未注入则静默降级
         startDemo() {
-          if (window.__demo && typeof window.__demo.start === "function") {
+          if (!window.__demo) return;
+          // 兜底：若 mounted 时 window.__demo 尚未就绪（DOMContentLoaded 竞态），这里补订阅
+          if (!this._demoBound) {
+            window.__demo.on(this._demoHandler);
+            this._demoBound = true;
+          }
+          if (typeof window.__demo.start === "function") {
             window.__demo.start();
           }
         },
+
+        // 演示实时推演：demo.js 事件总线 → demo-stream 曲线联动
+        onDemoStart() {
+          this.demoActive = true;
+          this.demoPaused = false;
+          this.$nextTick(() => {
+            if (!this.demoStream) this.demoStream = createDemoStream(this.$refs.demoStreamChart);
+            this.demoStream.reset();
+          });
+        },
+        onDemoStep(e) {
+          this.demoStepLabel = e.msg || "";
+          if (this.demoStream) this.demoStream.applyStep(e.index);
+        },
+        onDemoEnd(e) {
+          this.demoPaused = false;
+          if (e.type === "done") this.demoStepLabel = "演示完成：预测 → 优化 → 交易 → 决策闭环已走通";
+        },
+        toggleDemoPause() {
+          if (!window.__demo) return;
+          if (this.demoPaused) { window.__demo.resume(); }
+          else { window.__demo.pause(); }
+          this.demoPaused = (window.__demo.isPaused && window.__demo.isPaused()) ? true : this.demoPaused;
+        },
+        resetDemo() {
+          if (!window.__demo) return;
+          window.__demo.stop();
+          window.__demo.start();
+        },
       },
       template: `
-        <main>
-          <header class="p1-header">
+        <main class="page-wrap">
+          <!-- 头部 -->
+          <header class="page-head">
             <div>
-              <h1 class="p1-title">{{ title }}</h1>
-              <p class="p1-subtitle">北域绿联 · 一屏经营决策视图</p>
+              <h1 class="page-title">{{ title }}</h1>
+              <p class="page-meta">北域绿联 · 一屏经营决策视图</p>
             </div>
-            <button type="button" class="p1-demo-btn" @click="startDemo">开始演示</button>
+            <div class="page-meta">
+              <span class="badge">今日 · 更新于 15:40</span>
+              <span class="badge badge--warn">预警 3 项</span>
+              <button type="button" class="btn btn--accent" @click="startDemo">开始演示</button>
+            </div>
           </header>
 
-          <!-- 顶部核心数字 -->
-          <div class="p1-top-stats">
-            <div v-for="s in topStats" :key="s.label" class="p1-top-stat">
-              <div class="p1-top-stat__label">{{ s.label }}</div>
-              <div class="p1-top-stat__value">{{ s.value }}</div>
+          <!-- 演示实时推演曲线（演示启动后显示；demo-stream.js 驱动） -->
+          <section v-show="demoActive" class="p1-demo-stream panel" style="margin-bottom:20px">
+            <div class="p1-demo-bar">
+              <h2 class="panel__title" style="margin:0">实时推演 · 今日发电预测</h2>
+              <button type="button" class="btn btn--sm btn--accent" @click="toggleDemoPause">{{ demoPaused ? "继续" : "暂停" }}</button>
+              <button type="button" class="btn btn--sm btn--ghost" @click="resetDemo">重置</button>
+              <span class="panel__hint" style="margin-left:auto">滚轮缩放 · 拖动底部滑块</span>
+            </div>
+            <div class="p1-demo-stream__status">{{ demoStepLabel || "演示启动中…" }}</div>
+            <div ref="demoStreamChart" class="p1-demo-stream__chart"></div>
+          </section>
+
+          <!-- 视角切换（地图联动：点省份 → 顶部数字切到该省；点此返回全景） -->
+          <div class="p1-scope-row">
+            <span v-if="geoDrill && geoDrill.level > 0" class="p1-drill-path">{{ drillPath }}</span>
+            <button type="button" class="p1-scope" :class="{ active: geoScope }" @click="resetScope">
+              当前视角：{{ scopeLabel }}
+            </button>
+          </div>
+
+          <!-- 区域经营地图（ECharts 矢量地图，第一页置顶大图） -->
+          <section class="p1-map-hero">
+            <div class="panel__head">
+              <h2 class="panel__title">区域经营地图</h2>
+              <span class="panel__hint">东北四省 · GeoJSON 矢量地图 · 八图层</span>
+            </div>
+            <div class="geo-map" :class="geoMapClass">
+              <div class="geo-map__toolbar">
+                <div class="geo-map__group">
+                  <button v-for="l in geoLayers" :key="l.key" type="button"
+                    class="geo-map__btn" :class="{ active: l.key === geoLayer }"
+                    @click="setGeoLayer(l.key)">{{ l.label }}</button>
+                </div>
+                <div v-if="isKpiLayer()" class="geo-map__group">
+                  <button v-for="k in geoKPIs" :key="k.key" type="button"
+                    class="geo-map__btn geo-map__btn--mini" :class="{ active: k.key === activeKPI }"
+                    @click="setGeoKPI(k.key)">{{ k.label }}</button>
+                </div>
+                <div v-if="isResourceLayer()" class="geo-map__group">
+                  <button v-for="r in geoResources" :key="r.key" type="button"
+                    class="geo-map__btn geo-map__btn--mini" :class="{ active: r.key === activeResource }"
+                    @click="setGeoResource(r.key)">{{ r.label }}</button>
+                </div>
+                <div v-if="isBubbleLayer()" class="geo-map__group">
+                  <button v-for="(pt, i) in geoPeriods" :key="pt" type="button"
+                    class="geo-map__btn geo-map__btn--mini" :class="{ active: i === geoTime }"
+                    @click="setGeoTime(i)">{{ pt }}</button>
+                  <button type="button" class="geo-map__btn geo-map__btn--mini" @click="playGeoTime">
+                    {{ geoPlaying ? "暂停" : "播放" }}
+                  </button>
+                </div>
+                <div class="geo-map__spacer"></div>
+                <div class="geo-map__group">
+                  <button type="button" class="geo-map__btn" @click="toggleGeoTheme">
+                    {{ geoTheme === "dark" ? "日间模式" : "夜间模式" }}
+                  </button>
+                </div>
+              </div>
+              <div class="geo-map__canvas-wrap">
+                <div ref="geoMap" class="geo-map__chart"></div>
+                <div class="geo-map__zoom">
+                  <button v-if="geoDrill && geoDrill.level > 0" type="button" class="geo-map__zoom-btn" title="返回上级" @click="drillUpMap">↩</button>
+                  <button type="button" class="geo-map__zoom-btn" title="放大" @click="zoomInMap">＋</button>
+                  <button type="button" class="geo-map__zoom-btn" title="复位视角" @click="resetGeoView">⟳</button>
+                  <button type="button" class="geo-map__zoom-btn" title="缩小" @click="zoomOutMap">－</button>
+                </div>
+              </div>
+              <div v-if="geoSummary" class="geo-map__detail geo-map__detail--err">{{ geoSummary }}</div>
+              <div v-else-if="geoSelected" class="geo-map__detail">
+                <b class="geo-map__detail-name">{{ geoSelected.title }}</b>
+                <span class="geo-map__detail-text">{{ geoSelected.text }}</span>
+              </div>
+              <div v-else class="geo-map__detail geo-map__detail--empty">
+                点击省份或场站查看详情 · 数据字典见 data/geo/README.md
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 固定数据区：顶部核心数字（艺术字） ===== -->
+          <div class="p1-stat-grid">
+            <div v-for="s in topStats" :key="s.label" class="stat-display"
+              :class="s.label.indexOf('预警') >= 0 ? 'stat-display--accent' : ''">
+              <div class="stat-display__label">{{ s.label }}</div>
+              <div class="stat-display__value">{{ s.value }}</div>
             </div>
           </div>
 
-          <!-- 今日经营结果 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">今日经营结果</h2>
-              <span class="p1-section__hint">更新于 15:40</span>
-            </div>
-            <div class="p1-kpi-grid">
-              <div v-for="s in todayStats" :key="s.label" class="kpi-card">
-                <div class="kpi-card__label">{{ s.label }}</div>
-                <div class="kpi-card__value">{{ s.value }}</div>
-                <div v-if="s.trend" class="kpi-card__trend" :class="s.trend.indexOf('-') === 0 ? 'down' : 'up'">{{ s.trend }}</div>
-                <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
+          <!-- 主视觉行：经营链路 + 可信 AI 建议 -->
+          <div class="panel--row2">
+            <section class="card panel p1-section--hero">
+              <div class="panel__head">
+                <h2 class="panel__title">经营链路</h2>
+                <span class="panel__hint">天气 → 预测 → 储能 → 交易 → 收益</span>
               </div>
-            </div>
-          </section>
-
-          <!-- 明日经营预测 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">明日经营预测</h2>
-            </div>
-            <div class="p1-kpi-grid">
-              <div v-for="s in tomorrowStats" :key="s.label" class="kpi-card">
-                <div class="kpi-card__label">{{ s.label }}</div>
-                <div class="kpi-card__value">{{ s.value }}</div>
-                <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
+              <div class="link-flow">
+                <template v-for="(node, i) in linkFlow" :key="node.label">
+                  <div class="link-node">
+                    <div class="link-node__badge">{{ i + 1 }}</div>
+                    <div class="link-node__label">{{ node.label }}</div>
+                    <div class="link-node__status">{{ node.status }}</div>
+                  </div>
+                  <div v-if="i < linkFlow.length - 1" class="link-arrow">→</div>
+                </template>
               </div>
-            </div>
-            <div class="p1-strategy">AI 建议交易策略：{{ aiStrategy }}</div>
-          </section>
-          <!-- 经营链路图 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">经营链路</h2>
-              <span class="p1-section__hint">天气 → 预测 → 储能 → 交易 → 收益</span>
-            </div>
-            <div class="link-flow">
-              <template v-for="(node, i) in linkFlow" :key="node.label">
-                <div class="link-node">
-                  <div class="link-node__label">{{ node.label }}</div>
-                  <div class="link-node__status">{{ node.status }}</div>
-                </div>
-                <div v-if="i < linkFlow.length - 1" class="link-arrow">→</div>
-              </template>
-            </div>
-          </section>
+            </section>
 
-          <!-- 今日三项重点 + 经营待办 -->
-          <section class="p1-section">
-            <div class="p1-cols">
-              <div>
-                <div class="p1-section__head"><h2 class="p1-section__title">今日三项重点</h2></div>
-                <div v-for="f in focusItems" :key="f.title" class="focus-item">
-                  <div class="focus-item__title">{{ f.title }}</div>
-                  <p class="focus-item__detail">{{ f.detail }}</p>
+            <section class="card panel p1-section--rail">
+              <div class="panel__head">
+                <h2 class="panel__title">可信 AI 决策建议</h2>
+                <span class="panel__hint">可解释 · 可追溯 · 可人工确认</span>
+              </div>
+              <p v-if="aiNotice" class="p1-ai-notice">{{ aiNotice }}</p>
+              <div ref="aiCard" class="p1-ai-card"></div>
+            </section>
+          </div>
+
+          <!-- 经营结果行：今日 + 明日 -->
+          <div class="panel--row2">
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">今日经营结果</h2>
+                <span class="panel__hint">更新于 15:40</span>
+              </div>
+              <div class="p1-kpi-grid">
+                <div v-for="s in todayStats" :key="s.label" class="kpi-card">
+                  <div class="kpi-card__label">{{ s.label }}</div>
+                  <div class="kpi-card__value">
+                    <count-up :value="s.value" :decimals="s.decimals" :prefix="s.prefix || ''" :duration="1000" />
+                    <span class="kpi-card__unit">{{ s.unit }}</span>
+                  </div>
+                  <div v-if="s.trend" class="kpi-card__trend" :class="trendClass(s.trend)">{{ s.trend }}</div>
+                  <div class="kpi-card__goal">
+                    <div class="kpi-card__goal-track"><div class="kpi-card__goal-fill" :style="{ width: kpiGoal(s).pct + '%', background: kpiGoal(s).color }"></div></div>
+                    <div class="kpi-card__goal-text">{{ kpiGoal(s).text }}</div>
+                  </div>
+                  <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
                 </div>
               </div>
-              <div>
-                <div class="p1-section__head"><h2 class="p1-section__title">经营待办</h2></div>
-                <ul class="todo-list">
-                  <li v-for="(t, i) in todos" :key="i">
-                    <span class="todo-check">☐</span>{{ t }}
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </section>
+            </section>
 
-          <!-- 区域经营地图 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">区域经营地图</h2>
-              <span class="p1-section__hint">黑吉辽蒙 · 示意</span>
-            </div>
-            <div class="bubble-map">
-              <div class="bubble-map__toggle">
-                <button
-                  v-for="m in mapModes"
-                  :key="m"
-                  type="button"
-                  class="bubble-map__toggle-btn"
-                  :class="{ active: m === mapMode }"
-                  @click="mapMode = m"
-                >{{ m }}</button>
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">明日经营预测</h2>
               </div>
-              <div class="bubble-map__canvas">
-                <div
-                  v-for="r in regions"
-                  :key="r.name"
-                  class="bubble"
-                  :style="{ left: r.x, top: r.y }"
-                  :data-risk="r.risk"
-                >
-                  <div class="bubble__name">{{ r.name }}</div>
-                  <div class="bubble__value">{{ regionValue(r) }}</div>
+              <div class="p1-kpi-grid">
+                <div v-for="s in tomorrowStats" :key="s.label" class="kpi-card">
+                  <div class="kpi-card__label">{{ s.label }}</div>
+                  <div class="kpi-card__value">
+                    <count-up :value="s.value" :decimals="s.decimals" :prefix="s.prefix || ''" :duration="1000" />
+                    <span class="kpi-card__unit">{{ s.unit }}</span>
+                  </div>
+                  <div class="kpi-card__goal">
+                    <div class="kpi-card__goal-track"><div class="kpi-card__goal-fill" :style="{ width: kpiGoal(s).pct + '%', background: kpiGoal(s).color }"></div></div>
+                    <div class="kpi-card__goal-text">{{ kpiGoal(s).text }}</div>
+                  </div>
+                  <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
                 </div>
               </div>
-            </div>
-          </section>
+              <div class="p1-strategy">AI 建议交易策略：{{ aiStrategy }}</div>
+            </section>
+          </div>
 
-          <!-- 可信 AI 决策建议 -->
-          <section class="p1-section">
-            <div class="p1-section__head">
-              <h2 class="p1-section__title">可信 AI 决策建议</h2>
-              <span class="p1-section__hint">可解释 · 可追溯 · 可人工确认</span>
-            </div>
-            <p v-if="aiNotice" class="p1-ai-notice">{{ aiNotice }}</p>
-            <div ref="aiCard" class="p1-ai-card"></div>
-          </section>
+          <!-- 重点与待办 -->
+          <div class="panel--row2">
+            <section class="card panel">
+              <div class="panel__head"><h2 class="panel__title">今日三项重点</h2></div>
+              <div v-for="f in focusItems" :key="f.title" class="focus-item">
+                <div class="focus-item__title">{{ f.title }}</div>
+                <p class="focus-item__detail">{{ f.detail }}</p>
+              </div>
+            </section>
+            <section class="card panel">
+              <div class="panel__head"><h2 class="panel__title">经营待办</h2><span class="panel__hint">点击进入 p5 决策任务中心</span></div>
+              <ul class="todo-list">
+                <li v-for="(t, i) in todos" :key="i">
+                  <span class="todo-check">☐</span><a href="/pages/p5.html" style="color:inherit;text-decoration:none">{{ t }}</a>
+                </li>
+              </ul>
+            </section>
+          </div>
 
           <!-- 数据溯源弹层挂载点（position:fixed，内容由 provenance.js 渲染） -->
           <div ref="provenance"></div>
         </main>
+
       `,
       mounted() {
         // 可信 AI 卡片（ai-card.js，八要素）
         this.aiCard = createAICard(this.$refs.aiCard);
         this.aiCard.setData(this.aiSuggestion, { pending: true, onAction: this.handleAIAction });
+        // 区域经营地图（ECharts 矢量地图 + data/geo 地理信息数据库）
+        loadGeoDB(window.fetch, "../").then((db) => {
+          this.geoDb = db;
+          this.geoPeriods = db.periods;
+          this.gm = createGeoMap(this.$refs.geoMap, {
+            geoJson: db.geoJson,
+            provinces: db.provinces,
+            stations: db.stations,
+            flows: db.flows,
+            rivers: db.rivers,
+            periods: db.periods,
+          });
+          this.gm.init();
+          this.gm.setKPI(this.activeKPI);
+          this.gm.setLayer(this.geoLayer);
+          this.gm.bindClick(this.onGeoClick);
+        }).catch((err) => {
+          this.geoSummary = "地理数据加载失败：" + (err && err.message ? err.message : String(err));
+        });
+
         // 数据溯源弹层（provenance.js，7 字段）
         this.prov = createProvenance(this.$refs.provenance);
+
+        // 演示实时推演曲线：订阅 demo.js 事件总线，驱动 demo-stream 联动
+        this._demoHandler = (e) => {
+          if (e.type === "start") { this.onDemoStart(); }
+          else if (e.type === "step") { this.onDemoStep(e); }
+          else if (e.type === "pause") { this.demoPaused = true; }
+          else if (e.type === "resume") { this.demoPaused = false; }
+          else if (e.type === "done") { this.onDemoEnd(e); }
+        };
+        if (window.__demo && typeof window.__demo.on === "function") {
+          window.__demo.on(this._demoHandler);
+          this._demoBound = true;
+        }
       },
 
       beforeUnmount() {
         if (this.aiCard) { this.aiCard.dispose(); this.aiCard = null; }
+        if (this.gm) { this.gm.dispose(); this.gm = null; }
+        if (this.playTimer) { clearInterval(this.playTimer); this.playTimer = null; }
         if (this.prov) { this.prov.dispose(); this.prov = null; }
+        if (window.__demo && typeof window.__demo.off === "function") {
+          window.__demo.off(this._demoHandler);
+        }
+        if (this.demoStream) { this.demoStream.dispose(); this.demoStream = null; }
       },
     });
 
+    app.component('count-up', CountUp);
     app.mount('#app');
   </script>
 </body>

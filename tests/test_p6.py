@@ -19,7 +19,7 @@ def test_p6_nav_renders(page, base_url):
     nav = page.locator("#site-nav a")
     assert nav.count() == 6
     assert nav.nth(5).get_attribute("href") == "/pages/p6.html"
-    assert "is-active" in (nav.nth(5).get_attribute("class") or "")
+    assert (nav.nth(5).get_attribute("class") or "").find("active") >= 0
 
 
 def test_p6_tabs_exist(page, base_url):

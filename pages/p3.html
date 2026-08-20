@@ -8,9 +8,29 @@
   <link rel="stylesheet" href="../assets/common.css">
   <script src="../assets/vendor/vue.global.prod.js"></script>
   <script src="../assets/vendor/echarts.min.js"></script>
+  <style>
+    /* ===== p3 页面级样式（v3 设计语言） ===== */
+    /* 四方案对比表：方案 E 高亮行 */
+    .scheme-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .scheme-table th { text-align: left; font-size: 12px; color: #6B7280; font-weight: 600; padding: 8px 6px; border-bottom: 2px solid var(--color-border); white-space: nowrap; }
+    .scheme-table td { padding: 10px 6px; border-bottom: 1px solid var(--color-border-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .scheme-table tbody tr { transition: background 150ms ease; }
+    .scheme-table tbody tr:hover { background: #F0FDF4; }
+    .scheme-table tr.recommended td { background: var(--color-accent-light); font-weight: 600; }
+    .scheme-table tr.recommended td:first-child { border-left: 4px solid var(--color-accent); }
+    .risk-hi { color: var(--color-destructive); font-weight: 700; }
+    .risk-mid { color: #CA8A04; font-weight: 600; }
+    .risk-low { color: var(--color-accent-dark); font-weight: 600; }
+
+    /* 模型约束表 */
+    .constraint-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .constraint-table td { padding: 9px 6px; border-bottom: 1px solid var(--color-border-soft); }
+    .constraint-table tr:last-child td { border-bottom: none; }
+    .constraint-table td.val { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  </style>
 </head>
-<body class="min-h-screen">
-  <nav id="site-nav"></nav>
+<body class="min-h-screen bg-background">
+  <nav id="site-nav" class="sticky top-0 z-40"></nav>
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
@@ -70,122 +90,150 @@
         };
       },
       template: `
-        <main>
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <h1 class="text-2xl">{{ title }}</h1>
-            <div class="flex items-center gap-3 text-sm text-gray-400">
-              <span v-if="storage">{{ metaLine }}</span>
-              <span v-if="isLevel1" class="px-2 py-0.5 rounded-full border border-accent text-accent text-xs">模拟数据</span>
-              <button v-if="storage" class="text-accent" @click="showSource">查看数据来源</button>
+        <main class="page-wrap">
+          <!-- 头部 -->
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">{{ title }}</h1>
+              <div class="page-meta">
+                <span v-if="storage">数据更新 {{ storage.meta.updated }} · {{ storage.meta.level }}</span>
+                <span v-if="isLevel1" class="badge badge--accent">模型模拟</span>
+              </div>
+            </div>
+            <div class="page-meta">
+              <button v-if="storage" class="btn btn--sm btn--ghost" @click="showSource">查看数据来源</button>
             </div>
           </div>
 
+          <!-- 加载 / 错误态 -->
           <p v-if="loading" class="text-gray-400">加载中…</p>
           <div v-else-if="error" class="text-red-400">
             <p>{{ error }}</p>
-            <button class="mt-3 px-4 py-2 rounded bg-accent text-background font-semibold" @click="loadData">重试</button>
+            <button class="btn btn--accent mt-3" @click="loadData">重试</button>
           </div>
 
           <template v-else>
-            <!-- ===== 模块1 · 顶部核心数字 ===== -->
-            <section class="mb-6">
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div v-for="k in kpis" :key="k.label" class="card">
-                  <div class="text-sm text-gray-400">{{ k.label }}</div>
-                  <div class="text-2xl tabular mt-1" :style="{ color: k.color }">
-                    {{ k.value }} <span class="text-sm">{{ k.unit }}</span>
-                  </div>
-                  <div v-if="k.sub" class="text-xs text-gray-400 mt-1">{{ k.sub }}</div>
-                </div>
+            <!-- ===== 固定数据区：艺术字直接展示 ===== -->
+            <div class="stat-grid">
+              <div class="stat-display stat-display--accent">
+                <div class="stat-display__label">预计风电</div>
+                <div class="stat-display__value">{{ kpis[0].value }}<span class="unit">MWh</span></div>
+                <div class="stat-display__sub">明日出力预测</div>
               </div>
-            </section>
+              <div class="stat-display stat-display--accent">
+                <div class="stat-display__label">预计光伏</div>
+                <div class="stat-display__value">{{ kpis[1].value }}<span class="unit">MWh</span></div>
+                <div class="stat-display__sub">明日出力预测</div>
+              </div>
+              <div class="stat-display">
+                <div class="stat-display__label">当前 SOC</div>
+                <div class="stat-display__value">{{ kpis[2].value }}</div>
+                <div class="stat-display__sub">储能荷电状态</div>
+              </div>
+              <div class="stat-display stat-display--accent">
+                <div class="stat-display__label">预计峰值电价</div>
+                <div class="stat-display__value">{{ kpis[3].value }}<span class="unit">元/MWh</span></div>
+                <div class="stat-display__sub">{{ kpis[3].sub }}</div>
+              </div>
+              <div class="stat-display">
+                <div class="stat-display__label">储能容量</div>
+                <div class="stat-display__value">{{ capacityMwh }}<span class="unit">MWh</span></div>
+                <div class="stat-display__sub">充放电效率 95% / 94%</div>
+              </div>
+            </div>
 
-            <!-- ===== 模块2 · 能源优化时间轴 ===== -->
-            <section class="card mb-6">
-              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <h2 class="text-lg font-semibold">能源优化时间轴（风电 / 光伏 / 储能 / 并网）</h2>
+            <!-- ===== 仪表盘区 ===== -->
+            <!-- 能源优化时间轴 -->
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">能源优化时间轴（风电 / 光伏 / 储能 / 并网）</h2>
                 <div class="flex gap-1 text-sm">
                   <button v-for="s in scales" :key="s.key" @click="setScale(s.key)"
-                    :class="scale === s.key ? 'px-3 py-1 rounded bg-accent text-background font-semibold' : 'px-3 py-1 rounded border border-gray-600 text-gray-300'">
+                    :class="scale === s.key ? 'btn btn--sm btn--accent' : 'btn btn--sm btn--ghost'">
                     {{ s.key }}
                   </button>
                 </div>
               </div>
               <div ref="timelineChart" class="w-full h-80"></div>
-              <p class="text-xs text-gray-500 mt-2">储能功率正=充电、负=放电；充放电节点由 storage_power 正负切换推导（11:00 充 / 13:00 停 / 17:00 放 / 19:00 停）</p>
+              <p class="panel__hint mt-2">储能功率正=充电、负=放电；充放电节点由 storage_power 正负切换推导（11:00 充 / 13:00 停 / 17:00 放 / 19:00 停）</p>
             </section>
 
-            <!-- ===== 电价小图（独立，避免量纲混轴）===== -->
-            <section class="card mb-6">
-              <h2 class="text-lg font-semibold mb-2">市场价格参考（日前电价）</h2>
+            <!-- 市场价格参考 -->
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">市场价格参考（日前电价）</h2>
+                <span class="panel__hint">与主时间轴共用 {{ scale }} 尺度</span>
+              </div>
               <div ref="priceChart" class="w-full h-48"></div>
-              <p class="text-xs text-gray-500 mt-2">与主时间轴共用 {{ scale }} 时间尺度；19:00 晚峰约 586 元/MWh</p>
+              <p class="panel__hint mt-2">19:00 晚峰约 586.2 元/MWh</p>
             </section>
 
-            <!-- ===== 模块3 · 四方案对比 ===== -->
-            <section class="card mb-6">
-              <h2 class="text-lg font-semibold mb-3">四方案对比
-                <span class="text-xs text-gray-500">（模拟示例值，方案 E 循环/SOC 终值实读 schedule）</span>
-              </h2>
+            <!-- 四方案对比 -->
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">四方案对比</h2>
+                <span class="panel__hint">模拟示例值，方案 E 循环/SOC 终值实读 schedule</span>
+              </div>
               <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="scheme-table">
                   <thead>
-                    <tr class="text-left text-gray-400 border-b border-gray-700">
-                      <th class="py-2 pr-3">方案</th>
-                      <th class="py-2 pr-3">预计收益</th>
-                      <th class="py-2 pr-3">弃电率</th>
-                      <th class="py-2 pr-3">峰谷差</th>
-                      <th class="py-2 pr-3">循环次数</th>
-                      <th class="py-2 pr-3">SOC 终值</th>
-                      <th class="py-2 pr-3">偏差风险</th>
-                      <th class="py-2 pr-3">运行风险</th>
+                    <tr>
+                      <th>方案</th>
+                      <th>预计收益</th>
+                      <th>弃电率</th>
+                      <th>峰谷差</th>
+                      <th>循环次数</th>
+                      <th>SOC 终值</th>
+                      <th>偏差风险</th>
+                      <th>运行风险</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="r in schemeRows" :key="r.name"
-                      class="border-b border-gray-800 tabular"
-                      :class="r.recommend ? 'bg-secondary' : ''">
-                      <td class="py-2 pr-3 font-semibold">
+                    <tr v-for="r in schemeRows" :key="r.name" :class="{ recommended: r.recommend }">
+                      <td class="font-semibold">
                         {{ r.name }}
-                        <span v-if="r.recommend" class="ml-1 px-1.5 py-0.5 rounded text-xs border border-accent text-accent">AI 推荐</span>
+                        <span v-if="r.recommend" class="badge badge--accent ml-1">AI 推荐</span>
                       </td>
-                      <td class="py-2 pr-3" :class="r.recommend ? 'text-accent' : ''">{{ r.revenue }}</td>
-                      <td class="py-2 pr-3">{{ r.curtailment }}</td>
-                      <td class="py-2 pr-3">{{ r.peakValley }}</td>
-                      <td class="py-2 pr-3">{{ r.cycles }}</td>
-                      <td class="py-2 pr-3">{{ r.socEnd }}</td>
-                      <td class="py-2 pr-3" :class="r.devRisk === '高' ? 'text-red-400' : ''">{{ r.devRisk }}</td>
-                      <td class="py-2 pr-3" :class="r.runRisk === '高' ? 'text-red-400' : ''">{{ r.runRisk }}</td>
+                      <td :class="r.recommend ? 'text-accent-dark' : ''">{{ r.revenue }}</td>
+                      <td>{{ r.curtailment }}</td>
+                      <td>{{ r.peakValley }}</td>
+                      <td>{{ r.cycles }}</td>
+                      <td>{{ r.socEnd }}</td>
+                      <td :class="riskClass(r.devRisk)">{{ r.devRisk }}</td>
+                      <td :class="riskClass(r.runRisk)">{{ r.runRisk }}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <p class="text-xs text-gray-500 mt-2">D 收益最高但 2 次循环、风险高；E 风险调整后最优（同 p4 决策解释逻辑）。示例值配置在 SCHEME_ROWS 常量，待 A 提供 schemes[] 后整体替换。</p>
+              <p class="panel__hint mt-2">D 收益最高但 2 次循环、风险高；E 风险调整后最优（同 p4 决策解释逻辑）。示例值配置在 SCHEME_ROWS 常量，待 A 提供 schemes[] 后整体替换。</p>
             </section>
 
-            <!-- ===== 模块4 · AI 推荐 ===== -->
-            <section class="card mb-6">
-              <h2 class="text-lg font-semibold mb-3">AI 推荐</h2>
+            <!-- AI 推荐 -->
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">AI 推荐</h2>
+                <span class="panel__hint" v-if="isLevel1">模拟建议</span>
+              </div>
               <div ref="aiCard"></div>
             </section>
 
-            <!-- ===== 模块5 · 模型约束 ===== -->
-            <section class="card mb-6">
-              <div class="flex items-center justify-between mb-2">
-                <h2 class="text-lg font-semibold">模型约束</h2>
-                <button class="px-3 py-1 rounded border border-gray-600 text-gray-300 text-sm" @click="showConstraint = !showConstraint">
-                  {{ showConstraint ? '收起' : '查看模型约束' }}
+            <!-- 模型约束 -->
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">模型约束</h2>
+                <button class="btn btn--sm btn--ghost" @click="showConstraint = !showConstraint">
+                  {{ showConstraint ? '收起约束' : '查看模型约束' }}
                 </button>
               </div>
-              <table v-if="showConstraint" class="w-full text-sm">
+              <table v-if="showConstraint" class="constraint-table">
                 <tbody>
-                  <tr v-for="c in constraints" :key="c.label" class="border-b border-gray-800">
-                    <td class="py-2 text-gray-400">{{ c.label }}</td>
-                    <td class="py-2 tabular text-right">{{ c.value }}</td>
+                  <tr v-for="c in constraints" :key="c.label">
+                    <td>{{ c.label }}</td>
+                    <td class="val">{{ c.value }}</td>
                   </tr>
                 </tbody>
               </table>
-              <p v-else class="text-xs text-gray-500">点击【查看模型约束】查看 SOC 上下限、充放电功率、效率与循环约束（数据来自 storage.params）。</p>
+              <p v-else class="panel__hint">点击【查看模型约束】查看 SOC 上下限、充放电功率、效率与循环约束（数据来自 storage.params）。</p>
             </section>
           </template>
 
@@ -201,7 +249,7 @@
         isLevel1() {
           return this.storage && String(this.storage.meta.level || "").indexOf("Level 1") === 0;
         },
-        // ===== 模块1：顶部 4 卡 =====
+        // ===== 固定数据区：顶部 4 卡 =====
         peakPrice() {
           if (!this.market) return null;
           // 未来 24h 峰值（实测 586.2 @ 19:00）
@@ -211,15 +259,19 @@
           arr.forEach((x) => { if (x.price > max) { max = x.price; t = x.time; } });
           return { value: formatNumber(max, 1), time: t.slice(11, 16) };
         },
+        capacityMwh() {
+          if (!this.storage) return "--";
+          return formatNumber(this.storage.params.capacity_mwh, 0);
+        },
         kpis() {
           if (!this.gen || !this.storage) return [];
           const t = this.gen.today, s = this.storage.status;
           const pk = this.peakPrice;
           return [
-            { label: "预计风电", value: formatNumber(t.wind, 1), unit: "MWh", color: "#3987e5" },
-            { label: "预计光伏", value: formatNumber(t.pv, 1), unit: "MWh", color: "#d95926" },
-            { label: "当前 SOC", value: formatPercent(s.soc), unit: "", color: "#22C55E" },
-            { label: "预计峰值电价", value: pk ? pk.value : "--", unit: "元/MWh", sub: pk ? "未来24h峰值 @ " + pk.time : "", color: "#C98500" },
+            { label: "预计风电", value: formatNumber(t.wind, 1), unit: "MWh", color: "#15803C" },
+            { label: "预计光伏", value: formatNumber(t.pv, 1), unit: "MWh", color: "#15803C" },
+            { label: "当前 SOC", value: formatPercent(s.soc), unit: "", color: "#15803C" },
+            { label: "预计峰值电价", value: pk ? pk.value : "--", unit: "元/MWh", sub: pk ? "未来24h峰值 @ " + pk.time : "", color: "#15803C" },
           ];
         },
         // ===== 主时间轴视图（取 48h 交集，按档截取）=====
@@ -250,7 +302,7 @@
           const n = Math.min(this.hours, d.length);
           return d.slice(0, n).map((x) => ({ label: x.time.slice(11, 16), value: x.price }));
         },
-        // ===== 模块5：模型约束（读 storage.params）=====
+        // ===== 模型约束（读 storage.params）=====
         constraints() {
           if (!this.storage) return [];
           const p = this.storage.params;
@@ -294,6 +346,11 @@
         },
       },
       methods: {
+        riskClass(v) {
+          if (v === '高') return 'risk-hi';
+          if (v === '中') return 'risk-mid';
+          return 'risk-low';
+        },
         async loadData() {
           this.loading = true;
           this.error = "";
@@ -315,6 +372,7 @@
         },
         renderCharts() {
           const v = this.view;
+          if (!v) return;
           const pv = this.priceView;
           const tc = this.$refs.timelineChart;
           if (tc) {
@@ -334,6 +392,7 @@
         },
         refreshCharts() {
           const v = this.view;
+          if (!v) return;
           const pv = this.priceView;
           if (this.timelineChart) {
             this.timelineChart.setData({ labels: v.labels, series: v.series, marks: v.marks }, { type: "timeline" });

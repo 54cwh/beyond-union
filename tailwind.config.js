@@ -9,8 +9,10 @@ module.exports = {
     extend: {
       colors: {
         primary: "var(--color-primary)",
+        "on-primary": "var(--color-on-primary)",
         secondary: "var(--color-secondary)",
         accent: "var(--color-accent)",
+        "accent-dark": "var(--color-accent-dark)",
         background: "var(--color-background)",
         foreground: "var(--color-foreground)",
         muted: "var(--color-muted)",

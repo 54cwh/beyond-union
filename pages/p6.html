@@ -8,9 +8,65 @@
   <link rel="stylesheet" href="../assets/common.css">
   <script src="../assets/vendor/vue.global.prod.js"></script>
   <script src="../assets/vendor/echarts.min.js"></script>
+  <style>
+    /* ===== p6 页面级样式（v3 设计语言：粗黑边框仪表盘） ===== */
+    .p6-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .p6-col-3 { grid-column: span 3; }
+    .p6-col-4 { grid-column: span 4; }
+    .p6-col-5 { grid-column: span 5; }
+    .p6-col-6 { grid-column: span 6; }
+    .p6-col-7 { grid-column: span 7; }
+    .p6-col-8 { grid-column: span 8; }
+    .p6-col-12 { grid-column: span 12; }
+    @media (max-width: 1024px) {
+      .p6-col-3, .p6-col-4, .p6-col-5, .p6-col-6, .p6-col-7, .p6-col-8 { grid-column: span 12; }
+    }
+
+    .p6-panel {
+      background-color: #FFFFFF;
+      border: 3px solid var(--color-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .p6-kpi-card {
+      position: relative;
+      overflow: hidden;
+      background-color: #FFFFFF;
+      border: 3px solid var(--color-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+    .p6-kpi-card::after {
+      content: "";
+      position: absolute;
+      right: -16px;
+      top: -16px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.08), transparent 70%);
+      pointer-events: none;
+    }
+    .p6-kpi-value {
+      font-family: var(--font-display);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      font-size: 26px;
+      line-height: 1.1;
+      color: var(--color-accent-dark);
+    }
+    .p6-kpi-label { font-size: 12px; opacity: 0.55; margin-top: 1px; }
+
+    /* 明细表 */
+    .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .detail-table th { text-align: left; font-size: 11px; font-weight: 600; opacity: 0.5; padding: 8px 10px; border-bottom: 2px solid var(--color-border); white-space: nowrap; }
+    .detail-table td { padding: 9px 10px; border-bottom: 1px solid var(--color-border-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .detail-table tr:last-child td { border-bottom: none; }
+  </style>
 </head>
-<body class="min-h-screen">
-  <nav id="site-nav"></nav>
+<body class="min-h-screen bg-background">
+  <nav id="site-nav" class="sticky top-0 z-40"></nav>
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
@@ -31,169 +87,183 @@
           cases: [],
           provenance: null,
           nearDays: [],
-          seriesColor: { baseline: "#64748B", ai: "#22C55E", actual: "#38BDF8" },
+          seriesColor: { baseline: "#64748B", ai: "#22C55E", actual: "#2563EB" },
         };
       },
       template: `
-        <main>
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <h1 class="text-2xl">{{ title }}</h1>
-            <span v-if="revenue" class="text-sm text-gray-400">数据更新 {{ revenue.meta.updated }} · 模拟数据已标注</span>
-          </div>
-
-          <div class="flex gap-2 mb-4 border-b border-gray-700">
-            <button v-for="t in tabs" :key="t.key" @click="tab = t.key"
-              class="px-3 py-2 text-sm"
-              :class="tab === t.key ? 'text-accent border-b-2 border-accent font-semibold' : 'text-gray-400'">
-              {{ t.name }}
-            </button>
-          </div>
+        <main class="page-wrap">
+          <header class="page-head">
+            <div>
+              <h1 class="page-title">{{ title }}</h1>
+              <p class="page-meta">经营结果 · AI 优化验证 · 数据可信</p>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <span v-if="revenue" class="badge badge--accent hidden md:inline-flex">
+                数据更新 {{ revenue.meta.updated }} · 模拟数据已标注
+              </span>
+              <div class="flex gap-1 bg-muted rounded-lg p-1" style="border:2px solid var(--color-border)">
+                <button v-for="t in tabs" :key="t.key" type="button" @click="tab = t.key"
+                  class="px-4 py-1.5 rounded-md text-sm transition-colors"
+                  :class="tab === t.key ? 'btn btn--sm btn--accent' : 'text-foreground opacity-60 hover:opacity-100'">
+                  {{ t.name }}
+                </button>
+              </div>
+            </div>
+          </header>
 
           <p v-if="loading" class="text-gray-400">加载中…</p>
           <p v-else-if="error" class="text-red-400">{{ error }}</p>
 
           <template v-else>
             <!-- ===== 板块一 · 经营成效 ===== -->
-            <section v-show="tab === 'perf'">
-              <h2 class="text-lg font-semibold mb-3">本月经营成绩</h2>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <div v-for="k in perfKpis" :key="k.label" class="card">
-                  <div class="text-sm text-gray-400">{{ k.label }}</div>
-                  <div class="text-2xl tabular mt-1" :style="{ color: k.color }">{{ k.value }}</div>
-                  <div class="text-xs text-gray-400">{{ k.unit }}</div>
+            <div v-show="tab === 'perf'">
+              <!-- 本月经营成绩 KPI（固定数据艺术字） -->
+              <div class="panel__head" style="margin-bottom:4px">
+                <h2 class="panel__title">本月经营成绩</h2>
+                <span class="panel__hint">当月累计 · 模拟数据</span>
+              </div>
+              <div class="p6-grid mb-4">
+                <div v-for="k in perfKpis" :key="k.label" class="p6-col-3 p6-kpi-card">
+                  <div class="p6-kpi-value tabular" :style="{color: k.color}">{{ k.value }}</div>
+                  <div class="p6-kpi-label">{{ k.label }} · {{ k.unit }}</div>
                 </div>
               </div>
 
-              <div class="card mb-6">
+              <!-- AI 优化成效主图 -->
+              <div class="p6-panel mb-4">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <h2 class="text-lg font-semibold">AI 优化成效 · 近 7 天收益对比（万元）</h2>
-                  <div class="flex gap-3 text-xs text-gray-400">
-                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3" :style="{background: seriesColor.baseline}"></span>基准</span>
-                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3" :style="{background: seriesColor.ai}"></span>AI 方案</span>
-                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3" :style="{background: seriesColor.actual}"></span>实际</span>
+                  <h2 class="panel__title" style="margin:0">AI 优化成效 · 近 7 天收益对比</h2>
+                  <div class="flex gap-3 text-xs opacity-60">
+                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full" :style="{background: seriesColor.baseline}"></span>基准</span>
+                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full" :style="{background: seriesColor.ai}"></span>AI 方案</span>
+                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full" :style="{background: seriesColor.actual}"></span>实际</span>
                   </div>
                 </div>
                 <div ref="revChart" class="w-full h-72"></div>
               </div>
 
-              <div class="card mb-6">
-                <h2 class="text-lg font-semibold mb-3">三栏对比明细（近 7 天）</h2>
+              <!-- 三栏对比明细 -->
+              <div class="p6-panel mb-4">
+                <h2 class="panel__title mb-3" style="margin:0 0 12px">三栏对比明细（近 7 天）</h2>
                 <div class="overflow-x-auto">
-                  <table class="w-full text-sm">
+                  <table class="detail-table">
                     <thead>
-                      <tr class="text-left text-gray-400 border-b border-gray-700">
-                        <th class="py-2 pr-3">日期</th>
-                        <th class="py-2 pr-3">基准收益(万)</th>
-                        <th class="py-2 pr-3">AI 收益(万)</th>
-                        <th class="py-2 pr-3">实际收益(万)</th>
-                        <th class="py-2 pr-3">AI 发电(MWh)</th>
-                        <th class="py-2 pr-3">实际发电(MWh)</th>
-                        <th class="py-2 pr-3">AI 偏差成本(万)</th>
-                        <th class="py-2 pr-3">实际偏差成本(万)</th>
+                      <tr>
+                        <th>日期</th>
+                        <th>基准收益(万)</th>
+                        <th>AI 收益(万)</th>
+                        <th>实际收益(万)</th>
+                        <th>AI 发电(MWh)</th>
+                        <th>实际发电(MWh)</th>
+                        <th>AI 偏差成本(万)</th>
+                        <th>实际偏差成本(万)</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="d in nearDays" :key="d.date" class="border-b border-gray-800 tabular">
-                        <td class="py-2 pr-3">{{ d.date }}</td>
-                        <td class="py-2 pr-3">{{ fmtNum(d.baseline_revenue, 2) }}</td>
-                        <td class="py-2 pr-3">{{ fmtNum(d.ai_revenue, 2) }}</td>
-                        <td class="py-2 pr-3" :style="{color: seriesColor.actual}">{{ fmtNum(d.actual_revenue, 2) }}</td>
-                        <td class="py-2 pr-3">{{ fmtNum(d.ai_gen, 1) }}</td>
-                        <td class="py-2 pr-3">{{ fmtNum(d.actual_gen, 1) }}</td>
-                        <td class="py-2 pr-3">{{ fmtNum(d.ai_cost, 2) }}</td>
-                        <td class="py-2 pr-3">{{ fmtNum(d.actual_cost, 2) }}</td>
+                      <tr v-for="d in nearDays" :key="d.date">
+                        <td>{{ d.date }}</td>
+                        <td>{{ fmtNum(d.baseline_revenue, 2) }}</td>
+                        <td class="text-accent-dark font-semibold">{{ fmtNum(d.ai_revenue, 2) }}</td>
+                        <td :style="{color: seriesColor.actual}">{{ fmtNum(d.actual_revenue, 2) }}</td>
+                        <td>{{ fmtNum(d.ai_gen, 1) }}</td>
+                        <td>{{ fmtNum(d.actual_gen, 1) }}</td>
+                        <td>{{ fmtNum(d.ai_cost, 2) }}</td>
+                        <td>{{ fmtNum(d.actual_cost, 2) }}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-                <div v-for="k in cumKpis" :key="k.label" class="card">
-                  <div class="text-sm text-gray-400">{{ k.label }}</div>
-                  <div class="text-2xl tabular mt-1 text-accent">{{ k.value }}</div>
-                  <div class="text-xs text-gray-400">{{ k.unit }}</div>
+              <!-- 累计效能 KPI -->
+              <div class="panel__head" style="margin-bottom:4px">
+                <h2 class="panel__title">累计效能</h2>
+                <span class="panel__hint">累计口径 · 模拟</span>
+              </div>
+              <div class="p6-grid mb-4">
+                <div v-for="k in cumKpis" :key="k.label" class="p6-col-3 p6-kpi-card">
+                  <div class="p6-kpi-value tabular">{{ k.value }}</div>
+                  <div class="p6-kpi-label">{{ k.label }} · {{ k.unit }}</div>
                 </div>
               </div>
 
-              <div class="card">
-                <h2 class="text-lg font-semibold mb-3">模型效果</h2>
-                <table class="w-full text-sm">
-                  <tbody>
-                    <tr v-for="m in modelRows" :key="m.label" class="border-b border-gray-800">
-                      <td class="py-2">{{ m.label }}</td>
-                      <td class="py-2 tabular">{{ m.value }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <!-- 模型效果 -->
+              <div class="p6-panel">
+                <h2 class="panel__title mb-3" style="margin:0 0 12px">模型效果</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div v-for="m in modelRows" :key="m.label" class="p-3 rounded-lg bg-[#F0FDF4]" style="border:2px solid var(--color-border-soft)">
+                    <div class="text-xs opacity-55">{{ m.label }}</div>
+                    <div class="text-lg font-bold tabular mt-0.5 text-accent-dark">{{ m.value }}</div>
+                  </div>
+                </div>
               </div>
-            </section>
+            </div>
 
             <!-- ===== 板块二 · 案例验证 ===== -->
-            <section v-show="tab === 'cases'">
-              <h2 class="text-lg font-semibold mb-3">案例验证（{{ cases.length }} 条）</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div v-for="c in cases" :key="c.id" class="card">
+            <div v-show="tab === 'cases'">
+              <h2 class="panel__title mb-3" style="margin:0 0 12px">案例验证（{{ cases.length }} 条）</h2>
+              <div class="p6-grid">
+                <div v-for="c in cases" :key="c.id" class="p6-col-6 p6-panel">
                   <div class="flex items-center justify-between mb-2">
                     <div class="font-semibold">{{ c.name }}</div>
-                    <span class="text-xs px-2 py-0.5 rounded" :style="levelStyle(c.level)">Level {{ c.level }}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full" :style="levelStyle(c.level)">Level {{ c.level }}</span>
                   </div>
-                  <div class="text-xs text-gray-400 mb-1">{{ c.category }} · {{ c.scale }}</div>
-                  <div class="text-xs mb-1"><span class="text-gray-400">问题：</span>{{ c.problem }}</div>
-                  <div class="text-xs mb-1"><span class="text-gray-400">模块：</span>{{ c.modules }}</div>
-                  <div class="text-xs mb-1"><span class="text-gray-400">方案：</span>{{ c.plan }}</div>
-                  <div class="text-xs mb-1"><span class="text-gray-400">结果：</span>{{ c.result }}</div>
-                  <div class="text-xs text-gray-500 mt-2">{{ c.note }}</div>
+                  <div class="text-xs opacity-60 mb-1">{{ c.category }} · {{ c.scale }}</div>
+                  <div class="text-xs mb-1"><span class="opacity-50">问题：</span>{{ c.problem }}</div>
+                  <div class="text-xs mb-1"><span class="opacity-50">模块：</span>{{ c.modules }}</div>
+                  <div class="text-xs mb-1"><span class="opacity-50">方案：</span>{{ c.plan }}</div>
+                  <div class="text-xs mb-1"><span class="opacity-50">结果：</span>{{ c.result }}</div>
+                  <div class="text-xs opacity-50 mt-2">{{ c.note }}</div>
                 </div>
               </div>
-            </section>
+            </div>
 
             <!-- ===== 板块三 · 数据可信 ===== -->
-            <section v-show="tab === 'trust'">
-              <h2 class="text-lg font-semibold mb-3">数据血缘（{{ provenance.lineage.length }} 条）</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                <div v-for="l in provenance.lineage" :key="l.id" class="card">
+            <div v-show="tab === 'trust'">
+              <h2 class="panel__title mb-3" style="margin:0 0 12px">数据血缘（{{ provenance.lineage.length }} 条）</h2>
+              <div class="p6-grid mb-4">
+                <div v-for="l in provenance.lineage" :key="l.id" class="p6-col-6 p6-panel">
                   <div class="flex items-center justify-between mb-1">
                     <span class="font-semibold text-sm">{{ l.id }}</span>
-                    <span class="text-xs text-gray-400">{{ l.time }}</span>
+                    <span class="text-xs opacity-50">{{ l.time }}</span>
                   </div>
-                  <div class="text-xs mb-1"><span class="text-gray-400">来源：</span>{{ l.source }}</div>
-                  <div class="text-xs mb-1"><span class="text-gray-400">处理：</span>{{ l.process }}</div>
-                  <div class="text-xs mb-1"><span class="text-gray-400">模型：</span>{{ l.model }}</div>
-                  <div class="text-xs"><span class="text-gray-400">输出：</span>{{ l.output }}</div>
+                  <div class="text-xs mb-1"><span class="opacity-50">来源：</span>{{ l.source }}</div>
+                  <div class="text-xs mb-1"><span class="opacity-50">处理：</span>{{ l.process }}</div>
+                  <div class="text-xs mb-1"><span class="opacity-50">模型：</span>{{ l.model }}</div>
+                  <div class="text-xs"><span class="opacity-50">输出：</span>{{ l.output }}</div>
                 </div>
               </div>
 
-              <div class="card">
-                <h2 class="text-lg font-semibold mb-3">模型档案（{{ provenance.models.length }} 个）</h2>
+              <div class="p6-panel">
+                <h2 class="panel__title mb-3" style="margin:0 0 12px">模型档案（{{ provenance.models.length }} 个）</h2>
                 <div class="overflow-x-auto">
-                  <table class="w-full text-sm">
+                  <table class="detail-table">
                     <thead>
-                      <tr class="text-left text-gray-400 border-b border-gray-700">
-                        <th class="py-2 pr-3">模型</th>
-                        <th class="py-2 pr-3">版本</th>
-                        <th class="py-2 pr-3">训练数据</th>
-                        <th class="py-2 pr-3">MAPE</th>
-                        <th class="py-2 pr-3">MAE</th>
-                        <th class="py-2 pr-3">RMSE</th>
-                        <th class="py-2 pr-3">状态</th>
+                      <tr>
+                        <th>模型</th>
+                        <th>版本</th>
+                        <th>训练数据</th>
+                        <th>MAPE</th>
+                        <th>MAE</th>
+                        <th>RMSE</th>
+                        <th>状态</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="m in provenance.models" :key="m.id" class="border-b border-gray-800 tabular">
-                        <td class="py-2 pr-3">{{ m.name }}</td>
-                        <td class="py-2 pr-3">{{ m.version }}</td>
-                        <td class="py-2 pr-3">{{ m.dataset }}</td>
-                        <td class="py-2 pr-3">{{ m.mape_pct ?? '—' }}</td>
-                        <td class="py-2 pr-3">{{ m.mae ?? '—' }}</td>
-                        <td class="py-2 pr-3">{{ m.rmse ?? '—' }}</td>
-                        <td class="py-2 pr-3">{{ m.status }}</td>
+                      <tr v-for="m in provenance.models" :key="m.id">
+                        <td>{{ m.name }}</td>
+                        <td>{{ m.version }}</td>
+                        <td>{{ m.dataset }}</td>
+                        <td>{{ m.mape_pct ?? '—' }}</td>
+                        <td>{{ m.mae ?? '—' }}</td>
+                        <td>{{ m.rmse ?? '—' }}</td>
+                        <td>{{ m.status }}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
-            </section>
+            </div>
           </template>
         </main>
       `,
@@ -209,10 +279,10 @@
           if (!this.revenue) return [];
           const p = this.revenue.performance;
           return [
-            { label: "本月发电", value: this.fmtNum(p.month_gen_mwh, 1), unit: "MWh", color: "#F8FAFC" },
-            { label: "市场收入", value: this.fmtNum(p.market_revenue_wan, 1), unit: "万元", color: "#22C55E" },
-            { label: "储能收益", value: this.fmtNum(p.storage_revenue_wan, 1), unit: "万元", color: "#22C55E" },
-            { label: "偏差成本", value: this.fmtNum(p.deviation_cost_wan, 1), unit: "万元", color: "#EF4444" },
+            { label: "本月发电", value: this.fmtNum(p.month_gen_mwh, 1), unit: "MWh", color: "#1A1A1A" },
+            { label: "市场收入", value: this.fmtNum(p.market_revenue_wan, 1), unit: "万元", color: "#15803C" },
+            { label: "储能收益", value: this.fmtNum(p.storage_revenue_wan, 1), unit: "万元", color: "#15803C" },
+            { label: "偏差成本", value: this.fmtNum(p.deviation_cost_wan, 1), unit: "万元", color: "#B91C1C" },
           ];
         },
         cumKpis() {
@@ -242,11 +312,11 @@
         fmtPct: formatPercent,
         levelStyle(l) {
           const map = {
-            1: ["#1E293B", "#94A3B8"],
-            2: ["#0F2E1D", "#22C55E"],
-            3: ["#123049", "#38BDF8"],
-            4: ["#311B05", "#F59E0B"],
-            5: ["#3B1111", "#EF4444"],
+            1: ["#F1F5F9", "#475569"],
+            2: ["#DCFCE7", "#15803C"],
+            3: ["#E0F2FE", "#0369A1"],
+            4: ["#FEF3C7", "#B45309"],
+            5: ["#FEE2E2", "#B91C1C"],
           };
           const [bg, fg] = map[Math.round(l)] || map[1];
           return { background: bg, color: fg };
@@ -282,19 +352,15 @@
             this.revChart = createChart(el);
             const days = this.revenue.comparison.slice(-7);
             this.nearDays = days.slice().reverse();
-            const chartData = days.map((d) => ({
-              label: String(d.date).slice(5),
-              value: [d.baseline_revenue, d.ai_revenue, d.actual_revenue],
-            }));
-            const series = [
-              { name: "基准", type: "bar", data: days.map((d) => d.baseline_revenue), itemStyle: { color: this.seriesColor.baseline } },
-              { name: "AI 方案", type: "bar", data: days.map((d) => d.ai_revenue), itemStyle: { color: this.seriesColor.ai } },
-              { name: "实际", type: "bar", data: days.map((d) => d.actual_revenue), itemStyle: { color: this.seriesColor.actual } },
-            ];
-            this.revChart.setData(chartData, {
-              series,
-              legend: { data: ["基准", "AI 方案", "实际"], textStyle: { color: "#94A3B8" } },
-            });
+            const labels = days.map((d) => String(d.date).slice(5));
+            this.revChart.setData({
+              labels,
+              series: [
+                { name: "基准", data: days.map((d) => d.baseline_revenue) },
+                { name: "AI 方案", data: days.map((d) => d.ai_revenue) },
+                { name: "实际", data: days.map((d) => d.actual_revenue) },
+              ],
+            }, { type: "bar" });
           });
         },
       },

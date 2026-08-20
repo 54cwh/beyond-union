@@ -8,9 +8,176 @@
   <link rel="stylesheet" href="../assets/common.css">
   <script src="../assets/vendor/vue.global.prod.js"></script>
   <script src="../assets/vendor/echarts.min.js"></script>
+  <style>
+    /* ===== p4 页面级样式（v3 设计语言：粗黑边框仪表盘） ===== */
+    .p4-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .p4-col-3 { grid-column: span 3; }
+    .p4-col-4 { grid-column: span 4; }
+    .p4-col-5 { grid-column: span 5; }
+    .p4-col-6 { grid-column: span 6; }
+    .p4-col-7 { grid-column: span 7; }
+    .p4-col-8 { grid-column: span 8; }
+    .p4-col-12 { grid-column: span 12; }
+    @media (max-width: 1024px) {
+      .p4-col-3, .p4-col-4, .p4-col-5, .p4-col-6, .p4-col-7, .p4-col-8 { grid-column: span 12; }
+    }
+
+    .p4-panel {
+      background-color: #FFFFFF;
+      border: 3px solid var(--color-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .p4-stat-card {
+      position: relative;
+      overflow: hidden;
+      background-color: #FFFFFF;
+      border: 3px solid var(--color-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .p4-stat-card::after {
+      content: "";
+      position: absolute;
+      right: -16px;
+      top: -16px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.10), transparent 70%);
+      pointer-events: none;
+    }
+    .p4-stat-value {
+      font-family: var(--font-display);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      font-size: 26px;
+      line-height: 1.2;
+      color: var(--color-accent-dark);
+    }
+    .p4-stat-label { font-size: 12px; opacity: 0.55; margin-top: 2px; }
+
+    .p4-chip {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 2px solid var(--color-border);
+      background-color: #FFFFFF;
+      color: var(--color-foreground);
+      cursor: pointer;
+      transition: all 160ms ease;
+    }
+    .p4-chip:hover { border-color: var(--color-accent); color: var(--color-accent-dark); }
+    .p4-chip.active {
+      background: var(--color-accent);
+      border-color: var(--color-accent-dark);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .p4-bar-track { background-color: var(--color-accent-light); border-radius: 999px; height: 8px; overflow: hidden; }
+    .p4-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(34, 197, 94, 0.5), var(--color-accent));
+      transition: width 400ms ease;
+    }
+
+    /* ===== 情景实验室：页内对话卡片 ===== */
+    .p4-lab-body {
+      height: 320px;
+      overflow-y: auto;
+      padding: 12px;
+      background: #FFFFFF;
+      border: 2px solid var(--color-border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .p4-msg {
+      max-width: 88%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .p4-msg--user {
+      align-self: flex-end;
+      background: var(--color-accent);
+      border: 2px solid var(--color-accent-dark);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .p4-msg--ai {
+      align-self: flex-start;
+      background: #FFFFFF;
+      border: 2px solid var(--color-border);
+      color: var(--color-foreground);
+    }
+    .p4-lab-result {
+      margin-top: 8px;
+      border-top: 1px dashed var(--color-border-soft);
+      padding-top: 8px;
+    }
+    .p4-lab-result__row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+    .p4-lab-result__row .k { opacity: 0.55; }
+    .p4-lab-result__row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .p4-lab-conf {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--color-accent-dark);
+      background: var(--color-accent-light);
+      border: 1px solid var(--color-accent);
+      border-radius: 999px;
+      padding: 2px 10px;
+    }
+    #p4-lab-input {
+      flex: 1;
+      border: 2px solid var(--color-border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
+      color: var(--color-foreground);
+      outline: none;
+      background: #FFFFFF;
+      font-family: var(--font-body);
+    }
+    #p4-lab-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12); }
+    #p4-lab-send {
+      border: 2px solid var(--color-accent-dark);
+      border-radius: 8px;
+      padding: 0 18px;
+      background: var(--color-accent);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 160ms ease;
+    }
+    #p4-lab-send:hover { opacity: 0.88; }
+
+    /* 报价条 */
+    .quote-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .quote-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 6px;
+      background: var(--color-accent-light);
+      border: 2px solid var(--color-border);
+    }
+    .quote-item__name { font-size: 12px; opacity: 0.6; }
+    .quote-item__value { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  </style>
 </head>
-<body class="min-h-screen">
-  <nav id="site-nav"></nav>
+<body class="min-h-screen bg-background">
+  <nav id="site-nav" class="sticky top-0 z-40"></nav>
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
@@ -26,16 +193,20 @@
       data() {
         return {
           title: "绿电入市",
+          tab: "market",
           loading: false,
           error: "",
           updated: "2026-08-19 15:40",
-          // 1. 市场雷达（内联示例，对应 A market.json）
-          markets: [
-            { key: "midterm", name: "中长期", price: 332, unit: "元/MWh", note: "月度均价" },
-            { key: "day", name: "日前", price: 350, unit: "元/MWh", note: "吉林现货锚点" },
-            { key: "rt", name: "实时", price: 214, unit: "元/MWh", note: "近期均值" },
-            { key: "green", name: "绿电", price: 45, unit: "元/MWh", note: "环境溢价" },
-            { key: "cert", name: "绿证", price: 5.15, unit: "元/个", note: "2025均价" },
+          marketLoaded: false,
+          marketData: null,
+          genData: null,
+          // 市场快讯（模拟新闻，对应市场动态）
+          news: [
+            { id: "N1", title: "吉林电力现货市场转入正式运行，常态化开展日前结算", tag: "现货", time: "08-19 09:30", level: 1 },
+            { id: "N2", title: "东北区域辅助服务市场规则修订，储能参与调频补偿上调", tag: "辅助服务", time: "08-19 08:10", level: 2 },
+            { id: "N3", title: "8 月下旬东北多风，风电出力预计提升，现货价格或承压", tag: "气象", time: "08-18 17:40", level: 1 },
+            { id: "N4", title: "绿电交易规模持续扩大，东北绿电环境溢价区间 30-60 元", tag: "绿电", time: "08-18 10:00", level: 3 },
+            { id: "N5", title: "辽宁发布现货市场结算细则修订稿，差价结算方式明确", tag: "规则", time: "08-17 15:20", level: 2 },
           ],
           // 2. 企业资源池
           pool: { forecast: 142.3, locked: 65, storage: 18.2, flexible: 59 },
@@ -44,8 +215,7 @@
           midtermPct: 65,
           storageArbitrage: true,
           generated: false,
-          recommend: "",
-          plans: [],
+          recommendation: null,
           // 7. 市场规则影响
           rules: [
             { id: "R1", name: "吉林中长期持仓约束", detail: "中长期合同量占比不低于 60%，超限部分按现货结算" },
@@ -63,246 +233,461 @@
             { key: "s7", name: "预测偏差扩大", desc: "气象模型分歧加大，置信区间收窄" },
             { key: "s8", name: "自定义", desc: "自定义参数推演" },
           ],
-          selectedScene: "s2",
-          simulating: false,
-          simulation: null,
+          // 情景实验室：页内对话卡片
+          labMessages: [],
         };
       },
       computed: {
         spotPct() {
           return 100 - this.midtermPct;
         },
+        flexiblePct() {
+          return Math.round((this.pool.flexible / this.pool.forecast) * 100);
+        },
+        midtermAvg() {
+          if (this.marketData && this.marketData.midterm_monthly && this.marketData.midterm_monthly.length) {
+            const ms = this.marketData.midterm_monthly;
+            return Math.round(ms.reduce((s, m) => s + (m.monthly || 0), 0) / ms.length);
+          }
+          return 332;
+        },
+        greenPremium() {
+          if (this.marketData && this.marketData.green && this.marketData.green.premium) {
+            return this.marketData.green.premium.value;
+          }
+          return 45;
+        },
+        greenCert() {
+          if (this.marketData && this.marketData.green && this.marketData.green.cert_price) {
+            return this.marketData.green.cert_price.value;
+          }
+          return 5.15;
+        },
+        anchors() {
+          if (this.marketData && this.marketData.anchors) {
+            return this.marketData.anchors.slice(0, 4);
+          }
+          return [];
+        },
+        marketRules() {
+          if (this.marketData && this.marketData.rules) {
+            return this.marketData.rules.slice(0, 5);
+          }
+          return [];
+        },
+        quoteItems() {
+          const day = (this.marketData && this.marketData.day_ahead) || [];
+          const rt = (this.marketData && this.marketData.real_time) || [];
+          const ms = (this.marketData && this.marketData.midterm_monthly) || [];
+          const dayAvg = day.length ? Math.round(day.reduce((s, d) => s + d.price, 0) / day.length) : 350;
+          const rtAvg = rt.length ? Math.round(rt.reduce((s, d) => s + d.price, 0) / rt.length) : 214;
+          const midAvg = ms.length ? Math.round(ms.reduce((s, m) => s + m.monthly, 0) / ms.length) : 332;
+          return [
+            { name: "中长期", value: midAvg, unit: "元/MWh", trend: "up" },
+            { name: "日前", value: dayAvg, unit: "元/MWh", trend: "up" },
+            { name: "实时", value: rtAvg, unit: "元/MWh", trend: "down" },
+            { name: "绿电溢价", value: this.greenPremium, unit: "元/MWh", trend: "" },
+            { name: "绿证", value: this.greenCert, unit: "元/个", trend: "" },
+          ];
+        },
       },
       methods: {
         fmtNum: formatNumber,
         fmtPct: formatPercent,
-        // 方案生成器：按风险偏好 + 现货比例生成三方案，联动决策卡与散点图
+        // 方案生成器：按风险偏好 + 现货比例生成推荐方案（含基准对比）
         genStrategy() {
           const spot = this.spotPct;
           const base = 18.4 + (spot - 35) * 0.008;      // 现货比例越高，收益略升
           const baseRisk = 35 + (spot - 35) * 0.4;      // 风险同向
-          const plans = [
-            { key: "A", name: "稳健型", revenue: base - 0.6, risk: baseRisk - 15, vol: "低", note: "偏差风险低" },
-            { key: "B", name: "均衡型", revenue: base, risk: baseRisk, vol: "中", note: "收益风险均衡" },
-            { key: "C", name: "收益型", revenue: base + 0.8, risk: baseRisk + 20, vol: "较高", note: "收益波动高" },
-          ];
-          const rec = { conservative: "A", balanced: "B", aggressive: "C" }[this.preference];
-          this.plans = plans.map((p) => ({ ...p, rec: p.key === rec }));
-          this.recommend = rec;
+          const prefMap = {
+            conservative: { name: "稳健策略", mid: 80, spot: 20, desc: "高比例中长期锁定，波动最小", gain: 0.4 },
+            balanced: { name: "均衡策略", mid: 65, spot: 35, desc: "收益与风险平衡，适应市场波动", gain: 1.2 },
+            aggressive: { name: "进取策略", mid: 50, spot: 50, desc: "扩大现货敞口，博取更高收益", gain: 1.9 },
+          };
+          const pref = prefMap[this.preference] || prefMap.balanced;
+          const arbi = this.storageArbitrage ? 0.5 : 0;
+          this.recommendation = {
+            name: pref.name,
+            desc: pref.desc,
+            revenue: base + pref.gain + arbi,
+            risk: baseRisk + (this.preference === "conservative" ? -15 : this.preference === "aggressive" ? 20 : 0),
+            baselineRevenue: base - 0.4,
+            spot,
+            reasons: [
+              `现货比例 ${spot}%，中长期 ${this.midtermPct}%，锁定基础电量`,
+              this.storageArbitrage ? "开启储能套利：午间充电、晚峰放电" : "未开启储能套利",
+              this.preference === "conservative" ? "低风险偏好，优先保收益稳定" : (this.preference === "aggressive" ? "进取偏好，承受更高波动换收益" : "均衡偏好，收益风险兼顾"),
+            ],
+          };
           this.generated = true;
-          this.$nextTick(() => this.renderRiskChart());
         },
-        // 收益-风险散点图
-        renderRiskChart() {
-          if (!this.riskChart) this.riskChart = createChart(this.$refs.riskChart);
-          const points = this.plans.map((p) => ({ label: `方案${p.key}`, value: [p.risk, p.revenue] }));
-          this.riskChart.setData(points, {
-            series: [{
-              type: "scatter",
-              data: this.plans.map((p) => [p.risk, p.revenue]),
-              symbolSize: 26,
-              itemStyle: { color: "#22C55E" },
-            }],
-            xAxis: { type: "value", name: "风险", nameLocation: "middle", nameGap: 26, splitLine: { lineStyle: { color: "#1A1E2F" } } },
-            yAxis: { type: "value", name: "收益(万元)", splitLine: { lineStyle: { color: "#1A1E2F" } } },
-            tooltip: {
-              trigger: "item",
-              formatter: (p) => {
-                const pl = this.plans[p.dataIndex];
-                return `方案${pl.key} ${pl.name}<br/>收益 ${pl.revenue.toFixed(1)} 万 · 风险 ${Math.round(pl.risk)}`;
-              },
-            },
-            legend: { show: false },
+        // 生成一条推演消息（场景 key + 用户问题）
+        simulateScene(sceneKey, question) {
+          const s = this.scenarios.find((x) => x.key === sceneKey) || this.scenarios[1];
+          const drop = { s1: 0.18, s2: 0.3, s3: 0.12, s4: 0.05, s5: 0.08, s6: 0.15, s7: 0.1, s8: 0.1 }[sceneKey] || 0.1;
+          const origGen = 142;
+          const optGen = Math.round(origGen * (1 - drop) * 10) / 10;
+          return {
+            type: "scene",
+            q: question || `推演场景：${s.name}`,
+            conclusion: `${s.name}下，发电 ${origGen} → ${optGen} MWh，建议现货敞口降至 27%`,
+            impact: "预计偏差成本下降约 3200 元，收益波动收窄",
+            confidence: 87,
+            model: "ScenarioLab v1.1",
+            original: { gen: origGen, spot: 40, storage: 18, revenue: 19.1 },
+            optimized: { gen: optGen, spot: 27, storage: "重新调度", revenue: 21.4 },
+          };
+        },
+        // 点预设场景
+        runScene(key) {
+          const msg = this.simulateScene(key, null);
+          this.labMessages.push(msg);
+          this.scrollLab();
+        },
+        // 自由提问 → 关键词匹配（方案生成 / 情景推演 / 规则）
+        sendLab() {
+          const input = this.$refs.labInput;
+          const q = (input.value || "").trim();
+          if (!q) return;
+          // 方案生成类问题
+          if (/方案|策略|生成|怎么卖|如何交易|建议/.test(q)) {
+            this.genPlanMsg(q);
+            input.value = "";
+            this.scrollLab();
+            return;
+          }
+          // 规则类问题
+          if (/规则|政策|约束|考核/.test(q)) {
+            this.labMessages.push({
+              type: "rule",
+              q,
+              conclusion: "当前适用的市场交易规则如下：",
+            });
+            input.value = "";
+            this.scrollLab();
+            return;
+          }
+          // 情景推演类
+          let key = "s8";
+          if (/风速|风功率|骤降|下降.*风/.test(q)) key = "s2";
+          else if (/光伏|辐照|多云/.test(q)) key = "s3";
+          else if (/现货|价格|上涨|市场/.test(q)) key = "s4";
+          else if (/储能|容量|电池/.test(q)) key = "s5";
+          else if (/并网|限制|外送/.test(q)) key = "s6";
+          else if (/预测.*偏差|偏差.*扩大/.test(q)) key = "s7";
+          else if (/寒潮|低温|温度/.test(q)) key = "s1";
+          const msg = this.simulateScene(key, q);
+          this.labMessages.push(msg);
+          input.value = "";
+          this.scrollLab();
+        },
+        // 对话式生成推荐方案消息
+        genPlanMsg(q) {
+          this.genStrategy();
+          const rec = this.recommendation;
+          this.labMessages.push({
+            type: "plan",
+            q,
+            ...rec,
           });
         },
-        // 情景推演
-        runSimulation() {
-          this.simulating = true;
-          this.simulation = null;
-          setTimeout(() => {
-            const s = this.scenarios.find((x) => x.key === this.selectedScene);
-            // 演示：原始方案 vs 优化后方案（示例数字，不同场景发电降幅不同）
-            const drop = { s1: 0.18, s2: 0.3, s3: 0.12, s4: 0.05, s5: 0.08, s6: 0.15, s7: 0.1, s8: 0.1 }[this.selectedScene] || 0.1;
-            const origGen = 142;
-            const optGen = Math.round(origGen * (1 - drop) * 10) / 10;
-            this.simulation = {
-              scene: s,
-              dropPct: Math.round(drop * 100),
-              original: { gen: origGen, spot: 40, storage: 18, revenue: 19.1 },
-              optimized: { gen: optGen, spot: 27, storage: "重新调度", revenue: 21.4 },
-            };
-            this.simulating = false;
-          }, 600);
+        // 预设问题快捷发送
+        sendPreset(q) {
+          const input = this.$refs.labInput;
+          if (input) input.value = q;
+          this.sendLab();
+        },
+        scrollLab() {
+          this.$nextTick(() => {
+            const el = this.$refs.labBody;
+            if (el) el.scrollTop = el.scrollHeight;
+          });
         },
         fmtRev(v) {
           return "¥" + Number(v).toFixed(1) + "万";
         },
+        // 市场雷达折线图：日前 vs 实时分时价格（走 chart-view line）
+        async loadMarketData() {
+          try {
+            const market = await Data("demo/market");
+            this.marketData = market;
+            this.marketLoaded = true;
+            let gen = null;
+            try { gen = await Data("demo/generation"); } catch (e) {}
+            this.genData = gen;
+            this.$nextTick(() => {
+              this.renderMarketChart();
+              this.renderGenPriceChart();
+            });
+          } catch (e) {
+            // market.json 缺失时保持内联卡（不阻断页面）
+          }
+        },
+        renderMarketChart() {
+          if (!this.$refs.marketChart) return;
+          if (!this.marketChart) this.marketChart = createChart(this.$refs.marketChart);
+          const day = (this.marketData && this.marketData.day_ahead) || [];
+          const rt = (this.marketData && this.marketData.real_time) || [];
+          if (day.length === 0) return;
+          const labels = day.slice(0, 24).map((d) => {
+            const t = d.time.split(" ")[1] || "";
+            return t.slice(0, 5);
+          });
+          const dayData = day.slice(0, 24).map((d) => d.price);
+          const rtData = rt.slice(0, 24).map((d) => d.price);
+          this.marketChart.setData({
+            labels,
+            series: [
+              { name: "日前", data: dayData },
+              { name: "实时", data: rtData },
+            ],
+          }, { type: "line", smooth: true });
+        },
+
+        // 发电 vs 日前电价关联图（24h，双轴）
+        renderGenPriceChart() {
+          if (!this.$refs.genPriceChart) return;
+          if (!this.genPriceChart) this.genPriceChart = createChart(this.$refs.genPriceChart);
+          const fc = (this.genData && this.genData.forecast) || [];
+          if (fc.length === 0) return;
+          const day = fc.slice(0, 24);
+          const labels = day.map((d) => { const t = d.time.split(" ")[1] || ""; return t.slice(0, 5); });
+          this.genPriceChart.setData({
+            labels,
+            series: [
+              { name: "发电出力(MW)", data: day.map((d) => Math.round(d.gen_total * 10) / 10) },
+              { name: "日前电价(元/MWh)", data: day.map((d) => d.price_day_ahead) },
+            ],
+          }, { type: "line", smooth: true });
+        },
+
       },
       mounted() {
         // 首屏自动生成一组默认策略，让页面开箱即有数据
         this.genStrategy();
+        this.loadMarketData();
       },
       beforeUnmount() {
-        if (this.riskChart) { this.riskChart.dispose(); this.riskChart = null; }
+        if (this.marketChart) { this.marketChart.dispose(); this.marketChart = null; }
+        if (this.genPriceChart) { this.genPriceChart.dispose(); this.genPriceChart = null; }
       },
       template: `
-        <main>
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <h1 class="text-2xl">{{ title }}</h1>
-            <span class="text-sm text-gray-400">数据更新 {{ updated }} · Level 1 模拟</span>
-          </div>
-
-          <!-- 1. 市场雷达 -->
-          <section class="mb-6">
-            <h2 class="text-lg font-semibold mb-3">市场雷达</h2>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <div v-for="m in markets" :key="m.key" class="card">
-                <div class="text-sm text-gray-400">{{ m.name }}</div>
-                <div class="text-2xl tabular mt-1 text-accent">{{ m.price }}<span class="text-xs text-gray-400 ml-1">{{ m.unit }}</span></div>
-                <div class="text-xs text-gray-400">{{ m.note }}</div>
-              </div>
+        <main class="page-wrap">
+          <header class="p1-header page-head">
+            <div>
+              <h1 class="p1-title page-title">{{ title }}</h1>
+              <p class="p1-subtitle page-meta">市场行情 · AI 交易决策 · 情景推演</p>
             </div>
-          </section>
-
-          <!-- 2. 企业资源池 + 3. 方案生成器 -->
-          <section class="mb-6">
-            <h2 class="text-lg font-semibold mb-3">企业资源池 · 方案生成器</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="card">
-                <div class="text-sm text-gray-400 mb-2">明日可交易资源（MWh）</div>
-                <div class="space-y-2">
-                  <div class="flex justify-between"><span class="text-sm text-gray-400">明日预测发电</span><span class="tabular">{{ fmtNum(pool.forecast, 1) }}</span></div>
-                  <div class="flex justify-between"><span class="text-sm text-gray-400">中长期已锁定</span><span class="tabular text-accent">{{ fmtNum(pool.locked, 1) }}</span></div>
-                  <div class="flex justify-between"><span class="text-sm text-gray-400">储能可调</span><span class="tabular text-accent">{{ fmtNum(pool.storage, 1) }}</span></div>
-                  <div class="flex justify-between border-t border-gray-800 pt-2"><span class="text-sm">可灵活交易</span><span class="tabular text-xl text-accent">{{ fmtNum(pool.flexible, 1) }}</span></div>
-                </div>
-              </div>
-              <div class="card">
-                <div class="text-sm text-gray-400 mb-3">方案生成器</div>
-                <div class="mb-3">
-                  <div class="text-sm mb-1">风险偏好</div>
-                  <div class="flex gap-2">
-                    <button v-for="p in [['conservative','保守'],['balanced','均衡'],['aggressive','激进']]" :key="p[0]"
-                      @click="preference = p[0]"
-                      class="px-3 py-1 text-sm rounded" :class="preference === p[0] ? 'bg-accent text-black' : 'bg-muted text-gray-300'">
-                      {{ p[1] }}
-                    </button>
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <div class="flex justify-between text-sm mb-1">
-                    <span>中长期 {{ midtermPct }}%</span><span>现货 {{ spotPct }}%</span>
-                  </div>
-                  <input type="range" v-model.number="midtermPct" min="40" max="90" class="w-full">
-                </div>
-                <label class="flex items-center gap-2 text-sm mb-3">
-                  <input type="checkbox" v-model="storageArbitrage"> 开启储能套利（午间充、晚峰放）
-                </label>
-                <button @click="genStrategy" class="w-full bg-accent text-black font-semibold py-2 px-4 rounded">生成策略</button>
-              </div>
-            </div>
-          </section>
-
-          <!-- 4. 三方案决策卡 + 5. 收益风险图 + 6. 决策解释 -->
-          <section class="mb-6">
-            <h2 class="text-lg font-semibold mb-3">三方案决策卡 <span v-if="generated" class="text-sm text-accent">· AI 推荐方案 {{ recommend }}</span></h2>
-            <div v-if="generated" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-              <div v-for="p in plans" :key="p.key" class="card" :class="p.rec ? 'border border-accent' : ''">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold">方案{{ p.key }} · {{ p.name }}</span>
-                  <span v-if="p.rec" class="text-xs px-2 py-0.5 rounded bg-accent text-black">AI 推荐</span>
-                </div>
-                <div class="text-2xl tabular mt-2 text-accent">{{ fmtRev(p.revenue) }}</div>
-                <div class="text-xs text-gray-400 mb-2">预计收益</div>
-                <div class="text-sm">偏差风险 <span class="tabular">{{ Math.round(p.risk) }}</span> · 收益波动 <span class="tabular">{{ p.vol }}</span></div>
-                <div class="text-xs text-gray-400 mt-1">{{ p.note }}</div>
-              </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="card">
-                <h3 class="text-sm font-semibold mb-2">收益—风险地图</h3>
-                <div ref="riskChart" class="w-full h-64"></div>
-              </div>
-              <div class="card">
-                <h3 class="text-sm font-semibold mb-2">决策解释</h3>
-                <p class="text-sm mb-2">为什么不是收益最高的方案 C？</p>
-                <ul class="text-xs text-gray-400 space-y-1">
-                  <li>· 方案 C 收益高 <span class="text-accent">4.8%</span>，但预测偏差暴露提高 <span class="text-destructive">21%</span></li>
-                  <li>· 储能剩余调节空间不足，难以对冲现货风险</li>
-                  <li>· 综合风险调整收益后，方案 {{ recommend || 'B' }} 更合理</li>
-                </ul>
-                <div class="mt-3 text-xs text-gray-500 border-t border-gray-800 pt-2">该结果仅作为辅助决策建议 · AI 辅助决策，不替代经营</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 7. 市场规则影响 -->
-          <section class="mb-6">
-            <h2 class="text-lg font-semibold mb-3">市场规则影响</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div v-for="r in rules" :key="r.id" class="card">
-                <div class="text-sm font-semibold mb-1">{{ r.name }}</div>
-                <div class="text-xs text-gray-400">{{ r.detail }}</div>
-                <div class="flex gap-2 mt-2">
-                  <button class="text-xs text-accent">查看规则原文</button>
-                  <button class="text-xs text-accent">AI 解释规则</button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 8. 情景实验室 -->
-          <section>
-            <h2 class="text-lg font-semibold mb-3">AI 经营情景实验室</h2>
-            <div class="card mb-3">
-              <div class="text-sm text-gray-400 mb-2">选择预置场景</div>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <button v-for="s in scenarios" :key="s.key"
-                  @click="selectedScene = s.key"
-                  class="text-left px-3 py-2 rounded text-sm"
-                  :class="selectedScene === s.key ? 'bg-accent text-black' : 'bg-muted text-gray-300'">
-                  <div class="font-medium">{{ s.name }}</div>
-                  <div class="text-xs opacity-80">{{ s.desc }}</div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <span class="badge badge--accent hidden md:inline-flex">数据更新 {{ updated }} · Level 1 模拟</span>
+              <div class="flex gap-1 bg-muted rounded-lg p-1" style="border:2px solid var(--color-border)">
+                <button type="button" @click="tab='market'"
+                  class="px-4 py-1.5 rounded-md text-sm transition-colors"
+                  :class="tab==='market' ? 'btn btn--sm btn--accent' : 'text-foreground opacity-60 hover:opacity-100'">
+                  市场行情
+                </button>
+                <button type="button" @click="tab='decision'"
+                  class="px-4 py-1.5 rounded-md text-sm transition-colors"
+                  :class="tab==='decision' ? 'btn btn--sm btn--accent' : 'text-foreground opacity-60 hover:opacity-100'">
+                  AI 交易决策
                 </button>
               </div>
-              <button @click="runSimulation" :disabled="simulating" class="mt-3 w-full bg-accent text-black font-semibold py-2 px-4 rounded">
-                {{ simulating ? '推演中…' : '开始推演' }}
-              </button>
             </div>
-            <div v-if="simulation" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="card">
-                <div class="text-sm font-semibold mb-2">原始方案</div>
-                <div class="text-xs text-gray-400 mb-2">{{ simulation.scene.name }} · 环境变化：{{ simulation.scene.desc }}</div>
-                <div class="space-y-1 text-sm">
-                  <div class="flex justify-between"><span class="text-gray-400">发电</span><span class="tabular">{{ simulation.original.gen }} MWh</span></div>
-                  <div class="flex justify-between"><span class="text-gray-400">现货比例</span><span class="tabular">{{ simulation.original.spot }}%</span></div>
-                  <div class="flex justify-between"><span class="text-gray-400">储能放电</span><span class="tabular">{{ simulation.original.storage }} MWh</span></div>
-                  <div class="flex justify-between"><span class="text-gray-400">预计收益</span><span class="tabular">{{ fmtRev(simulation.original.revenue) }}</span></div>
-                </div>
-              </div>
-              <div class="card border border-accent">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-semibold">优化后方案</span>
-                  <span class="text-xs px-2 py-0.5 rounded bg-accent text-black">AI 优化</span>
-                </div>
-                <div class="text-xs text-gray-400 mb-2">发电较原始下降 {{ simulation.dropPct }}% · AI 应对</div>
-                <div class="space-y-1 text-sm">
-                  <div class="flex justify-between"><span class="text-gray-400">发电</span><span class="tabular text-accent">{{ simulation.optimized.gen }} MWh</span></div>
-                  <div class="flex justify-between"><span class="text-gray-400">现货比例</span><span class="tabular">{{ simulation.optimized.spot }}%</span></div>
-                  <div class="flex justify-between"><span class="text-gray-400">储能</span><span class="tabular">{{ simulation.optimized.storage }}</span></div>
-                  <div class="flex justify-between"><span class="text-gray-400">预计收益</span><span class="tabular text-accent">{{ fmtRev(simulation.optimized.revenue) }}</span></div>
-                </div>
-              </div>
-              <div class="card md:col-span-2">
-                <div class="text-sm font-semibold mb-2">AI 应对措施</div>
-                <ol class="text-sm list-none space-y-1">
-                  <li>① 降低现货敞口，提高中长期锁定比例</li>
-                  <li>② 晚高峰释放储能，优化放电时点</li>
-                  <li>③ 持续监测风功率预测变化，滚动修正策略</li>
-                </ol>
+          </header>
+
+          <!-- ===== Tab1 市场行情 ===== -->
+          <div v-show="tab==='market'">
+            <!-- 报价条：5 市场价格紧凑横向，涨跌色 -->
+            <div class="quote-bar mb-4" style="border:3px solid var(--color-border);border-radius:10px;background:#fff;padding:12px">
+              <div class="quote-item" v-for="m in quoteItems" :key="m.name">
+                <span class="quote-item__name">{{ m.name }}</span>
+                <span class="quote-item__value" :style="{color: m.trend === 'up' ? '#15803C' : (m.trend === 'down' ? '#DC2626' : '#1A1A1A')}">
+                  {{ m.value }}<span style="font-size:10px;opacity:.5;margin-left:2px">{{ m.unit }}</span>
+                </span>
+                <span v-if="m.trend" style="font-size:11px;font-weight:700" :style="{color: m.trend === 'up' ? '#15803C' : '#DC2626'}">
+                  {{ m.trend === 'up' ? '▲' : '▼' }}
+                </span>
               </div>
             </div>
-          </section>
+
+            <!-- 两大主图并排：分时行情 + 发电vs电价关联 -->
+            <div class="p4-grid mb-4">
+              <div class="p4-col-7 p4-panel">
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="panel__title" style="margin:0">日前 vs 实时价格</h3>
+                  <span class="panel__hint">24h · 元/MWh</span>
+                </div>
+                <div ref="marketChart" class="w-full h-48"></div>
+              </div>
+              <div class="p4-col-5 p4-panel">
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="panel__title" style="margin:0">发电 vs 电价</h3>
+                  <span class="panel__hint">新能源反调峰特征</span>
+                </div>
+                <div ref="genPriceChart" class="w-full h-48"></div>
+              </div>
+            </div>
+
+            <!-- 信息区：快讯 + 规则 + 锚点 -->
+            <div class="p4-grid">
+              <div class="p4-col-5 p4-panel">
+                <div class="flex justify-between items-center mb-3">
+                  <h3 class="panel__title" style="margin:0">市场快讯</h3>
+                  <span class="panel__hint">{{ news.length }} 条</span>
+                </div>
+                <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  <div v-for="n in news" :key="n.id" class="flex items-start gap-3 p-2.5 rounded-lg hover:bg-[#F0FDF4] transition-colors cursor-pointer">
+                    <span class="badge badge--accent shrink-0">{{ n.tag }}</span>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm leading-snug">{{ n.title }}</div>
+                      <div class="text-xs opacity-45 mt-0.5">{{ n.time }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="p4-col-4 p4-panel">
+                <div class="flex justify-between items-center mb-3">
+                  <h3 class="panel__title" style="margin:0">交易规则速览</h3>
+                  <span class="panel__hint">各省偏差/结算</span>
+                </div>
+                <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  <div v-for="r in marketRules" :key="r.region + r.category" class="p-2.5 rounded-lg bg-[#F0FDF4]" style="border:2px solid var(--color-border-soft)">
+                    <span class="text-xs font-semibold text-accent-dark">{{ r.region }} · {{ r.category }}</span>
+                    <div class="text-xs opacity-65 leading-snug mt-0.5">{{ r.rule }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p4-col-3 p4-panel">
+                <div class="flex justify-between items-center mb-3">
+                  <h3 class="panel__title" style="margin:0">锚点价格</h3>
+                  <span class="panel__hint">官方</span>
+                </div>
+                <div class="space-y-2">
+                  <div v-for="a in anchors.slice(0, 3)" :key="a.name" class="p-2 rounded-lg bg-white" style="border:2px solid var(--color-border)">
+                    <div class="text-[11px] opacity-60 leading-tight">{{ a.name }}</div>
+                    <div class="text-sm font-bold tabular mt-0.5 text-accent-dark">{{ a.value }}<span class="text-[10px] opacity-50 ml-0.5">{{ a.unit }}</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== Tab2 AI 交易决策（基本信息 + AI 对话） ===== -->
+          <div v-show="tab==='decision'" class="flex flex-col" style="height: calc(100vh - 140px)">
+            <!-- 顶部基本信息条 -->
+            <div class="p4-grid mb-3 shrink-0">
+              <div class="p4-col-3 p4-stat-card">
+                <div class="p4-stat-value tabular">{{ fmtNum(pool.forecast, 0) }}</div>
+                <div class="p4-stat-label">明日预测发电 · MWh</div>
+              </div>
+              <div class="p4-col-3 p4-stat-card">
+                <div class="p4-stat-value tabular">{{ fmtNum(pool.flexible, 0) }}</div>
+                <div class="p4-stat-label">可灵活交易 · MWh</div>
+              </div>
+              <div class="p4-col-3 p4-stat-card">
+                <div class="p4-stat-value tabular">{{ fmtNum(pool.storage, 1) }}</div>
+                <div class="p4-stat-label">储能可调 · MWh</div>
+              </div>
+              <div class="p4-col-3 p4-stat-card">
+                <div class="p4-stat-value tabular">{{ midtermPct }}%</div>
+                <div class="p4-stat-label">中长期锁定比例</div>
+              </div>
+            </div>
+
+            <!-- AI 对话主体 -->
+            <div class="p4-panel flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div class="flex justify-between items-center mb-3 shrink-0">
+                <h2 class="panel__title" style="margin:0">AI 交易助手</h2>
+                <span class="panel__hint">问 AI · 生成方案 · 推演情景</span>
+              </div>
+              <!-- 对话流 -->
+              <div class="p4-lab-body flex-1 min-h-0" ref="labBody" style="max-height:none;height:auto">
+                <div class="p4-msg p4-msg--ai">
+                  我是 AI 交易助手。可以问我：<b>「生成明日交易方案」</b>、<b>「风速降 30% 会怎样？」</b>、<b>「有哪些交易规则？」</b>
+                </div>
+                <template v-for="(m, i) in labMessages" :key="i">
+                  <div class="p4-msg p4-msg--user">{{ m.q }}</div>
+                  <div class="p4-msg p4-msg--ai">
+                    <!-- 推荐方案卡 -->
+                    <template v-if="m.type === 'plan'">
+                      <div class="flex items-center gap-2 mb-2">
+                        <span class="badge badge--accent">AI 推荐</span>
+                        <span class="font-bold">{{ m.name }}</span>
+                      </div>
+                      <div class="text-xs opacity-60 mb-2">{{ m.desc }}</div>
+                      <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div class="p-2 rounded-lg bg-white" style="border:2px solid var(--color-border)">
+                          <div class="text-[11px] opacity-55">预计收益</div>
+                          <div class="font-extrabold tabular text-accent-dark">{{ fmtRev(m.revenue) }}</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-white" style="border:2px solid var(--color-border)">
+                          <div class="text-[11px] opacity-55">基准收益</div>
+                          <div class="font-bold tabular">{{ fmtRev(m.baselineRevenue) }}</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-white" style="border:2px solid var(--color-border)">
+                          <div class="text-[11px] opacity-55">提升</div>
+                          <div class="font-bold tabular text-accent-dark">{{ fmtRev(m.revenue - m.baselineRevenue) }}</div>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-3 mb-2">
+                        <div class="flex-1">
+                          <div class="flex justify-between text-[11px] mb-0.5">
+                            <span class="opacity-55">中长期 {{ m.spot !== undefined ? 100 - m.spot : midtermPct }}%</span>
+                            <span class="opacity-55">现货 {{ m.spot || spotPct }}%</span>
+                          </div>
+                          <div class="p4-bar-track"><div class="p4-bar-fill" :style="{width: (m.spot || spotPct) + '%'}"></div></div>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded-full" :style="{background: m.risk < 30 ? 'rgba(34,197,94,0.15)' : m.risk < 50 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)', color: m.risk < 30 ? '#15803C' : m.risk < 50 ? '#B45309' : '#DC2626'}">风险 {{ Math.round(m.risk) }}</span>
+                      </div>
+                      <div class="space-y-1 mb-2">
+                        <div v-for="(r, ri) in m.reasons" :key="ri" class="text-xs flex items-start gap-1.5">
+                          <span class="text-accent-dark font-bold">{{ ri + 1 }}.</span>
+                          <span class="opacity-75">{{ r }}</span>
+                        </div>
+                      </div>
+                      <button class="btn btn--accent w-full !py-2 text-sm">确认此方案 · 加入今日任务</button>
+                    </template>
+                    <!-- 情景推演卡 -->
+                    <template v-else-if="m.type === 'scene'">
+                      <div class="font-semibold">{{ m.conclusion }}</div>
+                      <div class="text-xs opacity-70 mt-1">{{ m.impact }}</div>
+                      <div class="p4-lab-result">
+                        <div class="p4-lab-result__row"><span class="k">发电</span><span class="v">{{ m.original.gen }} → {{ m.optimized.gen }} MWh</span></div>
+                        <div class="p4-lab-result__row"><span class="k">现货比例</span><span class="v">{{ m.original.spot }}% → {{ m.optimized.spot }}%</span></div>
+                        <div class="p4-lab-result__row"><span class="k">预计收益</span><span class="v">{{ fmtRev(m.original.revenue) }} → {{ fmtRev(m.optimized.revenue) }}</span></div>
+                      </div>
+                      <span class="p4-lab-conf">置信度 {{ m.confidence }}% · {{ m.model }}</span>
+                    </template>
+                    <!-- 规则消息 -->
+                    <template v-else-if="m.type === 'rule'">
+                      <div class="font-semibold mb-2">{{ m.conclusion }}</div>
+                      <div class="space-y-1.5">
+                        <div v-for="r in marketRules" :key="r.region + r.category" class="text-xs p-2 rounded-lg bg-white" style="border:2px solid var(--color-border-soft)">
+                          <span class="font-semibold text-accent-dark">{{ r.region }} · {{ r.category }}</span>
+                          <div class="opacity-70 mt-0.5">{{ r.rule }}</div>
+                        </div>
+                      </div>
+                    </template>
+                    <!-- 纯文本 -->
+                    <template v-else>{{ m.conclusion }}</template>
+                  </div>
+                </template>
+              </div>
+              <!-- 预设问题 -->
+              <div class="flex flex-wrap gap-2 mb-3 shrink-0">
+                <button class="p4-chip" @click="sendPreset('帮我生成明天的交易方案')">生成交易方案</button>
+                <button class="p4-chip" @click="sendPreset('如果风速降 30% 会怎样')">风速骤降推演</button>
+                <button class="p4-chip" @click="sendPreset('现在有哪些交易规则')">交易规则</button>
+                <button class="p4-chip" @click="sendPreset('现货价格上涨会有什么影响')">现货上涨推演</button>
+              </div>
+              <!-- 输入框 -->
+              <div class="flex gap-2 shrink-0">
+                <input id="p4-lab-input" ref="labInput" placeholder="问 AI：如『帮我生成明日交易方案』『储能容量降20%会怎样』" @keydown.enter="sendLab" class="flex-1" />
+                <button id="p4-lab-send" @click="sendLab">发送</button>
+              </div>
+            </div>
+          </div>
+
         </main>
       `,
     });

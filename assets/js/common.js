@@ -1,6 +1,9 @@
 // common.js —— 基础设施（E 集成岗维护）
-// 职责：导航渲染 + 数据加载 + 通用工具
+// 职责：导航渲染 + 数据加载 + 通用工具 + 全局组件注入
 // 不创建 Vue app；接口变更（导出/导航结构）须通知消费方
+
+import './copilot.js';
+import './demo.js';
 
 // ===== 导航 =====
 // 路径统一用项目根绝对路径（/pages/...、/data/...）：
@@ -18,12 +21,21 @@ function renderNav() {
   const el = document.getElementById("site-nav");
   if (!el) return;
   const current = location.pathname.split("/").pop();
-  // 胶囊型导航：外层 .nav-capsule 包裹所有 pill，active 项由 CSS transition 平滑滑动
-  const pills = NAV_ITEMS.map((item) => {
+  // v3 导航：品牌标识 + 链接列表（active class 由 common.css 控制视觉）
+  const items = NAV_ITEMS.map((item) => {
     const active = current === item.href.split("/").pop();
-    return `<a class="nav-capsule__pill${active ? ' is-active' : ''}" href="${item.href}">${item.label}</a>`;
+    return `<a href="${item.href}" class="${active ? "active" : ""}">${item.label}</a>`;
   }).join("");
-  el.innerHTML = `<div class="nav-capsule">${pills}</div>`;
+  el.innerHTML = `
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <span class="nav-brand__dot"></span>
+        <span class="nav-brand__name">北域绿联</span>
+        <span class="nav-brand__tag">新能源入市决策平台</span>
+      </div>
+      <nav class="nav-links">${items}</nav>
+    </div>
+  `;
 }
 
 // ===== 数据（契约内容待定，先提供通用接口）=====
@@ -45,5 +57,9 @@ async function fetchData(url) {
   if (!resp.ok) throw new Error(`请求失败: ${url} (${resp.status})`);
   return resp.json();
 }
+
+// ===== 全局注入：AI 副驾驶壳 + 演示模式（E 集成岗，页面零改动）=====
+// copilot.js / demo.js 被 import 即自执行（DOMContentLoaded 后注入），
+// 页面无需任何改动即获得 AI 副驾驶壳与 window.__demo。
 
 export { NAV_ITEMS, renderNav as Nav, loadData as Data, fetchData };

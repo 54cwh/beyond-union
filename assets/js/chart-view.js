@@ -8,19 +8,18 @@
 const MARK_COLORS = { charge: "#22C55E", discharge: "#EF4444" };
 const MARK_LABELS = { charge: "充电", discharge: "放电" };
 
-// 图表暗色主题：取自 design-system/MASTER.md 配色 token，
-// 保证文字/轴线在深底 #020617 上可读（对比度 ≥ 4.5:1）
+// 图表浅色主题（v3 设计语言：白底面板上黑字可读，对比度 ≥ 4.5:1）
 const THEME = {
-  text: "#F8FAFC",        // Foreground —— 文字/轴标签
-  axisLine: "#334155",    // Border —— 坐标轴线
-  splitLine: "#1A1E2F",   // Muted —— 网格分隔线
-  tooltipBg: "#1E293B",   // Secondary —— 提示框底
-  tooltipBorder: "#334155",
+  text: "#1A1A1A",        // 主文字/轴标签（近黑）
+  axisLine: "#9CA3AF",    // 坐标轴线（灰）
+  splitLine: "#E5E5E5",   // 网格分隔线（浅灰）
+  tooltipBg: "#FFFFFF",   // 提示框底（白）
+  tooltipBorder: "#1A1A1A",
 };
 
-// 分类系列色（暗色底 #020617 上校验通过，CVD 色盲安全）：
+// 分类系列色（白底 #FFFFFF 上校验：饱和、对比足够、CVD 色盲安全）：
 // 固定顺序、不循环；绿/红保留给充放电状态色，故系列色只取 6 个色相
-const SERIES_COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#9085e9"];
+const SERIES_COLORS = ["#2563eb", "#d95926", "#0d9488", "#ca8a04", "#db2777", "#7c3aed"];
 
 function categoryAxis(labels) {
   return { type: "category", data: labels };

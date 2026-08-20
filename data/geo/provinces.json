@@ -1,0 +1,81 @@
+{
+  "provinces": [
+    {
+      "adcode": 230000,
+      "name": "黑龙江省",
+      "short": "黑龙江",
+      "center": [
+        127.693,
+        48.04
+      ],
+      "capacity": 2.1,
+      "generation": 96,
+      "revenue": 52,
+      "risk": "低",
+      "riskLevel": 1,
+      "wind": 6.8,
+      "solar": 4.3,
+      "storage": 40,
+      "stationCount": 3,
+      "history": [88,92,90,96,101,93,96]
+    },
+    {
+      "adcode": 220000,
+      "name": "吉林省",
+      "short": "吉林",
+      "center": [
+        126.171,
+        43.704
+      ],
+      "capacity": 1.28,
+      "generation": 128.6,
+      "revenue": 82,
+      "risk": "中低",
+      "riskLevel": 2,
+      "wind": 6.2,
+      "solar": 4.7,
+      "storage": 60,
+      "stationCount": 3,
+      "history": [120,124,118,130,125,127,128.6]
+    },
+    {
+      "adcode": 210000,
+      "name": "辽宁省",
+      "short": "辽宁",
+      "center": [
+        122.605,
+        41.3
+      ],
+      "capacity": 2.8,
+      "generation": 120,
+      "revenue": 71,
+      "risk": "低",
+      "riskLevel": 1,
+      "wind": 5.8,
+      "solar": 4.5,
+      "storage": 45,
+      "stationCount": 3,
+      "history": [112,118,116,122,119,123,120]
+    },
+    {
+      "adcode": 150000,
+      "name": "内蒙古自治区",
+      "short": "内蒙古",
+      "center": [
+        114.077,
+        44.331
+      ],
+      "capacity": 3.4,
+      "generation": 158,
+      "revenue": 88,
+      "risk": "中",
+      "riskLevel": 3,
+      "wind": 7.4,
+      "solar": 5.6,
+      "storage": 80,
+      "stationCount": 3,
+      "history": [148,154,151,160,156,161,158]
+    }
+  ],
+  "periods": ["08-12","08-13","08-14","08-15","08-16","08-17","08-18"]
+}

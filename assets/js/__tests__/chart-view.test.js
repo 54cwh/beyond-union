@@ -129,21 +129,21 @@ describe("createChart", () => {
   });
 });
 
-describe("暗色主题", () => {
+describe("浅色主题（v3 设计语言）", () => {
   let chart;
   beforeEach(() => {
     chart = mockEcharts();
     listeners.resize = undefined;
   });
 
-  it("套用 MASTER.md 主题（文字/轴线/提示框）", () => {
+  it("套用白底浅色主题（文字/轴线/提示框）", () => {
     const c = createChart({});
     c.setData([{ label: "A", value: 1 }]);
     const call = chart.setOption.mock.calls[0][0];
-    expect(call.textStyle.color).toBe("#F8FAFC");
-    expect(call.xAxis.axisLabel.color).toBe("#F8FAFC");
-    expect(call.xAxis.axisLine.lineStyle.color).toBe("#334155");
-    expect(call.tooltip.backgroundColor).toBe("#1E293B");
+    expect(call.textStyle.color).toBe("#1A1A1A");
+    expect(call.xAxis.axisLabel.color).toBe("#1A1A1A");
+    expect(call.xAxis.axisLine.lineStyle.color).toBe("#9CA3AF");
+    expect(call.tooltip.backgroundColor).toBe("#FFFFFF");
   });
 });
 
@@ -158,7 +158,7 @@ describe("分类配色与图例", () => {
     const c = createChart({});
     c.setData([{ label: "A", value: 1 }]);
     const call = chart.setOption.mock.calls[0][0];
-    expect(call.color).toEqual(["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#9085e9"]);
+    expect(call.color).toEqual(["#2563eb", "#d95926", "#0d9488", "#ca8a04", "#db2777", "#7c3aed"]);
   });
 
   it("多系列柱状图带图例", () => {
@@ -311,29 +311,29 @@ describe("边界情况", () => {
   });
 });
 
-// —— 新增：暗色主题（跨类型） ——
-describe("暗色主题（跨类型）", () => {
+// —— 新增：浅色主题（跨类型，v3 设计语言白底黑字） ——
+describe("浅色主题（跨类型）", () => {
   let chart;
   beforeEach(() => {
     chart = mockEcharts();
     listeners.resize = undefined;
   });
 
-  it("散点图 textStyle.color 为 #F8FAFC", () => {
+  it("散点图 textStyle.color 为 #1A1A1A", () => {
     const c = createChart({});
     c.setData([{ x: 3, y: 120, label: "方案A" }], { type: "scatter" });
     const call = chart.setOption.mock.calls[0][0];
-    expect(call.textStyle.color).toBe("#F8FAFC");
+    expect(call.textStyle.color).toBe("#1A1A1A");
   });
 
-  it("饼图 textStyle.color 为 #F8FAFC", () => {
+  it("饼图 textStyle.color 为 #1A1A1A", () => {
     const c = createChart({});
     c.setData([{ name: "风速", value: 42 }], { type: "pie" });
     const call = chart.setOption.mock.calls[0][0];
-    expect(call.textStyle.color).toBe("#F8FAFC");
+    expect(call.textStyle.color).toBe("#1A1A1A");
   });
 
-  it("置信区间图 textStyle.color 为 #F8FAFC", () => {
+  it("置信区间图 textStyle.color 为 #1A1A1A", () => {
     const c = createChart({});
     c.setData({
       labels: ["00:00", "04:00"],
@@ -343,16 +343,16 @@ describe("暗色主题（跨类型）", () => {
       lower: [114, 110],
     }, { type: "confidence" });
     const call = chart.setOption.mock.calls[0][0];
-    expect(call.textStyle.color).toBe("#F8FAFC");
+    expect(call.textStyle.color).toBe("#1A1A1A");
   });
 
-  it("时间轴图 textStyle.color 为 #F8FAFC", () => {
+  it("时间轴图 textStyle.color 为 #1A1A1A", () => {
     const c = createChart({});
     c.setData({
       labels: ["10:00", "12:00"],
       series: [{ name: "风电", data: [80, 85] }],
     }, { type: "timeline" });
     const call = chart.setOption.mock.calls[0][0];
-    expect(call.textStyle.color).toBe("#F8FAFC");
+    expect(call.textStyle.color).toBe("#1A1A1A");
   });
 });

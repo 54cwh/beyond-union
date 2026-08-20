@@ -8,9 +8,59 @@
   <link rel="stylesheet" href="../assets/common.css">
   <script src="../assets/vendor/vue.global.prod.js"></script>
   <script src="../assets/vendor/echarts.min.js"></script>
+  <style>
+    /* ===== p2 页面级样式（v3 设计语言：固定数据艺术字 + 粗黑边框仪表盘）===== */
+    .p2-page { max-width: 1240px; margin: 0 auto; padding: 20px 16px 56px; }
+    .p2-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .p2-title { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+    .p2-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: #6B7280; }
+
+    /* 固定数据艺术字区（直接浮在噪点背景上，不套卡片） */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px 20px;
+      margin: 20px 0 28px;
+      padding: 20px 24px;
+      border: 3px solid var(--color-border);
+      background: #FFFFFF;
+      border-radius: 10px;
+    }
+    .stat-grid .stat-display { padding: 8px 0; }
+    .stat-grid .stat-display__value { font-size: 38px; }
+    @media (max-width: 1024px) {
+      .stat-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-grid .stat-display__value { font-size: 30px; }
+    }
+
+    /* 仪表盘面板 */
+    .panel { margin-bottom: 20px; }
+    .panel--row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .panel--row2 { grid-template-columns: 1fr; } }
+
+    /* 风险时间轴 */
+    .risk-bar { display: flex; height: 22px; border-radius: 4px; overflow: hidden; border: 1px solid var(--color-border-soft); }
+    .risk-bar__seg { cursor: pointer; transition: filter 150ms ease; }
+    .risk-bar__seg:hover { filter: brightness(1.08); }
+    .risk-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #6B7280; }
+    .risk-legend__dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+
+    /* 模型验证表 */
+    .v-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .v-table th { text-align: left; font-size: 12px; color: #6B7280; font-weight: 600; padding: 8px 6px; border-bottom: 2px solid var(--color-border); }
+    .v-table td { padding: 9px 6px; border-bottom: 1px solid var(--color-border-soft); font-variant-numeric: tabular-nums; }
+    .v-table tr:last-child td { border-bottom: none; }
+    .v-table td.num { text-align: right; font-weight: 700; }
+
+    /* 经营影响按钮行 */
+    .action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  </style>
 </head>
-<body class="min-h-screen">
-  <nav id="site-nav"></nav>
+<body class="min-h-screen bg-background">
+  <nav id="site-nav" class="sticky top-0 z-40"></nav>
   <div id="app" class="container mx-auto p-4"></div>
 
   <script type="module">
@@ -25,8 +75,8 @@
     // ===== 风险分级临时规则（pages/p2.md 3.2：阈值抽配置常量，待 A 提供 classifyRisk 后替换）=====
     const RISK_RULES = {
       high: { bandwidthPct: 15, label: '预测不确定性高', color: '#D95926' },
-      mid: { bandwidthPct: 10, label: '波动加大', color: '#C98500' },
-      low: { label: '低风险', color: '#22C55E' },
+      mid: { bandwidthPct: 10, label: '波动加大', color: '#CA8A04' },
+      low: { label: '低风险', color: '#16A34A' },
     };
     // 时间尺度：7D 需 168h，数据仅 96h → 7D 置灰
     const SCALE_HOURS = { '24H': 24, '48H': 48, '7D': 168 };
@@ -57,103 +107,136 @@
         };
       },
       template: `
-        <main>
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <h1 class="text-2xl">{{ title }}</h1>
-            <div class="flex items-center gap-3 text-sm text-gray-400">
-              <span v-if="gen">{{ metaLine }}</span>
-              <span v-if="isLevel1" class="px-2 py-0.5 rounded-full border border-accent text-accent text-xs">模拟数据</span>
-              <button v-if="gen" class="text-accent" @click="showSource">查看数据来源</button>
+        <main class="p2-page">
+          <!-- 头部：标题 + 数据更新/可信等级 -->
+          <div class="p2-head">
+            <div>
+              <h1 class="p2-title">{{ title }}</h1>
+              <div class="p2-meta">
+                <span v-if="gen">数据更新 {{ gen.meta.updated }} · {{ gen.meta.level }}</span>
+                <span v-if="isLevel1" class="badge badge--accent">模型模拟</span>
+              </div>
+            </div>
+            <div class="p2-meta">
+              <button v-if="gen" class="btn btn--sm btn--ghost" @click="showSource">查看数据来源</button>
             </div>
           </div>
 
+          <!-- 加载 / 错误态 -->
           <p v-if="loading" class="text-gray-400">加载中…</p>
           <div v-else-if="error" class="text-red-400">
             <p>{{ error }}</p>
-            <button class="mt-3 px-4 py-2 rounded bg-accent text-background font-semibold" @click="loadData">重试</button>
+            <button class="btn btn--accent mt-3" @click="loadData">重试</button>
           </div>
 
           <template v-else>
-            <!-- ===== 模块1 · 顶部核心数字 ===== -->
-            <section class="mb-6">
-              <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                <div v-for="k in todayKpis" :key="k.label" class="card">
-                  <div class="text-sm text-gray-400">{{ k.label }}</div>
-                  <div class="text-2xl tabular mt-1" :style="{ color: k.color }">
-                    {{ k.value }} <span class="text-sm">{{ k.unit }}</span>
-                  </div>
-                  <div v-if="k.sub" class="text-xs text-gray-400 mt-1">{{ k.sub }}</div>
-                </div>
+            <!-- ===== 固定数据区：艺术字直接展示（不加卡片） ===== -->
+            <div class="stat-grid">
+              <div class="stat-display stat-display--accent">
+                <div class="stat-display__label">未来 24h 预计发电</div>
+                <div class="stat-display__value">{{ todayKpis[0].value }}<span class="unit">MWh</span></div>
+                <div class="stat-display__sub">风 {{ todayKpis[0].wind }} · 光 {{ todayKpis[0].pv }}</div>
               </div>
-            </section>
+              <div class="stat-display">
+                <div class="stat-display__label">预测置信度</div>
+                <div class="stat-display__value">{{ todayKpis[1].value }}</div>
+                <div class="stat-display__sub">模型输出可信度</div>
+              </div>
+              <div class="stat-display">
+                <div class="stat-display__label">预计最大偏差</div>
+                <div class="stat-display__value">{{ todayKpis[2].value }}<span class="unit">%</span></div>
+                <div class="stat-display__sub">置信区间带宽</div>
+              </div>
+              <div class="stat-display stat-display--accent">
+                <div class="stat-display__label">可交易电量</div>
+                <div class="stat-display__value">{{ todayKpis[3].value }}<span class="unit">MWh</span></div>
+                <div class="stat-display__sub">进入市场口径</div>
+              </div>
+              <div class="stat-display">
+                <div class="stat-display__label">可调储能</div>
+                <div class="stat-display__value">{{ todayKpis[4].value }}<span class="unit">MWh</span></div>
+                <div class="stat-display__sub">可调度空间</div>
+              </div>
+            </div>
 
-            <!-- ===== 模块2 · 主预测图 ===== -->
-            <section class="card mb-6">
-              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <h2 class="text-lg font-semibold">主预测图（实际 / 预测 / 置信区间）</h2>
+            <!-- ===== 仪表盘区 ===== -->
+            <!-- 主预测图 -->
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">主预测图（实际 / 预测 / 置信区间）</h2>
                 <div class="flex gap-1 text-sm">
                   <button v-for="s in ['24H','48H','7D']" :key="s" @click="setScale(s)"
                     :disabled="s === '7D' && !can7D"
                     :title="s === '7D' && !can7D ? '当前仅提供 96 小时预测，待数据扩充后开放' : ''"
-                    :class="scale === s ? 'px-3 py-1 rounded bg-accent text-background font-semibold' : 'px-3 py-1 rounded border border-gray-600 text-gray-300'">
+                    :class="scale === s ? 'btn btn--sm btn--accent' : 'btn btn--sm btn--ghost'">
                     {{ s }}
                   </button>
                 </div>
               </div>
               <div ref="forecastChart" class="w-full h-80"></div>
-              <p class="text-xs text-gray-500 mt-2">置信区间为 ±8.4%（Level 1 模拟增强）；7D 需 168h 数据，当前仅提供 96h</p>
+              <p class="panel__hint mt-2">置信区间为 ±8.4%（Level 1 模拟增强）；7D 需 168h 数据，当前仅提供 96h</p>
             </section>
 
-            <!-- ===== 模块3 · 预测风险时间轴 ===== -->
-            <section class="card mb-6">
-              <h2 class="text-lg font-semibold mb-3">预测风险时间轴</h2>
-              <div v-if="riskSegments.length" class="flex h-5 rounded overflow-hidden mb-2">
+            <!-- 预测风险时间轴 -->
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">预测风险时间轴</h2>
+                <span class="panel__hint">hover 查看时段与原因</span>
+              </div>
+              <div v-if="riskSegments.length" class="risk-bar mb-2">
                 <div v-for="(seg, i) in riskSegments" :key="i"
-                  class="cursor-pointer" :title="seg.tip"
+                  class="risk-bar__seg" :title="seg.tip"
                   :style="{ width: seg.widthPct + '%', background: seg.color }"></div>
               </div>
-              <div class="flex flex-wrap gap-4 text-xs text-gray-400 mb-2">
-                <span v-for="r in riskLegend" :key="r.label" class="flex items-center gap-1">
-                  <span class="inline-block w-3 h-3 rounded-full" :style="{ background: r.color }"></span>{{ r.label }}
+              <div class="risk-legend mb-2">
+                <span v-for="r in riskLegend" :key="r.label">
+                  <span class="risk-legend__dot" :style="{ background: r.color }"></span>{{ r.label }}
                 </span>
-                <span class="ml-auto">hover 查看时段与原因</span>
               </div>
-              <p class="text-xs text-gray-500">⚠️ 风险分级为临时规则（置信区间带宽占比 ≥15% 橙 / ≥10% 黄），待 A 提供 classifyRisk 正式计算后替换。</p>
+              <p class="panel__hint">⚠️ 风险分级为临时规则（置信区间带宽占比 ≥15% 橙 / ≥10% 黄），待 A 提供 classifyRisk 正式计算后替换。</p>
             </section>
 
-            <!-- ===== 模块4 · 影响因子 + 模型验证 ===== -->
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div class="card">
-                <h2 class="text-lg font-semibold mb-1">影响因子贡献
-                  <span class="text-xs text-gray-500">（示例贡献结构 · 模拟）</span>
-                </h2>
+            <!-- 影响因子 + 模型验证（双栏） -->
+            <div class="panel--row2">
+              <section class="card panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">影响因子贡献</h2>
+                  <span class="panel__hint">示例贡献结构 · 模拟</span>
+                </div>
                 <div ref="factorChart" class="w-full h-64"></div>
-              </div>
-              <div class="card">
-                <h2 class="text-lg font-semibold mb-3">模型验证
-                  <span class="text-xs text-gray-500">（30 天序列待 A 补充，当前为指标卡片）</span>
-                </h2>
-                <table class="w-full text-sm">
+              </section>
+              <section class="card panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">模型验证</h2>
+                  <span class="panel__hint">30 天序列待 A 补充</span>
+                </div>
+                <table class="v-table">
+                  <thead>
+                    <tr><th>指标</th><th class="num">数值</th><th>说明</th></tr>
+                  </thead>
                   <tbody>
-                    <tr v-for="m in modelCards" :key="m.label" class="border-b border-gray-800">
-                      <td class="py-2">{{ m.label }}</td>
-                      <td class="py-2 tabular text-right">{{ m.value }}</td>
-                      <td class="py-2 text-right text-xs text-gray-500">{{ m.tag }}</td>
+                    <tr v-for="m in modelCards" :key="m.label">
+                      <td>{{ m.label }}</td>
+                      <td class="num">{{ m.value }}</td>
+                      <td class="text-xs text-gray-400">{{ m.tag }}</td>
                     </tr>
                   </tbody>
                 </table>
-              </div>
-            </section>
+              </section>
+            </div>
 
-            <!-- ===== 模块5 · 经营影响分析 ===== -->
-            <section class="card mb-6">
-              <h2 class="text-lg font-semibold mb-3">经营影响分析</h2>
+            <!-- 经营影响分析 -->
+            <section class="card panel">
+              <div class="panel__head">
+                <h2 class="panel__title">经营影响分析</h2>
+                <span class="panel__hint" v-if="isLevel1">模拟建议</span>
+              </div>
               <div ref="aiCard" class="mb-4"></div>
               <h3 class="text-base font-semibold mb-2">日前电价参考（未来 {{ scale }}）</h3>
               <div ref="priceChart" class="w-full h-48 mb-4"></div>
-              <div class="flex flex-wrap gap-3">
-                <a href="/pages/p3.html" class="px-4 py-2 rounded bg-accent text-background font-semibold">重新计算储能方案</a>
-                <a href="/pages/p4.html" class="px-4 py-2 rounded border border-accent text-accent font-semibold">重新计算交易方案</a>
+              <div class="action-row">
+                <a href="/pages/p3.html" class="btn btn--accent">重新计算储能方案</a>
+                <a href="/pages/p4.html" class="btn btn--ghost">重新计算交易方案</a>
               </div>
             </section>
           </template>
@@ -177,17 +260,17 @@
         isLevel1() {
           return this.gen && String(this.gen.meta.level || "").indexOf("Level 1") === 0;
         },
-        // ===== 模块1：顶部核心数字 =====
+        // ===== 固定数据区（艺术字）=====
         todayKpis() {
           if (!this.gen) return [];
           const t = this.gen.today;
           return [
             { label: "未来24h预计发电", value: formatNumber(t.total, 1), unit: "MWh",
-              sub: "风 " + formatNumber(t.wind, 1) + " / 光 " + formatNumber(t.pv, 1), color: "#F8FAFC" },
-            { label: "预测置信度", value: formatPercent(t.confidence), unit: "", color: "#22C55E" },
-            { label: "预计最大偏差", value: "±" + formatNumber(t.max_dev_pct, 1), unit: "%", color: "#EF4444" },
-            { label: "可交易电量", value: formatNumber(t.tradable, 1), unit: "MWh", color: "#38BDF8" },
-            { label: "可调储能", value: formatNumber(t.storage_available_mwh, 1), unit: "MWh", color: "#22C55E" },
+              wind: formatNumber(t.wind, 1), pv: formatNumber(t.pv, 1), color: "#15803C" },
+            { label: "预测置信度", value: formatPercent(t.confidence), unit: "", color: "#15803C" },
+            { label: "预计最大偏差", value: "±" + formatNumber(t.max_dev_pct, 1), unit: "%", color: "#B91C1C" },
+            { label: "可交易电量", value: formatNumber(t.tradable, 1), unit: "MWh", color: "#15803C" },
+            { label: "可调储能", value: formatNumber(t.storage_available_mwh, 1), unit: "MWh", color: "#15803C" },
           ];
         },
         // ===== 主预测图视图（按时间尺度截取）=====
@@ -209,12 +292,11 @@
             price: f.slice(0, n).map((x) => ({ label: x.time.slice(11, 16), value: x.price_day_ahead })),
           };
         },
-        // ===== 模块3：风险时间轴（临时规则，合并连续同等级时段）=====
+        // ===== 风险时间轴（临时规则，合并连续同等级时段）=====
         riskSegments() {
           const v = this.view;
           if (!v) return [];
           const f = this.gen.forecast || [];
-          const w = this.weather ? this.weather.forecast : [];
           const hours = v.hours;
           const levels = [];
           for (let i = 0; i < hours; i++) {
@@ -242,7 +324,7 @@
               + (s.level === 'low' ? '，预测表现平稳' : '（临时规则，待 A 提供正式计算）'),
           }));
         },
-        // ===== 模块4：影响因子 + 模型验证 =====
+        // ===== 影响因子 + 模型验证 =====
         factorTotal() {
           return this.factors.reduce((s, x) => s + x.value, 0);
         },
@@ -256,7 +338,7 @@
             { label: "昨日实际", value: "124.8 MWh", tag: "误差 1.96%（模拟）" },
           ];
         },
-        // ===== 模块5：经营影响分析（pages/p2.md 5.2 链路规则）=====
+        // ===== 经营影响分析（pages/p2.md 5.2 链路规则）=====
         impactConclusion() {
           if (!this.gen) return "";
           const t = this.gen.today;
