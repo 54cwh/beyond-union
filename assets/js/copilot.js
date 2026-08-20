@@ -44,8 +44,8 @@ function injectStyle() {
       max-width: calc(100vw - 40px);
       height: 560px;
       max-height: calc(100vh - 120px);
-      background: #FFFFFF;
-      border: 1px solid #BBF7D0;
+      background: var(--color-panel);
+      border: 1px solid var(--color-border-soft);
       border-radius: 16px;
       box-shadow: 0 12px 40px rgba(21,128,61,0.18);
       display: flex;
@@ -66,14 +66,14 @@ function injectStyle() {
       align-items: center;
       justify-content: space-between;
       padding: 14px 16px;
-      border-bottom: 1px solid #BBF7D0;
-      background: linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 100%);
+      border-bottom: 1px solid var(--color-border-soft);
+      background: linear-gradient(135deg, var(--color-muted-2) 0%, var(--color-panel) 100%);
     }
     .copilot-head__title {
       font-weight: 700;
       font-size: 14px;
-      color: #14532D;
-      background: linear-gradient(135deg, #16A34A 0%, #14532D 100%);
+      color: var(--color-foreground);
+      background: var(--gradient-text);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -83,7 +83,7 @@ function injectStyle() {
       background: none;
       cursor: pointer;
       font-size: 18px;
-      color: #14532D;
+      color: var(--color-foreground);
       opacity: 0.5;
       line-height: 1;
     }
@@ -97,9 +97,9 @@ function injectStyle() {
       font-size: 12px;
       padding: 8px 12px;
       border-radius: 10px;
-      border: 1px solid #BBF7D0;
-      background: #F0FDF4;
-      color: #166534;
+      border: 1px solid var(--color-border-soft);
+      background: var(--color-muted-2);
+      color: var(--color-accent-dark);
       cursor: pointer;
       margin-bottom: 8px;
       transition: all 160ms ease;
@@ -107,20 +107,20 @@ function injectStyle() {
       width: 100%;
     }
     .copilot-sugg:hover {
-      border-color: #22C55E;
-      background: #FFFFFF;
+      border-color: var(--color-accent);
+      background: var(--color-panel);
       box-shadow: 0 2px 8px rgba(34,197,94,0.10);
     }
     .copilot-answer {
       font-size: 13px;
-      color: #14532D;
+      color: var(--color-foreground);
       line-height: 1.65;
     }
     .copilot-answer__conclusion {
       font-size: 15px;
       font-weight: 700;
       margin-bottom: 8px;
-      background: linear-gradient(135deg, #16A34A 0%, #14532D 100%);
+      background: var(--gradient-text);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -128,7 +128,7 @@ function injectStyle() {
     .copilot-answer__section {
       font-size: 11px;
       font-weight: 600;
-      color: #16A34A;
+      color: var(--color-accent-dark);
       margin: 10px 0 4px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -144,17 +144,17 @@ function injectStyle() {
       gap: 6px;
       margin-top: 10px;
       font-size: 12px;
-      color: #15803C;
-      background: #F0FDF4;
-      border: 1px solid #BBF7D0;
+      color: var(--color-accent-dark);
+      background: var(--color-muted-2);
+      border: 1px solid var(--color-border-soft);
       border-radius: 999px;
       padding: 4px 12px;
     }
     .copilot-meta {
       font-size: 11px;
-      color: #94A3B8;
+      color: var(--color-muted-2);
       margin-top: 10px;
-      border-top: 1px dashed #BBF7D0;
+      border-top: 1px dashed var(--color-border-soft);
       padding-top: 8px;
     }
     .copilot-actions {
@@ -186,18 +186,18 @@ function injectStyle() {
       font-size: 11px;
       padding: 4px 8px;
       border-radius: 8px;
-      background: #F0FDF4;
-      border: 1px solid #BBF7D0;
-      color: #14532D;
+      background: var(--color-muted-2);
+      border: 1px solid var(--color-border-soft);
+      color: var(--color-foreground);
     }
     .copilot-kb-file { font-weight: 600; }
     .copilot-kb-section { opacity: 0.6; flex: 1; }
-    .copilot-kb-score { font-size: 10px; color: #15803C; font-weight: 600; white-space: nowrap; }
+    .copilot-kb-score { font-size: 10px; color: var(--color-accent-dark); font-weight: 600; white-space: nowrap; }
     .copilot-kb-badge {
       font-size: 10px;
-      color: #15803C;
-      background: #F0FDF4;
-      border: 1px solid #BBF7D0;
+      color: var(--color-accent-dark);
+      background: var(--color-muted-2);
+      border: 1px solid var(--color-border-soft);
       border-radius: 999px;
       padding: 1px 8px;
       font-weight: 600;
@@ -207,17 +207,17 @@ function injectStyle() {
       display: flex;
       gap: 8px;
       padding: 12px 16px;
-      border-top: 1px solid #BBF7D0;
-      background: #F8FAFC;
+      border-top: 1px solid var(--color-border-soft);
+      background: var(--color-panel-alt);
     }
     #copilot-input {
       flex: 1;
-      border: 1px solid #BBF7D0;
+      border: 1px solid var(--color-border-soft);
       border-radius: 10px;
       padding: 8px 12px;
       font-size: 13px;
-      color: #14532D;
-      background: #FFFFFF;
+      color: var(--color-foreground);
+      background: var(--color-panel);
       outline: none;
     }
     #copilot-input:focus { border-color: #22C55E; box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }

@@ -652,7 +652,7 @@
                   <h2 class="p5-panel-title">{{ kbActiveFolder || '文档' }}</h2>
                   <button @click="openKbModal" class="p5-adv-btn !py-1 !px-2 text-xs">＋ 新建</button>
                 </div>
-                <input v-model="kbQuery" placeholder="搜索…" class="w-full px-2.5 py-1.5 rounded-lg border border-border mb-2 text-sm" />
+                <input v-model="kbQuery" placeholder="搜索…" class="w-full px-2.5 py-1.5 rounded-lg border border-border mb-2 text-sm" style="background:var(--color-panel)" />
                 <div class="flex-1 overflow-y-auto pr-1">
                   <div v-for="doc in kbActiveFiles" :key="doc.file"
                     class="flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer hover:bg-muted transition-colors mb-0.5"

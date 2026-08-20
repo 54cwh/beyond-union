@@ -517,7 +517,7 @@
           <!-- ===== Tab1 市场行情 ===== -->
           <div v-show="tab==='market'">
             <!-- 报价条：5 市场价格紧凑横向，涨跌色 -->
-            <div class="quote-bar mb-4" style="border:3px solid var(--color-border);border-radius:10px;background:#fff;padding:10px 14px">
+            <div class="quote-bar mb-4" style="border:3px solid var(--color-border);border-radius:10px;background:var(--color-panel);padding:10px 14px">
               <div class="quote-item" v-for="m in quoteItems" :key="m.name">
                 <span class="quote-item__name">{{ m.name }}</span>
                 <span class="quote-item__value" :class="m.trend === 'up' ? 'trend-up' : (m.trend === 'down' ? 'trend-down' : '')">
