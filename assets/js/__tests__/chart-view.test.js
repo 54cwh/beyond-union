@@ -356,3 +356,79 @@ describe("浅色主题（跨类型）", () => {
     expect(call.textStyle.color).toBe("#1A1A1A");
   });
 });
+
+// —— 新增：轴刻度 / 图例位置 / 双轴 / 色覆盖 ——
+describe("v3.1 轴与图例增强", () => {
+  let chart;
+  beforeEach(() => {
+    chart = mockEcharts();
+    listeners.resize = undefined;
+  });
+
+  it("数值轴默认 splitNumber=4 且轴标签 12px", () => {
+    const c = createChart({});
+    c.setData([{ label: "A", value: 1 }]);
+    const call = chart.setOption.mock.calls[0][0];
+    expect(call.yAxis.splitNumber).toBe(4);
+    expect(call.yAxis.axisLabel.fontSize).toBe(12);
+  });
+
+  it("多系列图例默认右上角", () => {
+    const c = createChart({});
+    c.setData({
+      labels: ["Q1", "Q2"],
+      series: [{ name: "基准", data: [1, 2] }, { name: "AI", data: [2, 3] }],
+    }, { type: "bar" });
+    const call = chart.setOption.mock.calls[0][0];
+    expect(call.legend.top).toBe(0);
+    expect(call.legend.right).toBe(0);
+  });
+
+  it("legend:false 关闭图例", () => {
+    const c = createChart({});
+    c.setData({
+      labels: ["Q1", "Q2"],
+      series: [{ name: "基准", data: [1, 2] }, { name: "AI", data: [2, 3] }],
+    }, { type: "bar", legend: false });
+    const call = chart.setOption.mock.calls[0][0];
+    expect(call.legend).toBeUndefined();
+  });
+
+  it("饼图 legend:false 关闭图例", () => {
+    const c = createChart({});
+    c.setData([{ name: "风速", value: 42 }, { name: "风向", value: 16 }], { type: "pie", legend: false });
+    const call = chart.setOption.mock.calls[0][0];
+    expect(call.legend).toBeUndefined();
+  });
+
+  it("colors 覆盖系列色板", () => {
+    const c = createChart({});
+    c.setData([{ label: "A", value: 1 }], { colors: ["#64748B", "#22C55E", "#2563EB"] });
+    const call = chart.setOption.mock.calls[0][0];
+    expect(call.color).toEqual(["#64748B", "#22C55E", "#2563EB"]);
+  });
+
+  it("双 Y 轴：命中的系列挂右轴", () => {
+    const c = createChart({});
+    c.setData({
+      labels: ["00:00", "06:00"],
+      series: [
+        { name: "发电出力(MW)", data: [80, 90] },
+        { name: "日前电价(元/MWh)", data: [350, 380] },
+      ],
+    }, { type: "line", yName: "MW", yAxis2: { name: "元/MWh", series: ["日前电价(元/MWh)"] } });
+    const call = chart.setOption.mock.calls[0][0];
+    expect(Array.isArray(call.yAxis)).toBe(true);
+    expect(call.yAxis[0].name).toBe("MW");
+    expect(call.yAxis[1].name).toBe("元/MWh");
+    expect(call.series[1].yAxisIndex).toBe(1);
+    expect(call.series[0].yAxisIndex).toBeUndefined();
+  });
+
+  it("xInterval 抽稀 X 轴标签", () => {
+    const c = createChart({});
+    c.setData([{ label: "A", value: 1 }, { label: "B", value: 2 }], { xInterval: 2 });
+    const call = chart.setOption.mock.calls[0][0];
+    expect(call.xAxis.axisLabel.interval).toBe(2);
+  });
+});

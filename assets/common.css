@@ -29,6 +29,10 @@
   --color-status-serious: #ea580c;
   --color-status-critical: #dc2626;
 
+  /* —— 涨跌语义（中国市场惯例：红涨 / 绿跌） —— */
+  --color-trend-up: #DC2626;    /* 上涨 / 增加 */
+  --color-trend-down: #16A34A;  /* 下跌 / 减少 */
+
   /* —— 间距 —— */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -125,6 +129,18 @@ body::before {
   opacity: 0.6;
   pointer-events: none;
   z-index: 0;
+}
+/* 背景层次：顶部浅绿光晕 + 点阵网格（解决"背景太空"） */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(34, 197, 94, 0.08), transparent 62%),
+    radial-gradient(circle, rgba(26, 26, 26, 0.055) 1px, transparent 1px);
+  background-size: 100% 100%, 22px 22px;
 }
 #app, #site-nav { position: relative; z-index: 1; }
 
@@ -271,6 +287,10 @@ h1, h2, h3, h4, h5, h6 {
 .badge--warn { background: #FEF3C7; border-color: #F59E0B; color: #92400E; }
 .badge--danger { background: #FEE2E2; border-color: #EF4444; color: #B91C1C; }
 
+/* —— 涨跌文字/箭头（红涨绿跌，全站统一语义） —— */
+.trend-up { color: var(--color-trend-up); }
+.trend-down { color: var(--color-trend-down); }
+
 /* —— 通用卡片（兼容既有 .card 契约：测试与旧组件依赖） —— */
 .card {
   background-color: var(--color-panel);
@@ -402,8 +422,9 @@ button, [role="button"], .clickable, a {
   font-size: 13px;
   padding: 2px 8px;
   border-radius: 9999px;
-  color: var(--color-accent);
-  border: 1px solid var(--color-accent);
+  color: #92400E;
+  border: 1px solid #F59E0B;
+  background: #FEF3C7;
 }
 .ai-card__conclusion {
   font-size: 18px;
@@ -654,8 +675,8 @@ button, [role="button"], .clickable, a {
 }
 .kpi-card__unit { font-size: 14px; font-weight: 700; opacity: 0.9; letter-spacing: 0.02em; }
 .kpi-card__trend { font-size: 13px; margin-top: 2px; }
-.kpi-card__trend.up { color: var(--color-accent); }
-.kpi-card__trend.down { color: var(--color-destructive); }
+.kpi-card__trend.up { color: var(--color-trend-up); }
+.kpi-card__trend.down { color: var(--color-trend-down); }
 .kpi-card__source {
   background: none;
   border: none;

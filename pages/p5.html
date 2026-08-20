@@ -226,6 +226,7 @@
           tasks: [],
           expandedPolicy: null,
           filterCat: "全部",
+          filterRegion: "全部",
           statusChain: STATUS_CHAIN.join(" → "),
           statusList: STATUS_CHAIN,
         };
@@ -285,12 +286,12 @@
                 <div class="p5-panel">
                   <div class="flex justify-between items-center mb-3">
                     <h2 class="panel__title" style="margin:0">地区覆盖</h2>
-                    <span class="panel__hint">{{ regionCount }} 个</span>
+                    <span class="panel__hint">{{ regionCount }} 个 · 点击筛选（再点取消）</span>
                   </div>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="r in regionDist" :key="r.name" class="p5-chip">
-                      {{ r.name }}<span class="tabular ml-1 text-accent">{{ r.count }}</span>
-                    </span>
+                    <button type="button" v-for="r in regionDist" :key="r.name" class="p5-filter-btn" :class="{active: filterRegion===r.name}" @click="setRegion(r.name)">
+                      {{ r.name }}<span class="tabular ml-1">{{ r.count }}</span>
+                    </button>
                   </div>
                 </div>
                 <div class="p5-panel">
@@ -525,8 +526,10 @@
           return [...this.policies].sort((a, b) => score(b) - score(a)).slice(0, 3);
         },
         filteredPolicies() {
-          if (this.filterCat === "全部") return this.policies;
-          return this.policies.filter((p) => p.category === this.filterCat);
+          let list = this.policies;
+          if (this.filterCat !== "全部") list = list.filter((p) => p.category === this.filterCat);
+          if (this.filterRegion !== "全部") list = list.filter((p) => p.region === this.filterRegion);
+          return list;
         },
         catDist() {
           const m = {};
@@ -559,6 +562,9 @@
       methods: {
         fmtConf(v) {
           return v ? (v * 100).toFixed(0) + "%" : "--";
+        },
+        setRegion(name) {
+          this.filterRegion = (this.filterRegion === name) ? "全部" : name;
         },
         impactRank(id) {
           const idx = this.topImpactPolicies.findIndex((p) => p.id === id);

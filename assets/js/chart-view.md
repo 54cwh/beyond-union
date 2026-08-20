@@ -19,8 +19,12 @@
 
 **配色与图例**:
 
-- 分类系列色固定 6 色(蓝/橙/青/黄/品红/紫),按系列出现顺序分配,不循环、不用绿/红(绿红保留给充放电状态色)。色值经 CVD 色盲安全校验,对应暗色底 `#020617`。
+- 分类系列色固定 6 色(蓝/橙/青/黄/品红/紫),按系列出现顺序分配,不循环、不用绿/红(绿红保留给充放电状态色)。色值经 CVD 色盲安全校验。
 - 多系列(≥2)图表自动带图例;单系列不带。
+- 图例默认**右上角**（不独占一行，节省纵向空间）；传 `options.legend: false` 可关闭。
+- 系列色可覆盖：传 `options.colors: [..]`（如 p6 品牌绿色系）。
+- 数值轴默认 `splitNumber: 4`（避免刻度标签重叠），可传 `options.splitNumber` 覆盖。
+- 轴标签统一 12px（`applyTheme` 内置）。
 
 ---
 
@@ -75,6 +79,17 @@ export default {
 | `data`    | `Array` / `Object`| 数据，形状由 `type` 决定                |
 | `options` | `Object`          | `{ type, ...类型专属字段 }`             |
 
+**通用 options（跨类型）**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `legend` | `boolean` | `false` 关闭图例（默认多系列显示，右上角） |
+| `colors` | `string[]` | 覆盖系列色板（默认 6 色） |
+| `splitNumber` | `number` | 数值轴刻度档数（默认 4） |
+| `xInterval` | `number` | X 轴标签抽稀间隔（`0` 全显示，`2` 每 2 个显示 1 个） |
+| `yName` | `string` | 左轴名称 |
+| `yAxis2` | `Object` | 双 Y 轴：`{ name, series: [系列名] }`，命中的系列挂右轴 |
+
 ### `dispose()`
 
 销毁实例并移除 `window.resize` 监听。**必须在 `beforeUnmount` 调用**，否则内存泄漏 + 残留监听。
@@ -113,7 +128,19 @@ this.chart.setData({
 |------------|-----------------------------------------------------------|
 | 单系列 data | `[{label, value}]`                                        |
 | 多系列 data | `{labels:[], series:[{name, data:[]}]}`                    |
-| options    | `smooth`（平滑）、`area`（面积）                           |
+| options    | `smooth`（平滑）、`area`（面积）、`yAxis2`（双 Y 轴）      |
+
+双 Y 轴示例（p4 发电 vs 电价，MW 左轴 / 元右轴）：
+
+```js
+this.chart.setData({
+  labels: ['00:00', '06:00', '12:00', '18:00'],
+  series: [
+    { name: '发电出力(MW)', data: [80, 90, 100, 60] },
+    { name: '日前电价(元/MWh)', data: [350, 380, 500, 560] },
+  ],
+}, { type: 'line', smooth: true, yName: 'MW', yAxis2: { name: '元/MWh', series: ['日前电价(元/MWh)'] } });
+```
 
 ### 4.3 `scatter` —— 散点图
 
@@ -132,10 +159,10 @@ this.chart.setData([
 
 ### 4.4 `pie` —— 饼图
 
-| 场景    | p2 影响因子贡献                                             |
+| 场景    | p2 影响因子贡献、p5 分类分布                               |
 |---------|-----------------------------------------------------------|
 | data    | `[{name, value}]`                                         |
-| options | `donut`（环形）、`showLabel`                               |
+| options | `donut`（环形）、`showLabel`（直接标签）、`legend: false`（关图例） |
 
 ```js
 this.chart.setData([

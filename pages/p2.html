@@ -47,6 +47,7 @@
     .risk-bar__seg:hover { filter: brightness(1.08); }
     .risk-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #6B7280; }
     .risk-legend__dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+    .risk-ticks { display: flex; justify-content: space-between; font-size: 11px; color: #6B7280; font-variant-numeric: tabular-nums; }
 
     /* 模型验证表 */
     .v-table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -193,6 +194,9 @@
                   <span class="risk-legend__dot" :style="{ background: r.color }"></span>{{ r.label }}
                 </span>
               </div>
+              <div class="risk-ticks mb-2">
+                <span v-for="(t, i) in riskTicks" :key="i">{{ t }}</span>
+              </div>
               <p class="panel__hint">⚠️ 风险分级为临时规则（置信区间带宽占比 ≥15% 橙 / ≥10% 黄），待 A 提供 classifyRisk 正式计算后替换。</p>
             </section>
 
@@ -251,6 +255,14 @@
             { label: RISK_RULES.mid.label, color: RISK_RULES.mid.color },
             { label: RISK_RULES.high.label, color: RISK_RULES.high.color },
           ];
+        },
+        // ===== 风险时间轴小时刻度（首尾 + 3 等分点）=====
+        riskTicks() {
+          const v = this.view;
+          if (!v || !v.labels || !v.labels.length) return [];
+          const n = v.labels.length;
+          const idx = [0, Math.floor((n - 1) * 0.25), Math.floor((n - 1) * 0.5), Math.floor((n - 1) * 0.75), n - 1];
+          return idx.map((i) => v.labels[i]);
         },
         // ===== 顶部元信息 =====
         metaLine() {
@@ -428,7 +440,7 @@
           const ff = this.$refs.factorChart;
           if (ff && !this.factorChart) {
             this.factorChart = createChart(ff);
-            this.factorChart.setData(this.factors, { type: "pie", donut: true });
+            this.factorChart.setData(this.factors, { type: "pie", donut: true, legend: false });
           }
           const ac = this.$refs.aiCard;
           if (ac) {

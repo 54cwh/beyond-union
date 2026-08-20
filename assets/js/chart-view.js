@@ -21,12 +21,48 @@ const THEME = {
 // 固定顺序、不循环；绿/红保留给充放电状态色，故系列色只取 6 个色相
 const SERIES_COLORS = ["#2563eb", "#d95926", "#0d9488", "#ca8a04", "#db2777", "#7c3aed"];
 
-function categoryAxis(labels) {
-  return { type: "category", data: labels };
+function categoryAxis(labels, options = {}) {
+  const axis = { type: "category", data: labels };
+  if (options.xInterval != null) {
+    axis.axisLabel = { interval: options.xInterval };
+  }
+  return axis;
 }
 
-function valueAxis() {
-  return { type: "value" };
+// value 轴：默认 splitNumber=4 避免刻度标签重叠；可传 name / splitNumber
+function valueAxis(options = {}) {
+  const axis = { type: "value", splitNumber: options.splitNumber || 4 };
+  if (options.name) axis.name = options.name;
+  return axis;
+}
+
+// 图例：多系列默认右上角（不独占一行）；options.legend===false 关闭
+function legendOption(series, options = {}) {
+  if (options.legend === false) return undefined;
+  return {
+    data: series.map((s) => s.name),
+    top: 0,
+    right: 0,
+    itemWidth: 12,
+    itemHeight: 12,
+    textStyle: { fontSize: 12 },
+  };
+}
+
+// 双 Y 轴：options.yAxis2 = { name, series: [系列名...] }
+// 命中的系列挂到右轴（yAxisIndex:1），其余留在左轴
+function applyDualAxis(option, options) {
+  if (!options || !options.yAxis2) return option;
+  const right = options.yAxis2;
+  const rightNames = (right && right.series) || [];
+  option.yAxis = [
+    valueAxis({ splitNumber: options.splitNumber, name: options.yName }),
+    valueAxis({ splitNumber: options.splitNumber, name: right.name }),
+  ];
+  option.series.forEach((s) => {
+    if (rightNames.indexOf(s.name) >= 0) s.yAxisIndex = 1;
+  });
+  return option;
 }
 
 // bar / line：单系列 [{label, value}] 或多系列 {labels:[], series:[{name, data:[]}]}
@@ -43,14 +79,14 @@ function buildCartesian(data, options, type) {
 
   const option = {
     tooltip: { trigger: "axis" },
-    xAxis: categoryAxis(labels),
-    yAxis: valueAxis(),
+    xAxis: categoryAxis(labels, options),
+    yAxis: valueAxis(options),
     series,
   };
 
   if (options.horizontal) {
-    option.xAxis = valueAxis();
-    option.yAxis = categoryAxis(labels);
+    option.xAxis = valueAxis(options);
+    option.yAxis = categoryAxis(labels, options);
   }
   if (options.stacked) {
     series.forEach((s) => { s.stack = "total"; });
@@ -62,8 +98,10 @@ function buildCartesian(data, options, type) {
   }
 
   if (series.length >= 2) {
-    option.legend = { data: series.map((s) => s.name) };
+    option.legend = legendOption(series, options);
   }
+
+  applyDualAxis(option, options);
 
   return option;
 }
@@ -83,9 +121,8 @@ function buildScatter(data, options) {
 
 // pie：[{name, value}]
 function buildPie(data, options) {
-  return {
+  const option = {
     tooltip: { trigger: "item" },
-    legend: { data: data.map((d) => d.name) },
     series: [{
       type: "pie",
       radius: options.donut ? ["40%", "70%"] : "70%",
@@ -93,10 +130,20 @@ function buildPie(data, options) {
       data: data.map((d) => ({ name: d.name, value: d.value })),
     }],
   };
+  if (options.legend !== false) {
+    option.legend = {
+      data: data.map((d) => d.name),
+      bottom: 0,
+      itemWidth: 12,
+      itemHeight: 12,
+      textStyle: { fontSize: 12 },
+    };
+  }
+  return option;
 }
 
 // confidence：{labels, actual, forecast, upper, lower}
-function buildConfidence(data) {
+function buildConfidence(data, options = {}) {
   const labels = data.labels || [];
   const actual = data.actual || [];
   const forecast = data.forecast || [];
@@ -105,9 +152,9 @@ function buildConfidence(data) {
   const band = upper.map((v, i) => v - (lower[i] !== undefined ? lower[i] : v));
   return {
     tooltip: { trigger: "axis" },
-    legend: { data: ["预测", "实际"] },
-    xAxis: { type: "category", boundaryGap: false, data: labels },
-    yAxis: valueAxis(),
+    legend: legendOption([{ name: "预测" }, { name: "实际" }], options),
+    xAxis: Object.assign(categoryAxis(labels, options), { boundaryGap: false }),
+    yAxis: valueAxis(options),
     series: [
       { name: "下界", type: "line", data: lower, stack: "ci", lineStyle: { opacity: 0 }, symbol: "none" },
       { name: "置信区间", type: "line", data: band, stack: "ci", lineStyle: { opacity: 0 }, symbol: "none", areaStyle: { opacity: 0.25 } },
@@ -137,13 +184,14 @@ function buildTimeline(data, options) {
 
   const option = {
     tooltip: { trigger: "axis" },
-    xAxis: categoryAxis(labels),
-    yAxis: valueAxis(),
+    xAxis: categoryAxis(labels, options),
+    yAxis: valueAxis(options),
     series,
   };
   if (series.length >= 2) {
-    option.legend = { data: series.map((s) => s.name) };
+    option.legend = legendOption(series, options);
   }
+  applyDualAxis(option, options);
   return option;
 }
 
@@ -160,6 +208,8 @@ function styleAxis(axis) {
 
   axis.axisLabel = axis.axisLabel || {};
   axis.axisLabel.color = THEME.text;
+  axis.axisLabel.fontSize = 12;
+  axis.axisLabel.margin = 6;
 
   if (axis.type === "value") {
     axis.splitLine = axis.splitLine || {};
@@ -169,8 +219,8 @@ function styleAxis(axis) {
 }
 
 // 统一套主题（setOption 前调用一次）
-function applyTheme(option) {
-  option.color = SERIES_COLORS;
+function applyTheme(option, options = {}) {
+  option.color = options.colors || SERIES_COLORS;
   styleAxis(option.xAxis);
   styleAxis(option.yAxis);
   option.textStyle = { color: THEME.text };
@@ -212,7 +262,7 @@ export function createChart(el) {
       default:
         option = buildCartesian(data, options, "bar");
     }
-    chart.setOption(applyTheme(option));
+    chart.setOption(applyTheme(option, options));
   }
 
   function dispose() {

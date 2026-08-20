@@ -45,6 +45,11 @@
       font-weight: 800;
       border: 2px solid var(--color-border);
     }
+
+    /* 明日经营预测：内容纵向铺满，AI 策略条沉底（消除与今日结果的空档差） */
+    .p1-tomorrow { display: flex; flex-direction: column; }
+    .p1-tomorrow .p1-kpi-grid { margin-bottom: 12px; }
+    .p1-tomorrow .p1-strategy { margin-top: auto; }
   </style>
 </head>
 <body class="min-h-screen bg-background">
@@ -546,7 +551,7 @@
               </div>
             </section>
 
-            <section class="card panel">
+            <section class="card panel p1-tomorrow">
               <div class="panel__head">
                 <h2 class="panel__title">明日经营预测</h2>
               </div>

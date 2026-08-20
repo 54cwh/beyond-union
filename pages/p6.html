@@ -63,6 +63,11 @@
     .detail-table th { text-align: left; font-size: 11px; font-weight: 600; opacity: 0.5; padding: 8px 10px; border-bottom: 2px solid var(--color-border); white-space: nowrap; }
     .detail-table td { padding: 9px 10px; border-bottom: 1px solid var(--color-border-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
     .detail-table tr:last-child td { border-bottom: none; }
+
+    /* 累计效能：5 项一行（消除第 5 张卡片孤行） */
+    .p6-kpi-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    @media (max-width: 1024px) { .p6-kpi-grid-5 { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 640px) { .p6-kpi-grid-5 { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
 <body class="min-h-screen bg-background">
@@ -180,8 +185,8 @@
                 <h2 class="panel__title">累计效能</h2>
                 <span class="panel__hint">累计口径 · 模拟</span>
               </div>
-              <div class="p6-grid mb-4">
-                <div v-for="k in cumKpis" :key="k.label" class="p6-col-3 p6-kpi-card">
+              <div class="p6-kpi-grid-5 mb-4">
+                <div v-for="k in cumKpis" :key="k.label" class="p6-kpi-card">
                   <div class="p6-kpi-value tabular">{{ k.value }}</div>
                   <div class="p6-kpi-label">{{ k.label }} · {{ k.unit }}</div>
                 </div>
@@ -360,7 +365,7 @@
                 { name: "AI 方案", data: days.map((d) => d.ai_revenue) },
                 { name: "实际", data: days.map((d) => d.actual_revenue) },
               ],
-            }, { type: "bar" });
+            }, { type: "bar", colors: [this.seriesColor.baseline, this.seriesColor.ai, this.seriesColor.actual] });
           });
         },
       },
