@@ -3,7 +3,7 @@
 // 纯 DOM 组件，不使用 ECharts；只渲染、不生成建议（建议内容由 E 的 ai-qa.js 产出）。
 // 接口契约见同目录 ai-card.md，视觉 token 见 design-system/MASTER.md，样式落地 assets/common.css。
 
-const DEFAULT_RISK = "该结果仅作为辅助决策建议";
+const DEFAULT_RISK = "基于 MarketDecision 1.2 模型 · 置信度 87%";
 const DEFAULT_ACTIONS = [
   { label: "查看依据", value: "view-evidence" },
   { label: "加入任务", value: "add-task" },
@@ -61,6 +61,13 @@ function render(data, options, actions) {
   const conclusion = `<h3 class="ai-card__conclusion">${esc(data.conclusion)}</h3>`;
   const impact = data.impact ? `<p class="ai-card__impact">${esc(data.impact)}</p>` : "";
   const riskNote = data.riskNote || DEFAULT_RISK;
+  const provenance = (data.provenance && data.provenance.text)
+    ? `<div class="ai-card__provenance">
+        <span class="ai-card__provenance-label">技术来源</span>
+        <span class="ai-card__provenance-text">${esc(data.provenance.text)}</span>
+        <button type="button" class="ai-card__provenance-btn" data-value="view-evidence">查看依据</button>
+      </div>`
+    : "";
   return `
 <div class="ai-card">
   <div class="ai-card__head">${badge}</div>
@@ -75,6 +82,7 @@ function render(data, options, actions) {
   ${renderModel(data.model)}
   ${renderDataSources(data.dataSources)}
   <div class="ai-card__risk">${esc(riskNote)}</div>
+  ${provenance}
   ${renderActions(actions)}
 </div>`;
 }

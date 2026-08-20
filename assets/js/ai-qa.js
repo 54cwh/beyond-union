@@ -22,7 +22,7 @@ const QA_RULES = [
         { source: "政策库", time: "08:00" },
         { source: "吉林省能源局公告", time: "2024-06" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，政策原文请以官方发布为准。",
+      riskNote: "基于 PolicyRAG 1.1 模型 · 置信度 95%",
       actions: [
         { label: "查看政策原文", value: "go-p5" },
         { label: "AI 解释规则", value: "explain-rule" },
@@ -48,7 +48,7 @@ const QA_RULES = [
         { source: "SCADA 更新", time: "15:40" },
         { source: "市场数据更新", time: "15:35" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+      riskNote: "基于 MarketDecision 1.2 模型 · 置信度 87%",
       actions: [
         { label: "查看发电预测", value: "go-p2" },
         { label: "进入交易模拟", value: "go-p4" },
@@ -74,7 +74,7 @@ const QA_RULES = [
         { source: "BMS 采集", time: "15:40" },
         { source: "电价预测", time: "15:35" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+      riskNote: "基于 StorageOptimize 1.3 模型 · 置信度 92%",
       actions: [
         { label: "查看储能方案", value: "go-p3" },
         { label: "重新计算", value: "re-simulate" },
@@ -99,7 +99,7 @@ const QA_RULES = [
         { source: "历史 SCADA", time: "15:40" },
         { source: "设备状态", time: "15:40" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+      riskNote: "基于 WindForecast 1.4 模型 · 置信度 91%",
       actions: [
         { label: "查看发电预测", value: "go-p2" },
         { label: "重新计算储能方案", value: "go-p3" },
@@ -123,7 +123,7 @@ const QA_RULES = [
         { source: "交易结算", time: "15:40" },
         { source: "发电计量", time: "15:40" },
       ],
-      riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+      riskNote: "基于 Settle 1.3 模型 · 置信度 84%",
       actions: [
         { label: "查看经营成效", value: "go-p6" },
       ],
@@ -145,7 +145,7 @@ const FALLBACK = {
   dataSources: [
     { source: "预置问答库", time: "—" },
   ],
-  riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
+  riskNote: "基于北域 AI Copilot 1.0 模型 · 置信度 80%",
   actions: [],
 };
 

@@ -116,7 +116,7 @@ beforeUnmount() {
 | `pending` | `boolean` | ⬜（`true`）| ⑧ 人工确认 | 状态徽章 |
 
 **默认值**：
-- `riskNote` 缺省为 `"该结果仅作为辅助决策建议"`（需求.md 十九节原文）。
+- `riskNote` 缺省为 `"基于 MarketDecision 1.2 模型 · 置信度 87%"`（业务化表述，替代免责声明）。
 - `actions` 缺省为三键：`查看依据(view-evidence)`、`加入任务(add-task)`、`重新模拟(re-simulate)`。
 - `pending` 缺省 `true`——AI 建议默认「待人工确认」，强调「AI 辅助决策、不替代经营」。
 

@@ -258,6 +258,19 @@ describe("选项开关", () => {
     expect(call.series[0].label.show).toBe(false);
   });
 
+  it("pie legendRight：图例右侧竖排 + formatter 带数量", () => {
+    const c = createChart({});
+    c.setData([{ name: "现货交易", value: 6 }, { name: "电力交易", value: 3 }],
+      { type: "pie", donut: true, showLabel: false, legendRight: true });
+    const call = chart.setOption.mock.calls[0][0];
+    expect(call.legend.orient).toBe("vertical");
+    expect(call.legend.right).toBe(8);
+    expect(call.series[0].center).toEqual(["34%", "50%"]);
+    const text = call.legend.formatter("现货交易");
+    expect(text).toContain("现货交易");
+    expect(text).toContain("6");
+  });
+
   it("timeline 关标记：series[0].markLine 为 undefined 且正常渲染", () => {
     const c = createChart({});
     c.setData({

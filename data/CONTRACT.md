@@ -93,7 +93,13 @@
 ### 2.6 `policy.json`
 | 字段 | 类型 | 含义 |
 |------|------|------|
+| `meta.scan_time` | string | 政策雷达每日抓取时刻（手动维护场景为预设扫描时间）|
+| `meta.scan_source` | string | 抓取数据源：发改委/能源局东北监管局/省发改委/省交易中心 |
 | `list[]` | array | 政策：`id/title/agency/doc_no/published/region/category/key_change/impact/link/status/credit` |
+| `list[].impact_level` | string | 影响评级：`高/中/低`（红/橙/灰）|
+| `list[].affected_assets` | array | 受影响资产清单（场站名数组）|
+| `list[].summary` | string | 政策要点摘要 |
+| `list[].deadline` | string | 合规截止日（空=无硬性截止）|
 
 ### 2.7 `tasks.json`
 | 字段 | 类型 | 含义 |
@@ -122,7 +128,7 @@
 | storage.json | 调度48 | 0% | number 全通过 | ✓ |
 | market.json | 日前72/实时72/月度12/锚点12/规则7 | 0%（锚点来源URL 部分为空）| number 全通过 | ✓ |
 | revenue.json | 三栏对比30 | 0% | number 全通过 | ✓ |
-| policy.json | 8 | 0% | — | ✓ |
+| policy.json | 13 | 0% | — | ✓ |
 | tasks.json | 8 | 0% | number(confidence) 通过 | ✓ |
 | cases.json | 12 | 0% | number(level) 通过 | ✓ |
 | provenance.json | 血缘18/模型6 | 0% | number(mape等) 通过 | ✓ |

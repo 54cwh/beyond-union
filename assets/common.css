@@ -492,6 +492,36 @@ button, [role="button"], .clickable, a {
   padding-top: var(--space-sm);
   margin: var(--space-sm) 0 var(--space-md);
 }
+.ai-card__provenance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  background: var(--color-panel-alt);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: var(--space-sm);
+}
+.ai-card__provenance-label {
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  flex-shrink: 0;
+}
+.ai-card__provenance-text { opacity: 0.75; }
+.ai-card__provenance-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent-dark);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  flex-shrink: 0;
+}
+.ai-card__provenance-btn:hover { opacity: 0.8; }
 .ai-card__actions {
   display: flex;
   gap: var(--space-sm);

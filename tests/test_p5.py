@@ -21,14 +21,14 @@ def test_p5_policy_module(page, base_url):
     assert "政策总数" in body
     assert "覆盖分类" in body
     assert "已实施" in body
-    # 政策表格（A 数据 8 条，仅可见表格）
+    # 政策表格（A 数据 13 条，仅可见表格）
     assert "深化新能源上网电价市场化改革" in body
     table = page.locator(".p5-table:visible")
-    assert table.locator("tbody tr").count() == 8
+    assert table.locator("tbody tr").count() == 13
     # 分类过滤
     page.locator(".p5-filter-btn", has_text="现货交易").click()
     page.wait_for_timeout(300)
-    assert table.locator("tbody tr").count() == 4
+    assert table.locator("tbody tr").count() == 6
     page.locator(".p5-filter-btn", has_text="全部").click()
     page.wait_for_timeout(200)
     # 展开影响分析 + 溯源（文号在展开区）
@@ -37,7 +37,7 @@ def test_p5_policy_module(page, base_url):
     body = page.inner_text("#app")
     assert "企业影响" in body
     assert "来源" in body
-    assert "发改价格〔2025〕136号" in body
+    assert "东北监能市场〔2026〕42号" in body
 
 
 def test_p5_task_module(page, base_url):

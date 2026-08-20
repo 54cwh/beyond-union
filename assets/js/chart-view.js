@@ -120,18 +120,34 @@ function buildScatter(data, options) {
 }
 
 // pie：[{name, value}]
+// options：donut（环形）、showLabel（直接标签）、legend:false（关图例）、
+//          legendRight:true（图例右侧竖排 + 每项带数量）
 function buildPie(data, options) {
+  const rightLegend = options.legendRight === true;
   const option = {
     tooltip: { trigger: "item" },
     series: [{
       type: "pie",
       radius: options.donut ? ["40%", "70%"] : "70%",
+      center: rightLegend ? ["34%", "50%"] : ["50%", "50%"],
       label: { show: options.showLabel !== false },
       data: data.map((d) => ({ name: d.name, value: d.value })),
     }],
   };
   if (options.legend !== false) {
-    option.legend = {
+    option.legend = rightLegend ? {
+      orient: "vertical",
+      right: 8,
+      top: "middle",
+      itemWidth: 12,
+      itemHeight: 12,
+      itemGap: 12,
+      textStyle: { fontSize: 12 },
+      formatter: (name) => {
+        const hit = (data || []).find((d) => d.name === name);
+        return hit ? `${name}  ${hit.value}` : name;
+      },
+    } : {
       data: data.map((d) => d.name),
       bottom: 0,
       itemWidth: 12,

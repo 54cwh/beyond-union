@@ -13,7 +13,105 @@
   <script src="../assets/vendor/echarts-gl.min.js"></script>
   <style>
     /* ===== p1 页面级样式（v3 设计语言） ===== */
-    /* 顶部核心数字：艺术字区（6 项） */
+    /* ===== 资产总览：微型仪表盘（2×3 卡片） ===== */
+    .p1-asset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 20px 0 24px;
+    }
+    .asset-card {
+      display: block;
+      min-height: 120px;
+      background: #FFFFFF;
+      border: 2px solid var(--color-border-soft);
+      border-radius: 12px;
+      padding: 12px 14px;
+      text-decoration: none;
+      color: var(--color-foreground);
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+    .asset-card:hover { border-color: var(--color-accent); box-shadow: 0 4px 12px rgba(21,128,61,0.10); }
+    .asset-card__head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .asset-card__label { font-size: 13px; font-weight: 700; }
+    .asset-card__icon { font-size: 16px; }
+    .asset-value {
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-foreground);
+      line-height: 1.2;
+    }
+    .asset-sub { font-size: 12px; opacity: 0.55; margin-top: 4px; }
+    .asset-delta { font-size: 12px; margin-top: 2px; }
+    .asset-delta.is-up { color: var(--color-trend-up); }
+    .asset-delta.is-down { color: var(--color-trend-down); }
+    .asset-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600;
+      padding: 3px 10px; border-radius: 999px; margin-top: 2px;
+    }
+    .asset-badge.tone-good { background: var(--color-accent-light); color: var(--color-accent-dark); }
+    .asset-badge.tone-warn { background: #FEF3C7; color: #92400E; }
+    /* 迷你折线（SVG，无外部库） */
+    .asset-spark { width: 100%; height: 30px; margin-top: 4px; display: block; }
+    .asset-spark__line {
+      stroke: var(--color-accent);
+      stroke-width: 2;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    /* 企业资产状态灯 */
+    .asset-company {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; padding: 3px 0;
+    }
+    .asset-status-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .asset-status-dot.is-on { background: var(--color-status-good); }
+    .asset-status-dot.is-off { background: var(--color-status-critical); }
+    .asset-company__name { flex: 1; }
+    .asset-company__state { font-size: 11px; opacity: 0.55; }
+    /* 项目分布环形图 */
+    .asset-donut-row { display: flex; align-items: center; gap: 14px; }
+    .asset-donut {
+      width: 68px; height: 68px; border-radius: 50%;
+      flex-shrink: 0;
+      background: conic-gradient(var(--color-accent) 0 calc(var(--p1, 50%)), var(--color-border-soft) calc(var(--p1, 50%) + 40%) 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .asset-donut__inner {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: #FFFFFF;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; text-align: center;
+    }
+    .asset-donut-legend { display: flex; flex-direction: column; gap: 6px; }
+    .asset-donut-legend__item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+    .asset-donut-legend__dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+    /* 预警中心 */
+    .asset-alert {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; padding: 3px 0;
+    }
+    .asset-alert-tag {
+      flex-shrink: 0; font-size: 10px; font-weight: 700;
+      padding: 2px 6px; border-radius: 6px;
+    }
+    .asset-alert-tag.tag-紧急 { background: #FEE2E2; color: #B91C1C; }
+    .asset-alert-tag.tag-重要 { background: #FEF3C7; color: #92400E; }
+    .asset-alert-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @media (max-width: 1024px) {
+      .p1-asset-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .p1-asset-grid { grid-template-columns: 1fr; }
+    }
+    /* 省份下钻：顶部数字（保留旧样式） */
     .p1-stat-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
@@ -38,12 +136,88 @@
     /* 视角切换行 */
     .p1-scope-row { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 12px; }
 
-    /* 经营链路节点徽标（数字艺术字） */
-    .link-node__badge {
+    /* ===== 任务2：经营链路横向状态条（顶部，高度 ≤80px） ===== */
+    .p1-chain-bar { margin-bottom: 16px; padding: 8px 16px; }
+    .p1-chain-bar .panel__head { margin-bottom: 6px; }
+    .p1-chain-bar .panel__title { font-size: 14px; }
+    .link-flow {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 2px 0;
+    }
+    .link-node {
+      flex: 0 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1px;
+      min-height: 40px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 2px solid var(--color-border-soft);
+      background: #FFFFFF;
+      text-decoration: none;
+      color: var(--color-foreground);
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+      position: relative;
+      white-space: nowrap;
+    }
+    .link-node:hover {
+      border-color: var(--color-accent);
+      box-shadow: 0 4px 12px rgba(21,128,61,0.12);
+    }
+    .link-node__label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-foreground);
+    }
+    .link-node__status {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-status-good);
+      word-break: keep-all;
+    }
+    .link-node__check { color: var(--color-status-good); font-weight: 800; font-size: 13px; }
+    .link-node__dot {
+      width: 8px; height: 8px; border-radius: 50%;
       background: var(--color-accent);
+      box-shadow: 0 0 0 3px var(--color-accent-light);
+    }
+    .link-node__tip {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 60;
+      white-space: nowrap;
+      background: var(--color-foreground);
       color: #FFFFFF;
-      font-weight: 800;
-      border: 2px solid var(--color-border);
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    .link-node:hover .link-node__tip { display: block; }
+    /* 三态节点 */
+    .link-node--done { border-color: var(--color-border-soft); }
+    .link-node--done .link-node__status { color: var(--color-status-good); }
+    .link-node--active {
+      border-color: var(--color-accent-dark);
+      background: var(--color-muted-2);
+    }
+    .link-node--active .link-node__status { color: var(--color-accent-dark); }
+    .link-node--pending { opacity: 1; }
+    .link-node--pending .link-node__status { color: var(--color-status-good); }
+    .link-arrow { color: var(--color-accent); font-size: 16px; flex-shrink: 0; padding: 0 2px; }
+    @media (max-width: 900px) {
+      .link-flow { flex-wrap: nowrap; overflow-x: auto; }
     }
 
     /* 明日经营预测：内容纵向铺满，AI 策略条沉底（消除与今日结果的空档差） */
@@ -51,42 +225,132 @@
     .p1-tomorrow .p1-kpi-grid { margin-bottom: 12px; }
     .p1-tomorrow .p1-strategy { margin-top: auto; }
 
-    /* 经营链路 + AI 建议布局（2:3 比例，缩小链路区，增大 AI 区） */
+    /* AI 建议区（经营链路已上提为顶部状态条，此区单列展示） */
     .p1-chain-row {
       display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      grid-template-columns: minmax(0, 1fr);
       gap: 20px;
     }
     @media (max-width: 900px) {
       .p1-chain-row { grid-template-columns: 1fr; }
     }
 
-    /* 经营链路：网格布局（2行×3列，统一高度，编号暗示递进） */
-    .link-flow {
-      display: grid !important;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-      gap: 12px;
-      padding: 0 !important;
-      overflow: visible !important;
-    }
-    .link-node {
-      min-height: 108px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      overflow: visible;
-      padding-top: 10px;
-    }
-    .link-node__status { word-break: break-word; overflow-wrap: break-word; }
-    .link-arrow { display: none; }
     .link-node__status strong {
       font-weight: 700;
       color: var(--color-text);
       opacity: 1;
     }
+
+    /* ===== 任务5：右上角全局工具栏 ===== */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .toolbar-item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      background: #FFFFFF;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 160ms ease;
+      user-select: none;
+    }
+    .toolbar-item:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
+    .toolbar-caret { font-size: 10px; opacity: 0.6; }
+    .toolbar-src { display: inline-flex; align-items: center; gap: 3px; }
+    .toolbar-src + .toolbar-src::before { content: "·"; opacity: 0.4; margin-right: 3px; }
+    .toolbar-src__time { opacity: 0.55; }
+    .toolbar-src.is-stale .toolbar-src__time { color: var(--color-status-warn); opacity: 1; font-weight: 700; }
+    .toolbar-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      display: inline-block; flex-shrink: 0;
+    }
+    .toolbar-dot--warn { background: var(--color-status-warn); }
+    .toolbar-alert { color: var(--color-foreground); }
+    .toolbar-alert.has-urgent { border-color: var(--color-status-critical); color: var(--color-status-critical); }
+    .toolbar-alert.has-warn { border-color: var(--color-status-warn); color: var(--color-status-warn); }
+    .toolbar-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 70;
+      min-width: 240px;
+      background: #FFFFFF;
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+      padding: 10px 12px;
+    }
+    .toolbar-popover--tl { min-width: 220px; }
+    .toolbar-popover--alert { min-width: 300px; }
+    .toolbar-popover--export { min-width: 200px; }
+    .toolbar-popover__head {
+      font-size: 12px; font-weight: 700;
+      border-bottom: 1px solid var(--color-border-soft);
+      padding-bottom: 6px; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .toolbar-link { color: var(--color-accent-dark); text-decoration: none; font-size: 12px; }
+    .toolbar-health {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; font-size: 12px;
+    }
+    .toolbar-health__name { font-weight: 600; }
+    .toolbar-health__time { opacity: 0.6; }
+    .toolbar-health__state { margin-left: auto; }
+    .toolbar-health__state.is-ok { color: var(--color-status-good); }
+    .toolbar-health__state.is-stale { color: var(--color-status-warn); }
+    .toolbar-alert-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 0; font-size: 12px;
+      border-bottom: 1px solid var(--color-border-soft);
+    }
+    .toolbar-alert-row:last-child { border-bottom: none; }
+    .toolbar-alert-tag {
+      flex-shrink: 0; font-size: 10px; font-weight: 700;
+      padding: 2px 6px; border-radius: 6px;
+    }
+    .toolbar-alert-tag.tag-紧急 { background: #FEE2E2; color: #B91C1C; }
+    .toolbar-alert-tag.tag-重要 { background: #FEF3C7; color: #92400E; }
+    .toolbar-alert-title { flex: 1; }
+    .toolbar-mini-btn {
+      flex-shrink: 0; font-size: 11px;
+      padding: 3px 8px; border-radius: 6px;
+      border: 1px solid var(--color-border);
+      background: #FFFFFF; cursor: pointer;
+    }
+    .toolbar-mini-btn:hover { border-color: var(--color-accent-dark); color: var(--color-accent-dark); }
+    .toolbar-export-btn {
+      display: block; width: 100%;
+      text-align: left; font-size: 12px;
+      padding: 8px 10px; border-radius: 8px;
+      border: none; background: transparent; cursor: pointer;
+    }
+    .toolbar-export-btn:hover { background: var(--color-muted); }
+    .toolbar-toast {
+      position: fixed; top: 70px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 90;
+      background: var(--color-foreground); color: #FFFFFF;
+      font-size: 13px; font-weight: 600;
+      padding: 10px 20px; border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    /* 全屏演示模式：隐藏导航，仅核心仪表盘 */
+    body.p1-fullscreen #site-nav { display: none; }
+    body.p1-fullscreen .p1-scope-row { display: none; }
+    body.p1-fullscreen .toolbar { display: none; }
+    body.p1-fullscreen .page-wrap { max-width: none; }
     @media (max-width: 640px) {
-      .link-flow { grid-template-columns: 1fr; grid-template-rows: none; }
+      .toolbar-popover { right: -40px; }
     }
   </style>
 </head>
@@ -114,7 +378,77 @@
       data() {
         return {
           title: "运营工作台",
-          // 顶部核心数字（项目中心总览）
+          // 数据时间线（工具栏）：各数据源最后更新时间，超 1 小时标 stale
+          dataSources: [
+            { name: "气象", time: "15:30", stale: false },
+            { name: "SCADA", time: "15:40", stale: false },
+            { name: "市场", time: "15:35", stale: false },
+            { name: "政策库", time: "08:00", stale: true },
+          ],
+          tlOpen: false,
+          // 预警入口（工具栏）
+          alerts: [
+            { level: "紧急", title: "吉林B场站风速异常", handled: false },
+            { level: "重要", title: "现货敞口超 30% 偏差风险上升", handled: false },
+            { level: "重要", title: "储能循环次数逼近上限", handled: false },
+          ],
+          alertOpen: false,
+          exportOpen: false,
+          exportNotice: "",
+          fullscreen: false,
+          // 资产总览（微型仪表盘卡片，2×3）
+          assetCards: [
+            {
+              label: "企业资产", icon: "🏢",
+              companies: [
+                { name: "华能集团", online: true },
+                { name: "大唐集团", online: true },
+                { name: "国电投", online: false },
+              ],
+              target: "/pages/p6.html",
+            },
+            {
+              label: "项目分布", icon: "🌐",
+              donut: [
+                { name: "风电", value: 8, color: "#22C55E" },
+                { name: "光伏", value: 4, color: "#F59E0B" },
+              ],
+              total: "12 个项目",
+              target: "/pages/p4.html",
+            },
+            {
+              label: "装机容量", icon: "⚡",
+              value: "1.28 GW",
+              spark: [1.18, 1.21, 1.24, 1.22, 1.26, 1.28, 1.28],
+              sub: "近 7 天稳定",
+              target: "/pages/p2.html",
+            },
+            {
+              label: "储能状态", icon: "🔋",
+              value: "SOC 64%",
+              badge: "充电中",
+              badgeTone: "good",
+              sub: "12:00—14:00 计划充电",
+              target: "/pages/p3.html",
+            },
+            {
+              label: "今日发电", icon: "🌬️",
+              value: "128.6 MWh",
+              delta: "+4.2% 同比",
+              spark: [30, 42, 55, 48, 38, 46, 52],
+              sub: "实时功率近 4 小时",
+              target: "/pages/p2.html",
+            },
+            {
+              label: "预警中心", icon: "⚠️",
+              alerts: [
+                { level: "紧急", text: "吉林B场站风速异常" },
+                { level: "重要", text: "现货敞口偏差风险上升" },
+              ],
+              count: 3,
+              target: "/pages/p5.html",
+            },
+          ],
           baseTopStats: [
             { label: "管理企业", value: "3 家" },
             { label: "新能源项目", value: "12 个" },
@@ -143,14 +477,14 @@
           ],
           aiStrategy: "中长期 72% · 现货 28%",
 
-          // 经营链路图（6 节点带状态）
+          // 经营链路图（横向状态条：6 节点，state=活跃/完成/未开始，detail=tooltip，target=下钻）
           linkFlow: [
-            { label: "天气", status: "风速明日下降 18%" },
-            { label: "风/光预测", status: "风电 91.7 MWh" },
-            { label: "储能优化", status: "12:00—14:00 充电" },
-            { label: "可交易电量", status: "128.7 MWh" },
-            { label: "市场策略", status: "72% 中长期 · 28% 现货" },
-            { label: "预计收益", status: "¥93 万" },
+            { label: "天气", status: "风速↓18%", state: "done", detail: "明日 14:00—18:00 风速下降 18%", target: "/pages/p2.html" },
+            { label: "风/光预测", status: "风电 91.7 MWh", state: "done", detail: "风电 91.7 MWh · 光伏 50.6 MWh", target: "/pages/p2.html" },
+            { label: "储能优化", status: "12:00—14:00 充", state: "done", detail: "12:00—14:00 充电 · 当前 SOC 64%", target: "/pages/p3.html" },
+            { label: "可交易电量", status: "128.7 MWh", state: "done", detail: "可交易电量 128.7 MWh", target: "/pages/p4.html" },
+            { label: "市场策略", status: "中长期 72% · 现货 28%", state: "active", detail: "建议：中长期 72% · 现货 28%", target: "/pages/p4.html" },
+            { label: "预计收益", status: "¥93 万", state: "pending", detail: "预计收益 ¥93 万", target: "/pages/p6.html" },
           ],
           // 今日三项重点
           focusItems: [
@@ -218,6 +552,10 @@
               { source: "SCADA 更新", time: "15:40" },
               { source: "市场数据更新", time: "15:35" },
             ],
+            provenance: {
+              text: "基于 RAG 知识库（政策库 v2026.08 + 历史交易数据）+ MarketDecision 1.2 模型",
+              chain: ["政策库 v2026.08", "历史交易数据", "MarketDecision 1.2", "建议输出"],
+            },
           },
           aiNotice: "",
 
@@ -238,6 +576,14 @@
             "可交易电量": { sources: ["发电预测", "储能 SOC"], updateTime: "15:40", quality: "98.5%", raw: "128.7 MWh", process: "预测扣减自用", model: { name: "Trade", version: "1.1" } },
             "可调储能": { sources: ["BMS 采集", "SOC 预测"], updateTime: "15:40", quality: "99.0%", raw: "18.2 MWh", process: "BMS 推算", model: { name: "BMS", version: "2.1" } },
             "预计市场价格": { sources: ["市场数据"], updateTime: "15:35", quality: "96.0%", raw: "¥312 / MWh", process: "市场模型推算", model: { name: "Price", version: "1.6" } },
+            "AI 建议：明日现货比例降至 27%": {
+              sources: ["政策库 v2026.08", "历史交易数据", "气象更新 15:30", "SCADA 更新 15:40", "市场数据更新 15:35"],
+              updateTime: "15:40",
+              quality: "87.0%",
+              raw: "建议现货 27% · 中长期 73%",
+              process: "RAG 知识库检索 → 特征拼接 → MarketDecision 1.2 推理",
+              model: { name: "MarketDecision", version: "1.2" },
+            },
           },
         };
       },
@@ -261,10 +607,64 @@
         geoMapClass() {
           return { "geo-map--dark": this.geoTheme === "dark" };
         },
+        // 工具栏：预警
+        alertCount() {
+          return this.alerts.filter((a) => !a.handled).length;
+        },
+        alertItems() {
+          return this.alerts.filter((a) => !a.handled);
+        },
+        alertClass() {
+          const urgent = this.alerts.filter((a) => a.level === "紧急" && !a.handled).length;
+          return urgent > 0 ? "has-urgent" : (this.alertCount > 0 ? "has-warn" : "");
+        },
       },
 
       methods: {
         trendClass(trend) { return trend.indexOf("-") === 0 ? "down" : "up"; },
+
+        // 项目分布环形图：主类别占比（%）
+        donutPct(card) {
+          if (!card || !card.donut) return "50%";
+          const total = card.donut.reduce((s, d) => s + d.value, 0);
+          return total ? Math.round((card.donut[0].value / total) * 100) + "%" : "50%";
+        },
+
+        // 迷你折线：数据数组 → SVG polyline points（归一化到 100×30 视窗）
+        sparkPoints(values) {
+          if (!Array.isArray(values) || values.length === 0) return "";
+          const max = Math.max(...values);
+          const min = Math.min(...values);
+          const range = max - min || 1;
+          const step = 100 / (values.length - 1 || 1);
+          return values.map((v, i) => {
+            const x = (i * step).toFixed(1);
+            const y = (30 - ((v - min) / range) * 26 - 2).toFixed(1);
+            return `${x},${y}`;
+          }).join(" ");
+        },
+
+        // 工具栏：标记预警已处理
+        markHandled(w) { w.handled = true; },
+
+        // 工具栏：导出报表（demo 环境：提示导出选项）
+        doExport(type) {
+          this.exportOpen = false;
+          this.exportNotice = "已生成「" + type + "」（演示环境：文件未实际落盘）";
+          window.setTimeout(() => { this.exportNotice = ""; }, 2500);
+        },
+
+        // 工具栏：全屏演示（隐藏导航与工具栏，仅展示核心仪表盘）
+        enterFullscreen() {
+          if (!this.fullscreen) {
+            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+            document.body.classList.add("p1-fullscreen");
+          } else {
+            document.exitFullscreen && document.exitFullscreen();
+            document.body.classList.remove("p1-fullscreen");
+          }
+          this.fullscreen = !this.fullscreen;
+        },
 
         // 格式化链路状态文本：将关键数值（数字+单位/时间/金额）加粗
         formatStatus(status) {
@@ -449,16 +849,85 @@
           <header class="page-head">
             <div>
               <h1 class="page-title">{{ title }}</h1>
-              <p class="page-meta">北域绿联 · 一屏经营决策视图</p>
+              <p class="page-meta">东北区域新能源运营总览</p>
             </div>
-            <div class="page-meta">
-              <span class="badge">今日 · 更新于 15:40</span>
-              <span class="badge badge--warn">预警 3 项</span>
-              <button type="button" class="btn btn--accent" @click="startDemo">开始演示</button>
-            </div>
-          </header>
+            <div class="toolbar">
+              <!-- 数据时间线 -->
+              <div class="toolbar-item toolbar-timeline" @click="tlOpen = !tlOpen">
+                <span v-for="src in dataSources" :key="src.name" class="toolbar-src"
+                  :class="{ 'is-stale': src.stale }">
+                  {{ src.name }}<span class="toolbar-src__time">{{ src.time }}</span>
+                  <span v-if="src.stale" class="toolbar-dot toolbar-dot--warn"></span>
+                </span>
+                <span class="toolbar-caret">▾</span>
+                <!-- 数据同步状态面板 -->
+                <div v-if="tlOpen" class="toolbar-popover toolbar-popover--tl">
+                  <div class="toolbar-popover__head">数据同步状态</div>
+                  <div v-for="src in dataSources" :key="src.name" class="toolbar-health">
+                    <span class="toolbar-health__name">{{ src.name }}</span>
+                    <span class="toolbar-health__time" :class="{ 'is-stale': src.stale }">{{ src.time }} 更新</span>
+                    <span class="toolbar-health__state" :class="src.stale ? 'is-stale' : 'is-ok'">
+                      {{ src.stale ? '超时' : '正常' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <!-- 预警入口 -->
+              <div class="toolbar-item toolbar-alert" :class="alertClass" @click="alertOpen = !alertOpen">
+                {{ alertCount }} 条预警
+                <span class="toolbar-caret">▾</span>
+                <!-- 预警快速处置面板 -->
+                <div v-if="alertOpen" class="toolbar-popover toolbar-popover--alert">
+                  <div class="toolbar-popover__head">预警处置 <a href="/pages/p5.html" class="toolbar-link">查看全部</a></div>
+                  <div v-for="w in alertItems" :key="w.title" class="toolbar-alert-row">
+                    <span class="toolbar-alert-tag" :class="'tag-' + w.level">{{ w.level }}</span>
+                    <span class="toolbar-alert-title">{{ w.title }}</span>
+                    <button type="button" class="toolbar-mini-btn" @click.stop="markHandled(w)">已处理</button>
+                  </div>
+                </div>
+              </div>
+              <!-- 导出报表 -->
+              <div class="toolbar-item toolbar-export" @click="exportOpen = !exportOpen">
+                导出报表
+                <span class="toolbar-caret">▾</span>
+                <div v-if="exportOpen" class="toolbar-popover toolbar-popover--export">
+                  <div class="toolbar-popover__head">导出当前视图数据</div>
+                  <button type="button" class="toolbar-export-btn" @click="doExport('PDF 经营日报')">PDF 经营日报</button>
+                  <button type="button" class="toolbar-export-btn" @click="doExport('Excel 数据明细')">Excel 数据明细</button>
+                  <button type="button" class="toolbar-export-btn" @click="doExport('PPT 演示文稿')">PPT 演示文稿</button>
+                </div>
+              </div>
+              <!-- 全屏演示 -->
+              <button type="button" class="btn btn--accent" @click="enterFullscreen">{{ fullscreen ? "退出全屏" : "全屏演示" }}</button>
+              <!-- 演示链路（保留 demo-stream 功能入口） -->
+              <button type="button" class="btn btn--ghost" @click="startDemo" title="90 秒演示链路">演示</button>
+            </div>          </header>
 
-          <!-- 演示实时推演曲线（演示启动后显示；demo-stream.js 驱动） -->
+          <!-- 导出/操作通知 -->
+          <div v-if="exportNotice" class="toolbar-toast">{{ exportNotice }}</div>
+
+          <!-- 经营链路：横向状态条（页面顶部，高度 ≤80px，节点可下钻） -->
+          <section class="card panel p1-chain-bar">
+            <div class="panel__head">
+              <h2 class="panel__title">经营链路</h2>
+              <span class="panel__hint">天气 → 预测 → 储能 → 交易 → 收益</span>
+            </div>
+            <div class="link-flow">
+              <template v-for="(node, i) in linkFlow" :key="node.label">
+                <a :href="node.target" class="link-node" :class="'link-node--' + node.state">
+                  <div class="link-node__label">
+                    <span v-if="node.state === 'done'" class="link-node__check">✓</span>
+                    <span v-if="node.state === 'active'" class="link-node__dot"></span>
+                    {{ node.label }}
+                  </div>
+                  <div class="link-node__status" v-html="formatStatus(node.status)"></div>
+                  <div class="link-node__tip">{{ node.detail }}</div>
+                </a>
+                <div v-if="i < linkFlow.length - 1" class="link-arrow">→</div>
+              </template>
+            </div>
+          </section>
+
           <section v-show="demoActive" class="p1-demo-stream panel" style="margin-bottom:20px">
             <div class="p1-demo-bar">
               <h2 class="panel__title" style="margin:0">实时推演 · 今日发电预测</h2>
@@ -530,44 +999,73 @@
                 <b class="geo-map__detail-name">{{ geoSelected.title }}</b>
                 <span class="geo-map__detail-text">{{ geoSelected.text }}</span>
               </div>
-              <div v-else class="geo-map__detail geo-map__detail--empty">
-                点击省份或场站查看详情 · 数据字典见 data/geo/README.md
-              </div>
             </div>
           </section>
 
-          <!-- ===== 固定数据区：顶部核心数字（艺术字） ===== -->
-          <div class="p1-stat-grid">
-            <div v-for="s in topStats" :key="s.label" class="stat-display"
-              :class="s.label.indexOf('预警') >= 0 ? 'stat-display--accent' : ''">
+          <!-- ===== 资产总览：微型仪表盘（全景）/ 省份 KPI（下钻） ===== -->
+          <div v-if="!geoScope" class="p1-asset-grid">
+            <a v-for="card in assetCards" :key="card.label" :href="card.target" class="asset-card">
+              <div class="asset-card__head">
+                <span class="asset-card__label">{{ card.label }}</span>
+                <span class="asset-card__icon">{{ card.icon }}</span>
+              </div>
+              <!-- 企业资产 -->
+              <template v-if="card.companies">
+                <div v-for="c in card.companies" :key="c.name" class="asset-company">
+                  <span class="asset-status-dot" :class="c.online ? 'is-on' : 'is-off'"></span>
+                  <span class="asset-company__name">{{ c.name }}</span>
+                  <span class="asset-company__state">{{ c.online ? "在线" : "离线" }}</span>
+                </div>
+              </template>
+              <!-- 项目分布（迷你环形图） -->
+              <template v-else-if="card.donut">
+                <div class="asset-donut-row">
+                  <div class="asset-donut" :style="{ '--p1': donutPct(card) }">
+                    <div class="asset-donut__inner">{{ card.total }}</div>
+                  </div>
+                  <div class="asset-donut-legend">
+                    <span v-for="d in card.donut" :key="d.name" class="asset-donut-legend__item">
+                      <i class="asset-donut-legend__dot" :style="{ background: d.color }"></i>
+                      {{ d.name }} {{ d.value }}
+                    </span>
+                  </div>
+                </div>
+              </template>
+              <!-- 数值 + 迷你折线 -->
+              <template v-else-if="card.value">
+                <div class="asset-value">{{ card.value }}</div>
+                <svg v-if="card.spark" class="asset-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+                  <polyline class="asset-spark__line"
+                    :points="sparkPoints(card.spark)" fill="none"></polyline>
+                </svg>
+                <div v-if="card.delta" class="asset-delta is-up">{{ card.delta }}</div>
+                <div v-else-if="card.badge" class="asset-badge" :class="'tone-' + card.badgeTone">{{ card.badge }}</div>
+                <div class="asset-sub">{{ card.sub }}</div>
+              </template>
+              <!-- 预警中心 -->
+              <template v-else-if="card.alerts">
+                <div v-for="a in card.alerts" :key="a.text" class="asset-alert">
+                  <span class="asset-alert-tag" :class="a.level === '紧急' ? 'tag-紧急' : 'tag-重要'">{{ a.level }}</span>
+                  <span class="asset-alert-text">{{ a.text }}</span>
+                </div>
+              </template>
+            </a>
+          </div>
+
+          <!-- 省份下钻：数字卡片 -->
+          <div v-else class="p1-stat-grid">
+            <div v-for="s in topStats" :key="s.label" class="stat-display">
               <div class="stat-display__label">{{ s.label }}</div>
               <div class="stat-display__value">{{ s.value }}</div>
             </div>
           </div>
 
-          <!-- 主视觉行：经营链路 + 可信 AI 建议 -->
+          <!-- 主视觉行：可信 AI 建议 -->
           <div class="p1-chain-row">
-            <section class="card panel p1-section--hero">
-              <div class="panel__head">
-                <h2 class="panel__title">经营链路</h2>
-                <span class="panel__hint">天气 → 预测 → 储能 → 交易 → 收益</span>
-              </div>
-              <div class="link-flow">
-                <template v-for="(node, i) in linkFlow" :key="node.label">
-                  <div class="link-node">
-                    <div class="link-node__badge">{{ i + 1 }}</div>
-                    <div class="link-node__label">{{ node.label }}</div>
-                    <div class="link-node__status" v-html="formatStatus(node.status)"></div>
-                  </div>
-                  <div v-if="i < linkFlow.length - 1" class="link-arrow">→</div>
-                </template>
-              </div>
-            </section>
-
             <section class="card panel p1-section--rail">
               <div class="panel__head">
                 <h2 class="panel__title">可信 AI 决策建议</h2>
-                <span class="panel__hint">可解释 · 可追溯 · 可人工确认</span>
+                <span class="panel__hint">数据来源：气象预报中心 · SCADA实时 · 电力交易中心</span>
               </div>
               <p v-if="aiNotice" class="p1-ai-notice">{{ aiNotice }}</p>
               <div ref="aiCard" class="p1-ai-card"></div>
@@ -616,7 +1114,7 @@
                   <button type="button" class="kpi-card__source" @click="showSource(s.label)">查看数据来源</button>
                 </div>
               </div>
-              <div class="p1-strategy">AI 建议交易策略：{{ aiStrategy }}</div>
+              <div class="p1-strategy">交易策略建议：{{ aiStrategy }}</div>
             </section>
           </div>
 
@@ -630,7 +1128,7 @@
               </div>
             </section>
             <section class="card panel">
-              <div class="panel__head"><h2 class="panel__title">经营待办</h2><span class="panel__hint">点击进入 p5 决策任务中心</span></div>
+              <div class="panel__head"><h2 class="panel__title">经营待办</h2><span class="panel__hint">进入决策任务中心</span></div>
               <ul class="todo-list">
                 <li v-for="(t, i) in todos" :key="i">
                   <span class="todo-check">☐</span><a href="/pages/p5.html" style="color:inherit;text-decoration:none">{{ t }}</a>
@@ -683,6 +1181,14 @@
           window.__demo.on(this._demoHandler);
           this._demoBound = true;
         }
+
+        // 全屏演示：监听退出全屏（ESC）同步按钮态
+        this._onFsChange = () => {
+          const isFs = !!document.fullscreenElement;
+          this.fullscreen = isFs;
+          document.body.classList.toggle("p1-fullscreen", isFs);
+        };
+        document.addEventListener("fullscreenchange", this._onFsChange);
       },
 
       beforeUnmount() {
@@ -694,6 +1200,7 @@
           window.__demo.off(this._demoHandler);
         }
         if (this.demoStream) { this.demoStream.dispose(); this.demoStream = null; }
+        if (this._onFsChange) { document.removeEventListener("fullscreenchange", this._onFsChange); }
       },
     });
 

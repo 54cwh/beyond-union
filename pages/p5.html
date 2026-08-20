@@ -199,6 +199,66 @@
       white-space: nowrap;
     }
     .p5-adv-btn:hover { opacity: 0.88; }
+
+    /* ===== 任务6：政策影响评级 / 受影响资产 / 简报 ===== */
+    .p5-impact {
+      display: inline-flex; align-items: center;
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+      line-height: 1.4;
+    }
+    .p5-impact.level-高 { background: #FEE2E2; color: #B91C1C; }
+    .p5-impact.level-中 { background: #FEF3C7; color: #92400E; }
+    .p5-impact.level-低 { background: #F3F4F6; color: #4B5563; }
+    .p5-asset {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px; margin: 2px 4px 2px 0;
+      border-radius: 6px;
+      background: var(--color-muted);
+      border: 1px solid var(--color-border-soft);
+      color: var(--color-foreground);
+    }
+    .p5-modal-mask {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.35);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .p5-modal {
+      width: 480px; max-width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      background: #FFFFFF;
+      border: 3px solid var(--color-border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    }
+    .p5-close {
+      border: none; background: none; cursor: pointer;
+      font-size: 16px; color: var(--color-foreground); opacity: 0.5;
+    }
+    .p5-close:hover { opacity: 1; }
+    .p5-brief-block {
+      background: var(--color-panel);
+      border: 2px solid var(--color-border-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .p5-brief-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--color-accent-dark);
+      margin-bottom: 4px;
+    }
+    .p5-toast {
+      position: fixed; top: 70px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 110;
+      background: var(--color-foreground); color: #FFFFFF;
+      font-size: 13px; font-weight: 600;
+      padding: 10px 20px; border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
   </style>
 </head>
 <body class="min-h-screen bg-background">
@@ -225,6 +285,8 @@
           policies: [],
           tasks: [],
           expandedPolicy: null,
+          brief: null,
+          briefPdfNotice: "",
           filterCat: "全部",
           filterRegion: "全部",
           statusChain: STATUS_CHAIN.join(" → "),
@@ -251,6 +313,8 @@
               </button>
             </div>
           </header>
+
+          <div v-if="briefPdfNotice" class="p5-toast">{{ briefPdfNotice }}</div>
 
           <!-- ================= 政策板块 ================= -->
           <div v-show="tab==='policy'">
@@ -281,7 +345,7 @@
                     <h2 class="panel__title" style="margin:0">分类分布</h2>
                     <span class="panel__hint">{{ policies.length }} 条</span>
                   </div>
-                  <div ref="catChart" class="w-full h-52"></div>
+                  <div ref="catChart" class="w-full" style="height:260px"></div>
                 </div>
                 <div class="p5-panel">
                   <div class="flex justify-between items-center mb-3">
@@ -335,7 +399,7 @@
                         <th>政策</th>
                         <th>发布机构</th>
                         <th>地区</th>
-                        <th>状态</th>
+                        <th>影响 · 状态</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -352,7 +416,10 @@
                           <td class="text-xs opacity-70">{{ p.agency }}</td>
                           <td class="text-xs opacity-70 whitespace-nowrap">{{ p.region }}</td>
                           <td class="whitespace-nowrap">
-                            <span class="p5-badge" :class="p.status==='已实施' ? 'p5-badge-green' : 'p5-badge-amber'">{{ p.status }}</span>
+                            <div class="flex items-center gap-1.5">
+                              <span class="p5-impact" :class="'level-' + (p.impact_level || '低')">{{ p.impact_level || "低" }}</span>
+                              <span class="p5-badge" :class="p.status==='已实施' ? 'p5-badge-green' : 'p5-badge-amber'">{{ p.status }}</span>
+                            </div>
                           </td>
                         </tr>
                         <!-- 展开区：跨整行 + 标识 -->
@@ -360,6 +427,7 @@
                           <td colspan="4">
                             <div class="expanded-banner">▼ 企业影响分析</div>
                             <div class="space-y-1.5 py-1">
+                              <div class="text-xs"><span class="opacity-50 mr-1">政策摘要</span>{{ p.summary || p.key_change }}</div>
                               <div class="text-xs"><span class="opacity-50 mr-1">核心变化</span>{{ p.key_change }}</div>
                               <div class="flex items-center gap-2 mt-1">
                                 <span class="text-xs opacity-50 shrink-0">企业影响</span>
@@ -369,6 +437,17 @@
                                     {{ imp.name }}<span class="p5-stars">{{ '★'.repeat(imp.stars) }}<span class="opacity-30">{{ '★'.repeat(5 - imp.stars) }}</span></span>
                                   </span>
                                 </div>
+                              </div>
+                              <div v-if="p.affected_assets && p.affected_assets.length" class="text-xs">
+                                <span class="opacity-50 mr-1">受影响资产</span>
+                                <span v-for="a in p.affected_assets" :key="a" class="p5-asset">{{ a }}</span>
+                              </div>
+                              <div v-if="p.deadline" class="text-xs">
+                                <span class="opacity-50 mr-1">合规截止</span>
+                                <span class="text-amber-500 font-semibold">{{ p.deadline }}</span>
+                              </div>
+                              <div class="flex gap-2 mt-2">
+                                <button type="button" class="p5-adv-btn" @click.stop="genBrief(p)">影响简报</button>
                               </div>
                               <div class="text-xs opacity-50 pt-1" style="border-top:1px solid var(--color-border-soft)">
                                 来源 {{ p.credit }} · <a :href="p.link" target="_blank" class="text-accent underline" @click.stop>查看原文</a>
@@ -502,6 +581,49 @@
               </div>
             </div>
           </div>
+          <!-- 政策影响简报 -->
+          <div v-if="brief" class="p5-modal-mask" @click.self="closeBrief">
+            <div class="p5-modal">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="panel__title" style="margin:0">政策影响简报</h3>
+                <button type="button" class="p5-close" @click="closeBrief">✕</button>
+              </div>
+              <div class="text-sm font-semibold leading-snug">{{ brief.title }}</div>
+              <div class="text-xs opacity-50 mt-1 tabular">{{ brief.doc_no }} · {{ brief.agency }}</div>
+              <div class="mt-3 p5-brief-block">
+                <div class="p5-brief-label">政策要点</div>
+                <div class="text-xs">{{ brief.summary }}</div>
+              </div>
+              <div class="mt-3 p5-brief-block">
+                <div class="p5-brief-label">影响评级</div>
+                <span class="p5-impact" :class="'level-' + brief.level">{{ brief.level }}</span>
+                <span class="text-xs opacity-60 ml-2">直接影响 {{ brief.assets.length }} 个场站</span>
+              </div>
+              <div v-if="brief.assets.length" class="mt-3 p5-brief-block">
+                <div class="p5-brief-label">受影响场站</div>
+                <div class="flex flex-wrap gap-1.5">
+                  <span v-for="a in brief.assets" :key="a" class="p5-asset">{{ a }}</span>
+                </div>
+              </div>
+              <div class="mt-3 p5-brief-block">
+                <div class="p5-brief-label">建议应对措施</div>
+                <ul class="text-xs space-y-1" style="list-style:disc;margin-left:16px">
+                  <li v-for="m in brief.measures" :key="m">{{ m }}</li>
+                </ul>
+              </div>
+              <div class="mt-3 flex items-center justify-between">
+                <span class="text-xs">
+                  <span class="opacity-50 mr-1">合规截止</span>
+                  <span v-if="brief.deadline !== '—'" class="text-amber-500 font-semibold tabular">{{ brief.deadline }}</span>
+                  <span v-else class="opacity-50">—</span>
+                </span>
+                <div class="flex gap-2">
+                  <button type="button" class="p5-adv-btn" @click="briefToTask">加入决策任务</button>
+                  <button type="button" class="p5-adv-btn" @click="briefToPdf">导出 PDF</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </main>
       `,
       computed: {
@@ -579,6 +701,45 @@
             return { name: m[1], stars };
           }).filter(Boolean);
         },
+        // 政策影响简报：要点 + 受影响场站 + 建议措施 + 合规截止
+        genBrief(p) {
+          const measures = p.impact_level === "高"
+            ? ["上调中长期锁定比例，控制现货敞口", "复核受影响场站的市场注册与报量方式", "跟踪政策实施时间，提前部署合规动作"]
+            : ["关注受影响场站的交易安排", "纳入月度经营复盘事项"];
+          this.brief = {
+            title: p.title,
+            level: p.impact_level || "低",
+            summary: p.summary || p.key_change,
+            assets: p.affected_assets || [],
+            measures,
+            deadline: p.deadline || "—",
+            agency: p.agency,
+            doc_no: p.doc_no,
+          };
+        },
+        closeBrief() { this.brief = null; },
+        // 简报 → 决策任务（demo：追加到 tasks 列表）
+        briefToTask() {
+          if (!this.brief) return;
+          this.tasks.unshift({
+            id: "T" + String(this.tasks.length + 1).padStart(2, "0"),
+            type: "政策合规",
+            title: "跟进：" + this.brief.title.slice(0, 18) + (this.brief.title.length > 18 ? "…" : ""),
+            status: "待分析",
+            owner: "张经理",
+            decision_id: "BRIEF_" + Date.now(),
+            model: "PolicyRAG 1.1",
+            confidence: 0.88,
+            risk: "影响评级 " + this.brief.level,
+          });
+          this.closeBrief();
+          this.tab = "tasks";
+        },
+        // 简报 → PDF（demo 提示）
+        briefToPdf() {
+          this.briefPdfNotice = "已生成简报 PDF（演示环境：未实际落盘）";
+          window.setTimeout(() => { this.briefPdfNotice = ""; }, 2500);
+        },
         statusPct(c) {
           return this.tasks.length ? Math.round((c / this.tasks.length) * 100) : 0;
         },
@@ -613,7 +774,7 @@
         renderCatChart() {
           if (!this.catChart) return;
           const data = this.catDist.map((c) => ({ name: c.name, value: c.count }));
-          this.catChart.setData(data, { type: "pie", donut: true });
+          this.catChart.setData(data, { type: "pie", donut: true, showLabel: false, legendRight: true });
         },
       },
       mounted() {

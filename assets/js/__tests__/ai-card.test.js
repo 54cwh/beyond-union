@@ -46,14 +46,14 @@ describe("createAICard", () => {
     expect(html).toContain("① 风速预测下降");
     expect(html).toContain("MarketDecision 1.2");
     expect(html).toContain("气象更新 15:30");
-    expect(html).toContain("该结果仅作为辅助决策建议");
+    expect(html).toContain("基于 MarketDecision 1.2 模型 · 置信度 87%");
     expect(html).toContain('data-value="add-task"');
   });
 
-  it("缺省 riskNote 用默认免责声明", () => {
+  it("缺省 riskNote 用默认模型说明", () => {
     const card = createAICard(el);
     card.setData({ conclusion: "x", confidence: 80 });
-    expect(el.innerHTML).toContain("该结果仅作为辅助决策建议");
+    expect(el.innerHTML).toContain("基于 MarketDecision 1.2 模型");
   });
 
   it("缺省 actions 渲染默认三键", () => {
