@@ -24,8 +24,8 @@ const QA_RULES = [
       ],
       riskNote: "该结果仅作为辅助决策建议，政策原文请以官方发布为准。",
       kbSources: [
-        { doc: "政策与市场规则.md", section: "新能源上网电价市场化改革", score: 0.94 },
-        { doc: "政策与市场规则.md", section: "吉林电力现货市场", score: 0.91 },
+        { doc: "新能源电价市场化改革136号文.md", section: "政策核心", score: 0.94 },
+        { doc: "东北电力现货市场.md", section: "省级规则（辽宁为例）", score: 0.91 },
       ],
       actions: [
         { label: "查看政策原文", value: "go-p5" },
@@ -54,8 +54,8 @@ const QA_RULES = [
       ],
       riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
       kbSources: [
-        { doc: "政策与市场规则.md", section: "新能源上网电价市场化改革", score: 0.88 },
-        { doc: "储能与预测.md", section: "发电预测模型", score: 0.72 },
+        { doc: "新能源电价市场化改革136号文.md", section: "政策核心", score: 0.88 },
+        { doc: "东北电力现货市场.md", section: "价格与负电价", score: 0.72 },
       ],
       actions: [
         { label: "查看发电预测", value: "go-p2" },
@@ -84,8 +84,8 @@ const QA_RULES = [
       ],
       riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
       kbSources: [
-        { doc: "储能与预测.md", section: "储能优化策略", score: 0.93 },
-        { doc: "储能与预测.md", section: "储能运行约束", score: 0.89 },
+        { doc: "储能参与电力市场.md", section: "现货套利盈利临界值", score: 0.93 },
+        { doc: "储能参与电力市场.md", section: "市场准入", score: 0.89 },
       ],
       actions: [
         { label: "查看储能方案", value: "go-p3" },
@@ -113,7 +113,7 @@ const QA_RULES = [
       ],
       riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
       kbSources: [
-        { doc: "储能与预测.md", section: "发电预测模型", score: 0.95 },
+        { doc: "东北电力现货市场.md", section: "价格与负电价", score: 0.95 },
       ],
       actions: [
         { label: "查看发电预测", value: "go-p2" },
@@ -140,7 +140,7 @@ const QA_RULES = [
       ],
       riskNote: "该结果仅作为辅助决策建议，最终由人工确认。",
       kbSources: [
-        { doc: "储能与预测.md", section: "经营收益模型", score: 0.9 },
+        { doc: "绿电绿证交易.md", section: "市场规模", score: 0.9 },
       ],
       actions: [
         { label: "查看经营成效", value: "go-p6" },
@@ -189,8 +189,18 @@ export const SUGGESTIONS = [
 
 // 知识库索引（模拟 RAG 检索源，data/kb/*.md）
 export const KB_INDEX = [
-  { name: "政策与市场规则.md", category: "政策", sections: 3, updated: "2026-08-19" },
-  { name: "储能与预测.md", category: "储能/预测", sections: 4, updated: "2026-08-19" },
-  { name: "东北电力市场交易指南.md", category: "市场", sections: 5, updated: "2026-08-20" },
-  { name: "绿电绿证与碳市场.md", category: "绿电", sections: 4, updated: "2026-08-20" },
+  { name: "东北电力现货市场.md", category: "市场", sections: 5, updated: "2026-08-20" },
+  { name: "新能源电价市场化改革136号文.md", category: "政策", sections: 5, updated: "2026-08-20" },
+  { name: "绿电绿证交易.md", category: "绿电", sections: 6, updated: "2026-08-20" },
+  { name: "储能参与电力市场.md", category: "储能", sections: 5, updated: "2026-08-20" },
+  { name: "发电功率预测与并网.md", category: "预测", sections: 6, updated: "2026-08-20" },
+  { name: "东北新能源消纳与弃风弃光.md", category: "消纳", sections: 5, updated: "2026-08-20" },
+  { name: "电力市场交易品种与方式.md", category: "市场", sections: 6, updated: "2026-08-20" },
+  { name: "碳市场与CCER.md", category: "碳", sections: 5, updated: "2026-08-20" },
+  { name: "虚拟电厂与需求响应.md", category: "新业态", sections: 6, updated: "2026-08-20" },
+  { name: "电力辅助服务市场.md", category: "辅助服务", sections: 4, updated: "2026-08-20" },
+  { name: "新能源投资经济性测算.md", category: "投资", sections: 4, updated: "2026-08-20" },
+  { name: "电力零售市场与售电公司.md", category: "零售", sections: 4, updated: "2026-08-20" },
+  { name: "分布式光伏与新能源配储.md", category: "分布式", sections: 4, updated: "2026-08-20" },
+  { name: "电力行业AI应用.md", category: "数字化", sections: 4, updated: "2026-08-20" },
 ];

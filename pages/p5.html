@@ -521,9 +521,9 @@
             </div>
           </div>
           <!-- ================= 知识库板块 ================= -->
-          <div v-show="tab==='kb'" class="kb-tab">
+          <div v-show="tab==='kb'" class="kb-tab" style="height: calc(100vh - 240px); display: flex; flex-direction: column; overflow: hidden;">
             <!-- 顶部统计条 -->
-            <div class="p5-grid mb-4">
+            <div class="p5-grid mb-3 shrink-0">
               <div class="p5-col-3 p5-stat-card card">
                 <div class="p5-stat-value tabular">{{ kbStats.docs }}</div>
                 <div class="p5-stat-label">知识文档</div>
@@ -541,12 +541,19 @@
                 <div class="p5-stat-label">总字符量</div>
               </div>
             </div>
-            <div class="p5-grid">
+            <div class="p5-grid flex-1 min-h-0 overflow-hidden">
               <!-- 左栏：文件夹 -->
-              <div class="p5-col-3 p5-panel" style="max-height: calc(100vh - 300px); display: flex; flex-direction: column;">
-                <div class="flex justify-between items-center mb-3">
+              <div class="p5-col-3 p5-panel flex flex-col min-h-0 overflow-hidden">
+                <div class="flex justify-between items-center mb-3 shrink-0">
                   <h2 class="p5-panel-title">文件夹</h2>
-                  <span class="p1-section__hint">{{ kbFolders.length }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="p1-section__hint">{{ kbFolders.length }}</span>
+                    <button @click="kbShowNewFolder = !kbShowNewFolder" class="text-xs px-2 py-1 rounded border border-border hover:border-accent hover:text-accent" title="新建文件夹">＋</button>
+                  </div>
+                </div>
+                <div v-if="kbShowNewFolder" class="flex gap-2 mb-2 shrink-0">
+                  <input v-model="kbNewFolder" placeholder="文件夹名称" class="flex-1 px-2 py-1.5 rounded border border-border text-sm" @keydown.enter="addKbFolder" />
+                  <button @click="addKbFolder" class="p5-adv-btn">✓</button>
                 </div>
                 <div class="flex-1 overflow-y-auto pr-1">
                   <div v-for="folder in kbFolders" :key="folder"
@@ -557,19 +564,12 @@
                     <span class="flex-1 text-sm">{{ folder }}</span>
                     <span class="text-xs opacity-40">{{ kbDocs.filter(d => (d.folder || '未分类') === folder).length }}</span>
                   </div>
-                  <button @click="kbShowNewFolder = !kbShowNewFolder" class="w-full mt-2 text-xs px-3 py-2 rounded-lg border border-dashed border-border hover:border-accent hover:text-accent">
-                    ＋ 新建文件夹
-                  </button>
-                  <div v-if="kbShowNewFolder" class="flex gap-2 mt-2">
-                    <input v-model="kbNewFolder" placeholder="名称" class="flex-1 px-2 py-1.5 rounded border border-border text-sm" @keydown.enter="addKbFolder" />
-                    <button @click="addKbFolder" class="p5-adv-btn">✓</button>
-                  </div>
                 </div>
               </div>
 
               <!-- 中栏：文档列表 -->
-              <div class="p5-col-3 p5-panel" style="max-height: calc(100vh - 300px); display: flex; flex-direction: column;">
-                <div class="flex justify-between items-center mb-3">
+              <div class="p5-col-3 p5-panel flex flex-col min-h-0 overflow-hidden">
+                <div class="flex justify-between items-center mb-3 shrink-0">
                   <h2 class="p5-panel-title">{{ kbActiveFolder || '文档' }}</h2>
                   <button @click="openKbModal" class="p5-adv-btn !py-1 !px-2 text-xs">＋ 新建</button>
                 </div>
@@ -590,7 +590,7 @@
               </div>
 
               <!-- 右栏：文档内容 -->
-              <div class="p5-col-6 p5-panel" style="max-height: calc(100vh - 300px); overflow-y: auto;">
+              <div class="p5-col-6 p5-panel min-h-0 overflow-y-auto">
                 <template v-if="kbActiveDoc">
                   <div class="flex justify-between items-center mb-1">
                     <h2 class="p5-panel-title">{{ kbActiveDoc.title }}</h2>
