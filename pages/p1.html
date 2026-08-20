@@ -363,7 +363,7 @@
     // p1 运营工作台（B 展示岗）
     // 数据：先内联 demo 数字（需求.md 示例）；待 A 产出 data/demo/*.json 后切 Data.load。
     // 图表：链路图/气泡为 HTML/CSS；区域经营地图用 ECharts 矢量地图（geo-map.js，见 data/geo/README.md）。
-    import { Nav, getTheme, toggleTheme as toggleGlobalTheme } from '../assets/js/common.js';
+    import { Nav, getTheme } from '../assets/js/common.js';
     // 契约(test_contract.py)要求 chart-view.js 引用；本页区域地图经 geo-map.js 调用 echarts
     import { createChart } from '../assets/js/chart-view.js';
     import { createAICard } from '../assets/js/ai-card.js';
@@ -722,10 +722,6 @@
           this.geoScope = null;
           if (this.gm) { this.gm.resetView(); this.geoDrill = this.gm.getDrill(); }
         },
-        toggleGeoTheme() {
-          this.geoTheme = toggleGlobalTheme();
-          if (this.gm) this.gm.setTheme(this.geoTheme);
-        },
         setGeoLayer(layer) {
           this.geoLayer = layer;
           if (this.gm) this.gm.setLayer(layer);
@@ -970,12 +966,6 @@
                     class="geo-map__btn" :class="{ active: l.key === geoLayer }"
                     @click="setGeoLayer(l.key)">{{ l.label }}</button>
                 </div>
-                <div class="geo-map__spacer"></div>
-                <div class="geo-map__group">
-                  <button type="button" class="geo-map__btn" @click="toggleGeoTheme">
-                    {{ geoTheme === "dark" ? "日间模式" : "夜间模式" }}
-                  </button>
-                </div>
               </div>
               <div class="geo-map__params">
                 <div v-if="isKpiLayer()" class="geo-map__group">
@@ -1206,6 +1196,13 @@
           document.body.classList.toggle("p1-fullscreen", isFs);
         };
         document.addEventListener("fullscreenchange", this._onFsChange);
+
+        // 全局主题切换（导航栏）→ 同步地图明暗
+        this._onThemeChange = (e) => {
+          const theme = e.detail && e.detail.theme;
+          if (theme) { this.geoTheme = theme; if (this.gm) this.gm.setTheme(theme); }
+        };
+        document.addEventListener("byu:themechange", this._onThemeChange);
       },
 
       beforeUnmount() {
@@ -1218,6 +1215,7 @@
         }
         if (this.demoStream) { this.demoStream.dispose(); this.demoStream = null; }
         if (this._onFsChange) { document.removeEventListener("fullscreenchange", this._onFsChange); }
+        if (this._onThemeChange) { document.removeEventListener("byu:themechange", this._onThemeChange); }
       },
     });
 

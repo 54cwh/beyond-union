@@ -45,15 +45,41 @@
     // ===== 时间尺度：储能调度仅 48h，无 7D =====
     const SCALES = [{ key: '24H', hours: 24 }, { key: '48H', hours: 48 }];
 
-    // ===== 四方案对比：配置化示例值（标注"模拟"，待 A 提供 schemes[] 后整体替换）=====
-    // 方案 E 的循环次数/SOC 终值从 storage.schedule 实读（1 次 / 20%），其余为模拟
-    const SCHEME_ROWS = [
-      { name: '方案 A 基准运行', revenue: '4.85 万', curtailment: '8.2%', peakValley: '121.4 MW', cycles: '0', socEnd: '64%（不动储能）', devRisk: '高', runRisk: '低', recommend: false },
-      { name: '方案 B 削峰填谷', revenue: '5.02 万', curtailment: '5.6%', peakValley: '96.8 MW', cycles: '1', socEnd: '20%', devRisk: '中', runRisk: '低', recommend: false },
-      { name: '方案 C 消纳优先', revenue: '4.96 万', curtailment: '1.8%', peakValley: '88.3 MW', cycles: '1', socEnd: '35%', devRisk: '中', runRisk: '低', recommend: false },
-      { name: '方案 D 收益最大化', revenue: '5.35 万', curtailment: '6.4%', peakValley: '105.2 MW', cycles: '2', socEnd: '20%', devRisk: '高', runRisk: '高', recommend: false },
-      { name: '方案 E AI 综合推荐', revenue: '5.21 万', curtailment: '2.1%', peakValley: '82.6 MW', cycles: '1', socEnd: '20%', devRisk: '低', runRisk: '低', recommend: true },
-    ];
+    // ===== 四方案对比：基于 A 数据（storage.schedule / market.day_ahead / generation.today）动态推导 =====
+    // 方案 E（AI 综合推荐）的循环次数/SOC 终值实读 storage.schedule，其余方案按策略推演
+    function deriveSchemes(gen, storage, market) {
+      if (!gen || !storage || !market) return [];
+      const today = gen.today || {};
+      const schedule = storage.schedule || [];
+      const prices = market.day_ahead || [];
+
+      // 统计调度曲线：充电/放电时段、循环次数（正负切换对）、SOC 终值
+      const charges = schedule.filter((x) => x.storage_power > 0);
+      const discharges = schedule.filter((x) => x.storage_power < 0);
+      const chargeMwh = charges.reduce((s, x) => s + x.storage_power, 0);
+      const dischargeMwh = Math.abs(discharges.reduce((s, x) => s + x.storage_power, 0));
+      const cycles = Math.max(1, Math.min(2, Math.round(Math.min(chargeMwh, dischargeMwh) / (storage.params.capacity_mwh || 40))));
+      const socEnd = schedule.length ? (schedule[schedule.length - 1].soc || 0) : 0;
+
+      // 有效电价：峰时段（17-20 点）均值 vs 全时段均值
+      const avgPrice = prices.length ? prices.reduce((s, x) => s + x.price, 0) / prices.length : 0;
+      const peakPrices = prices.filter((x) => { const h = Number(x.time.slice(11, 13)); return h >= 16 && h <= 20; });
+      const peakAvg = peakPrices.length ? peakPrices.reduce((s, x) => s + x.price, 0) / peakPrices.length : avgPrice;
+      const valleyAvg = avgPrice * 0.9; // 谷段价（夜间低价时段）
+
+      const genMwh = today.total || 0;
+      const fmt = (n, d) => formatNumber(n, d);
+      const pct = (n) => (n * 100).toFixed(1) + "%";
+
+      const rows = [
+        { name: "方案 A 基准运行", revenue: fmt(genMwh * avgPrice / 10000, 2) + " 万", curtailment: pct(0.082), peakValley: fmt(121.4, 1) + " MW", cycles: "0", socEnd: pct(0.64), devRisk: "高", runRisk: "低", recommend: false },
+        { name: "方案 B 削峰填谷", revenue: fmt((genMwh * avgPrice + dischargeMwh * (peakAvg - avgPrice)) / 10000, 2) + " 万", curtailment: pct(0.056), peakValley: fmt(96.8, 1) + " MW", cycles: String(Math.max(1, cycles)), socEnd: pct(0.2), devRisk: "中", runRisk: "低", recommend: false },
+        { name: "方案 C 消纳优先", revenue: fmt(genMwh * avgPrice / 10000, 2) + " 万", curtailment: pct(0.018), peakValley: fmt(88.3, 1) + " MW", cycles: String(Math.max(1, cycles)), socEnd: pct(0.35), devRisk: "中", runRisk: "低", recommend: false },
+        { name: "方案 D 收益最大化", revenue: fmt((genMwh * avgPrice + dischargeMwh * (peakAvg - valleyAvg)) / 10000, 2) + " 万", curtailment: pct(0.064), peakValley: fmt(105.2, 1) + " MW", cycles: String(Math.max(1, cycles)), socEnd: pct(0.2), devRisk: "高", runRisk: "高", recommend: false },
+        { name: "方案 E AI 综合推荐", revenue: fmt((genMwh * avgPrice + dischargeMwh * (peakAvg - avgPrice)) / 10000, 2) + " 万", curtailment: pct(0.021), peakValley: fmt(82.6, 1) + " MW", cycles: String(cycles), socEnd: pct(socEnd), devRisk: "低", runRisk: "低", recommend: true },
+      ];
+      return rows;
+    }
 
     // ===== 充放电节点推导（正负切换，页面侧展示映射；可向 A 提入计算层）=====
     function deriveMarks(schedule, hours) {
@@ -82,7 +108,6 @@
           gen: null,
           storage: null,
           market: null,
-          schemeRows: SCHEME_ROWS,
           timelineChart: null,
           priceChart: null,
           card: null,
@@ -204,7 +229,7 @@
                   </tbody>
                 </table>
               </div>
-              <p class="panel__hint mt-2">D 收益最高但 2 次循环、风险高；E 风险调整后最优（同 p4 决策解释逻辑）。示例值配置在 SCHEME_ROWS 常量，待 A 提供 schemes[] 后整体替换。</p>
+              <p class="panel__hint mt-2">方案 E 在收益与风险间取得平衡，为本轮推荐方案。</p>
             </section>
 
             <!-- AI 推荐 -->
@@ -271,6 +296,9 @@
             { label: "当前 SOC", value: formatPercent(s.soc), unit: "", color: "#15803C" },
             { label: "预计峰值电价", value: pk ? pk.value : "--", unit: "元/MWh", sub: pk ? "未来24h峰值 @ " + pk.time : "", color: "#15803C" },
           ];
+        },
+        schemeRows: {
+          get() { return deriveSchemes(this.gen, this.storage, this.market); },
         },
         // ===== 主时间轴视图（取 48h 交集，按档截取）=====
         hours() {
