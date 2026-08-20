@@ -536,7 +536,7 @@ export function createGeoMap(el, options) {
       .filter((x) => x.c)
       .map((x) => ({
         coords: [[x.s.lng, x.s.lat], x.c],
-        lineStyle: { color: t.typeColor[x.s.type], width: Math.max(1.5, x.s.capacity * 0.9) },
+        lineStyle: { color: t.typeColor[x.s.type], width: Math.max(1.5, Math.sqrt(x.s.capacity) * 0.25) },
         meta: x.s,
       }));
     const types = ["wind", "solar", "storage"];

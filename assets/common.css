@@ -1018,6 +1018,8 @@ button, [role="button"], .clickable, a {
 /* ---- 区域经营地图（ECharts 矢量地图，p1 地图行，geo-map.js） ---- */
 .geo-map { display: flex; flex-direction: column; gap: 10px; }
 .geo-map__toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.geo-map__params { display: flex; align-items: center; gap: 8px; margin-top: 8px; min-height: 28px; }
+.geo-map__params-label { font-size: 12px; color: #6B7280; white-space: nowrap; }
 .geo-map__group { display: flex; gap: 6px; flex-wrap: wrap; }
 .geo-map__btn {
   padding: 5px 12px; border-radius: 12px; border: 1px solid var(--color-border);

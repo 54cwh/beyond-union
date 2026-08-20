@@ -295,6 +295,16 @@
         // 区域经营地图：图层 / KPI / 资源切换（转发给 geo-map.js）
         isKpiLayer() { return this.geoLayer === "kpi"; },
         isResourceLayer() { return this.geoLayer === "resource"; },
+        geoLayerDesc() {
+          const d = {
+            station: "场站分布：按装机规模展示各场站",
+            flow: "输电流向：省份间送受电关系",
+            heat: "发电热力：当日发电强度分布",
+            assoc: "场站关联：跨区域协同关系",
+            bar3d: "3D 柱状：容量与发电对比",
+          };
+          return d[this.geoLayer] || "";
+        },
 
         // 地图联动：省份 KPI → 顶部数字；重置回全景
         provinceTopStats(p) {
@@ -482,7 +492,6 @@
           <section class="p1-map-hero">
             <div class="panel__head">
               <h2 class="panel__title">区域经营地图</h2>
-              <span class="panel__hint">东北四省 · GeoJSON 矢量地图 · 八图层</span>
             </div>
             <div class="geo-map" :class="geoMapClass">
               <div class="geo-map__toolbar">
@@ -491,17 +500,28 @@
                     class="geo-map__btn" :class="{ active: l.key === geoLayer }"
                     @click="setGeoLayer(l.key)">{{ l.label }}</button>
                 </div>
+                <div class="geo-map__spacer"></div>
+                <div class="geo-map__group">
+                  <button type="button" class="geo-map__btn" @click="toggleGeoTheme">
+                    {{ geoTheme === "dark" ? "日间模式" : "夜间模式" }}
+                  </button>
+                </div>
+              </div>
+              <div class="geo-map__params">
                 <div v-if="isKpiLayer()" class="geo-map__group">
+                  <span class="geo-map__params-label">KPI 维度</span>
                   <button v-for="k in geoKPIs" :key="k.key" type="button"
                     class="geo-map__btn geo-map__btn--mini" :class="{ active: k.key === activeKPI }"
                     @click="setGeoKPI(k.key)">{{ k.label }}</button>
                 </div>
-                <div v-if="isResourceLayer()" class="geo-map__group">
+                <div v-else-if="isResourceLayer()" class="geo-map__group">
+                  <span class="geo-map__params-label">资源类型</span>
                   <button v-for="r in geoResources" :key="r.key" type="button"
                     class="geo-map__btn geo-map__btn--mini" :class="{ active: r.key === activeResource }"
                     @click="setGeoResource(r.key)">{{ r.label }}</button>
                 </div>
-                <div v-if="isBubbleLayer()" class="geo-map__group">
+                <div v-else-if="isBubbleLayer()" class="geo-map__group">
+                  <span class="geo-map__params-label">时间轴</span>
                   <button v-for="(pt, i) in geoPeriods" :key="pt" type="button"
                     class="geo-map__btn geo-map__btn--mini" :class="{ active: i === geoTime }"
                     @click="setGeoTime(i)">{{ pt }}</button>
@@ -509,12 +529,7 @@
                     {{ geoPlaying ? "暂停" : "播放" }}
                   </button>
                 </div>
-                <div class="geo-map__spacer"></div>
-                <div class="geo-map__group">
-                  <button type="button" class="geo-map__btn" @click="toggleGeoTheme">
-                    {{ geoTheme === "dark" ? "日间模式" : "夜间模式" }}
-                  </button>
-                </div>
+                <div v-else class="geo-map__params-label">{{ geoLayerDesc() }}</div>
               </div>
               <div class="geo-map__canvas-wrap">
                 <div ref="geoMap" class="geo-map__chart"></div>
